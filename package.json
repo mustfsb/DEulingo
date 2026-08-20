@@ -1,0 +1,43 @@
+{
+  "name": "DEulingo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Obsidian Almanca notlarindan uretilen yerel alistirma uygulamasi",
+  "scripts": {
+    "sync": "node scripts/sync-content.ts",
+    "dev": "npm run sync && vite",
+    "app": "npm run dev",
+    "build": "npm run sync && tsc -b --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "tts:setup": "tsx scripts/tts-setup.ts",
+    "tts:check": "tsx -e \"import('./scripts/tts-service.ts').then(async ({ ttsHealth }) => { const health = await ttsHealth(); console.log(JSON.stringify(health, null, 2)); process.exit(health.ready ? 0 : 1); })\"",
+    "generate:audio": "npm run sync && tsx scripts/generate-audio.ts",
+    "generate:sfx": "tsx scripts/generate-sfx.ts",
+    "test:tts": "tsx scripts/tts-integration-test.ts"
+    ,"audit:sessions": "npm run sync && tsx scripts/audit-sessions.ts"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@fontsource-variable/archivo": "^5.2.5",
+    "@fontsource-variable/figtree": "^5.2.5",
+    "@fontsource/jetbrains-mono": "^5.2.5",
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.11",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.1",
+    "vitest": "^3.2.4"
+  }
+}

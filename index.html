@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>DEulingo</title>
+    <meta name="description" content="DEulingo — Obsidian Almanca notlarından üretilen kişisel alıştırma uygulaması." />
+    <script>
+      (() => {
+        try {
+          const raw = localStorage.getItem('almanca-alistirma:progress');
+          const preference = raw ? JSON.parse(raw)?.settings?.themePreference : 'system';
+          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const resolved = preference === 'light' || preference === 'dark'
+            ? preference
+            : systemDark ? 'dark' : 'light';
+          document.documentElement.dataset.theme = resolved;
+          document.documentElement.style.colorScheme = resolved;
+        } catch {
+          // localStorage erişilemese de sistem tercihiyle ilk boya tutarlı kalır.
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
