@@ -6,6 +6,7 @@ import {
   type GermanVoiceId,
   type SpeechSpeed,
 } from './tts';
+import { isWebSpeechAvailable, speakWithWebSpeech } from './web-speech';
 
 export type AudioState = 'idle' | 'feedback' | 'generating' | 'speaking';
 
@@ -216,8 +217,21 @@ export class AudioController {
       this.abort = null;
       await this.playUrl(result.url, contextId, generation, 0.86);
     } catch (error) {
-      // Egzersiz değişimi beklenen bir abort yoludur; UI'ye hata taşınmaz.
-      if (!abort.signal.aborted && this.isCurrent(contextId, generation)) throw error;
+      if (abort.signal.aborted || !this.isCurrent(contextId, generation)) return;
+      // Vercel/prod'da /api/tts yok — tarayıcı TTS'e düş (birebir fonksiyonel)
+      if (isWebSpeechAvailable()) {
+        try {
+          this.abort = abort;
+          this.currentState = 'speaking';
+          await speakWithWebSpeech(target, speed, abort.signal);
+          if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
+          return;
+        } catch (speechError) {
+          if ((speechError as DOMException)?.name === 'AbortError') return;
+          // Web Speech de başarısızsa orijinal hatayı fırlat
+        }
+      }
+      if (this.isCurrent(contextId, generation)) throw error;
     } finally {
       if (this.isCurrent(contextId, generation) && !this.active) this.currentState = 'idle';
     }
