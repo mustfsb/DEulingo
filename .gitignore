@@ -1,6 +1,7 @@
 node_modules
 dist
-generated
+generated/audio
+generated/*.wav
 .piper
 .DS_Store
 *.log

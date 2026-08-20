@@ -85,9 +85,18 @@ export async function resolveSourcePaths(config: ContentConfig): Promise<
 
 export async function syncContent({ quiet = false } = {}): Promise<ContentBundle> {
   const config = await loadConfig();
-  await stat(config.vaultPath).catch(() => {
-    throw new Error(`Obsidian klasörü bulunamadı: ${config.vaultPath}`);
-  });
+  const vaultExists = await stat(config.vaultPath).then(() => true).catch(() => false);
+  if (!vaultExists) {
+    // Vercel/CI gibi kasa olmayan ortamlarda mevcut paketi koru — build düşmesin
+    const outPath = join(projectRoot, config.output);
+    try {
+      const existing = JSON.parse(await readFile(outPath, 'utf8')) as ContentBundle;
+      if (!quiet) console.log(`[sync] kasa bulunamadı (${config.vaultPath}) — mevcut ${config.output} kullanılıyor (${existing.exercises.length} alıştırma)`);
+      return existing;
+    } catch {
+      throw new Error(`Obsidian klasörü bulunamadı: ${config.vaultPath} ve ${config.output} mevcut değil — local'de 'npm run sync' çalıştırıp commit etmen gerekir.`);
+    }
+  }
 
   const sources = await resolveSourcePaths(config);
   const files: SourceFile[] = [];
