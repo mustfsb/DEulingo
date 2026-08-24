@@ -2,7 +2,8 @@
   "vaultPath": "/Users/mustafa/Library/Mobile Documents/iCloud~md~obsidian/Documents/almanca",
   "files": [
     { "path": "İlk 3 Hafta/İlk 3 Hafta Alıştırma.md", "role": "exercises" },
-    { "path": "İlk 3 Hafta/İlk 3 Hafta Özet.md", "role": "summary" }
+    { "path": "İlk 3 Hafta/İlk 3 Hafta Özet.md", "role": "summary" },
+    { "path": "Özel Ders Özet.md", "role": "summary" }
   ],
   "output": "generated/exercises.json"
 }

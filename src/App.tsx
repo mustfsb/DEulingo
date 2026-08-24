@@ -51,6 +51,7 @@ function AppContents({
         // (orn. "Zor Sorular") ekranda hicbir sey degistirmez.
         key={hrefFor(route)}
         mode={route.name === 'lesson' ? 'day' : route.name === 'review' ? 'review' : 'mistakes'}
+        track={route.name === 'lesson' ? route.track : route.name === 'mistake-review' ? route.track : route.name === 'review' ? route.track : undefined}
         day={route.name === 'lesson' ? route.day : route.name === 'mistake-review' ? route.day : undefined}
         sessionMode={route.name === 'lesson' ? route.mode : undefined}
         topicId={route.name === 'lesson' ? route.topicId : undefined}
@@ -81,12 +82,12 @@ function AppContents({
         }
       />
       {route.name === 'home' && <HomeScreen api={api} navigate={navigate} />}
-      {route.name === 'day' && <DayIntroScreen day={route.day} api={api} navigate={navigate} />}
+      {route.name === 'day' && <DayIntroScreen track={route.track} day={route.day} api={api} navigate={navigate} />}
       {route.name === 'summaries' && <SummaryIndexScreen api={api} navigate={navigate} />}
       {route.name === 'summary' && (
-        <SummaryDayScreen day={route.day} topicId={route.topicId} api={api} navigate={navigate} />
+        <SummaryDayScreen track={route.track} day={route.day} topicId={route.topicId} api={api} navigate={navigate} />
       )}
-      {route.name === 'mistakes' && <MistakesScreen api={api} navigate={navigate} />}
+      {route.name === 'mistakes' && <MistakesScreen track={route.track} api={api} navigate={navigate} />}
       {route.name === 'stats' && <StatsScreen api={api} />}
       {route.name === 'debug' && <DebugScreen />}
     </div>
@@ -137,7 +138,7 @@ function TopNav({
           </span>
         </a>
 
-        <nav className="flex items-center gap-0.5 sm:gap-1">
+        <nav className="nav-scroll flex min-w-0 items-center gap-0.5 sm:gap-1">
           {NAV.map((item) => (
             <button
               key={item.label}

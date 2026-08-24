@@ -126,6 +126,7 @@ export function validateCoverage({
   for (const concept of concepts) {
     stats.set(concept.id, {
       day: concept.day,
+      track: (concept.track as import('../types.ts').LearningTrack | undefined) ?? 'normal',
       topicId: concept.topicId,
       conceptId: concept.id,
       label: concept.label,
@@ -144,6 +145,8 @@ export function validateCoverage({
       });
       continue;
     }
+    // Track isolation: private exercise must reference private concepts (future days may cross tracks via prerequisites but base isolation)
+
 
     for (const conceptId of exercise.conceptIds) {
       const concept = conceptIndex.get(conceptId);
@@ -205,7 +208,7 @@ export function validateNoDuplicates(exercises: Exercise[]): ContentWarning[] {
   const normalizedPairs = new Map<string, string>();
 
   for (const exercise of exercises) {
-    const promptKey = normalize(`${exercise.day}|${exercise.type}|${exercise.prompt ?? ''}|${exercise.instruction}`);
+    const promptKey = normalize(`${exercise.track ?? 'normal'}|${exercise.day}|${exercise.type}|${exercise.prompt ?? ''}|${exercise.instruction}`);
     const previous = prompts.get(promptKey);
     if (previous) {
       warnings.push({
@@ -219,7 +222,7 @@ export function validateNoDuplicates(exercises: Exercise[]): ContentWarning[] {
 
     // Ayni gun + ayni tip + ayni cevap + ayni soru koku → gercek kopya.
     if (exercise.answer && exercise.prompt) {
-      const answerKey = normalize(`${exercise.day}|${exercise.type}|${exercise.prompt}|${exercise.answer}`);
+      const answerKey = normalize(`${exercise.track ?? 'normal'}|${exercise.day}|${exercise.type}|${exercise.prompt}|${exercise.answer}`);
       const earlier = answers.get(answerKey);
       if (earlier) {
         warnings.push({
@@ -233,7 +236,7 @@ export function validateNoDuplicates(exercises: Exercise[]): ContentWarning[] {
 
       // Etkileşim türü değişse bile aynı soru-cevap çifti yeni öğrenme
       // kanıtı değildir; Tam Çalışma'yı sahte biçimde büyütmesin.
-      const normalizedPairKey = normalize(`${exercise.day}|${exercise.prompt}|${exercise.answer}`);
+      const normalizedPairKey = normalize(`${exercise.track ?? 'normal'}|${exercise.day}|${exercise.prompt}|${exercise.answer}`);
       const first = normalizedPairs.get(normalizedPairKey);
       if (first) {
         warnings.push({

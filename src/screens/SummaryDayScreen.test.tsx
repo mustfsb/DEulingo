@@ -52,7 +52,7 @@ describe('Gün 4–6 özet ekranı', () => {
       expect(Object.keys(view.progress().settings.readSummaries ?? {}).filter((id) => id.startsWith(`day${day}.`))).toHaveLength(summary.topics.length);
 
       act(() => view.buttons().find((button) => button.textContent === 'Bu Konuyu Çalış')!.click());
-      expect(view.routes).toEqual([{ name: 'lesson', day, mode: 'topic', topicId: summary.topics[0].id }]);
+      expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day, mode: 'topic', topicId: summary.topics[0].id }]);
       act(() => view.root.unmount());
     }
   });

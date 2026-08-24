@@ -8,7 +8,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { days, exercisesById, exercisesForDay, getSummary, summaryTopicsById } from '../lib/content';
+import { daysForTrack, exercisesById, exercisesForDay, getSummary, summaryTopicsById } from '../lib/content';
+import type { LearningTrack } from '../content/types';
 import { audioController } from '../lib/audio/playback';
 import { goalProgress, markGoalCelebrated } from '../lib/daily-goal';
 import { MOTION, prefersReducedMotion } from '../lib/motion';
@@ -30,6 +31,7 @@ const NEAR_PERFECT = 0.9;
 const NEEDS_WORK = 0.7;
 
 export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteScreenProps) {
+  const resultTrack: LearningTrack = (result.track as LearningTrack | undefined) ?? 'normal';
   const { progress, update } = api;
   const reduced = useMemo(prefersReducedMotion, []);
   const [revealed, setRevealed] = useState(reduced);
@@ -49,9 +51,9 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     [progress.mistakes, result],
   );
 
-  const nextDay = day === undefined ? undefined : days.find((entry) => entry.day === day + 1)?.day;
-  const challengeReady = day === undefined ? false : challengeReadiness(exercisesForDay(day)).ready;
-  const hasSummary = day !== undefined && Boolean(getSummary(day));
+  const nextDay = day === undefined ? undefined : daysForTrack(resultTrack).find((entry) => entry.day === day + 1)?.day;
+  const challengeReady = day === undefined ? false : challengeReadiness(exercisesForDay(day, resultTrack)).ready;
+  const hasSummary = day !== undefined && Boolean(getSummary(day, resultTrack));
   const nextExerciseSetId = result.exerciseSetId
     ? EXERCISE_SET_IDS[EXERCISE_SET_IDS.indexOf(result.exerciseSetId) + 1]
     : undefined;
@@ -112,6 +114,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
         ...current,
         activeLesson: {
           mode: 'mistakes',
+          track: resultTrack,
           day: result.day,
           queue: mistakeIds.map((exerciseId) => ({ exerciseId, presentationReason: 'primary' as const })),
           index: 0,
@@ -122,13 +125,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
           sourceSessionId: result.sessionId,
         },
       }));
-      navigate({ name: 'mistake-review', day: result.day });
+      navigate({ name: 'mistake-review', track: resultTrack, day: result.day });
     });
 
   const startChallenge = () =>
     run('challenge', () => {
       if (day === undefined) return;
-      navigate({ name: 'lesson', day, mode: 'challenge' });
+      navigate({ name: 'lesson', track: resultTrack, day, mode: 'challenge' });
     });
 
   const repeatSession = () =>
@@ -136,6 +139,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
       if (day === undefined) return;
       navigate({
         name: 'lesson',
+        track: resultTrack,
         day,
         mode: result.sessionMode ?? 'normal',
         topicId: result.topicId,
@@ -146,13 +150,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
   const startNextSet = () =>
     run('next-set', () => {
       if (day === undefined || !nextExerciseSetId) return;
-      navigate({ name: 'lesson', day, mode: 'set', exerciseSetId: nextExerciseSetId });
+      navigate({ name: 'lesson', track: resultTrack, day, mode: 'set', exerciseSetId: nextExerciseSetId });
     });
 
   const practiceWeakTopic = () =>
     run('weak-topic', () => {
       if (day === undefined || !weakest) return;
-      navigate({ name: 'lesson', day, mode: 'topic', topicId: weakest.topicId });
+      navigate({ name: 'lesson', track: resultTrack, day, mode: 'topic', topicId: weakest.topicId });
     });
 
   const headline = resultHeadline(result, accuracy, isFollowUp);
@@ -185,7 +189,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     actions.push({
       id: 'next-day',
       label: `${nextDay}. Güne Geç`,
-      onClick: () => run('next-day', () => navigate({ name: 'day', day: nextDay })),
+      onClick: () => run('next-day', () => navigate({ name: 'day', track: resultTrack, day: nextDay })),
     });
   }
   if (!isFollowUp && day !== undefined) {
@@ -197,21 +201,21 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     actions.push({
       id: 'quick',
       label: 'Hızlı Tekrar',
-      onClick: () => run('quick', () => navigate({ name: 'lesson', day, mode: 'quick' })),
+      onClick: () => run('quick', () => navigate({ name: 'lesson', track: resultTrack, day, mode: 'quick' })),
     });
   }
   if (Object.keys(progress.mistakes).length > 0) {
     actions.push({
       id: 'all-mistakes',
       label: 'Hatalarım',
-      onClick: () => run('all-mistakes', () => navigate({ name: 'mistakes' })),
+      onClick: () => run('all-mistakes', () => navigate({ name: 'mistakes', track: resultTrack })),
     });
   }
   if (hasSummary && day !== undefined) {
     actions.push({
       id: 'summary',
       label: '📖 Özeti Oku',
-      onClick: () => run('summary', () => navigate({ name: 'summary', day })),
+      onClick: () => run('summary', () => navigate({ name: 'summary', track: resultTrack, day })),
     });
   }
   actions.push({
@@ -305,7 +309,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
                       <button
                         type="button"
                         className="underline underline-offset-2"
-                        onClick={() => navigate({ name: 'summary', day, topicId: weakest.topicId })}
+                        onClick={() => navigate({ name: 'summary', track: resultTrack, day, topicId: weakest.topicId })}
                       >
                         özeti aç
                       </button>
@@ -359,7 +363,8 @@ export function resultHeadline(
           : `${answered} · ${result.correctCount + result.typoCount} doğru · ${result.incorrectCount} tekrar öneriliyor`,
     };
   }
-  const dayLabel = result.day === undefined ? 'Ders' : `${result.day}. Gün`;
+  const track = (result.track as LearningTrack | undefined) ?? 'normal';
+  const dayLabel = result.day === undefined ? 'Ders' : `${result.day}. Gün${track === 'private' ? ' — Özel Ders' : ''}`;
   if (result.perfect) {
     return { title: 'Mükemmel ders!', subtitle: `${dayLabel} · ${answered} · tüm sorular doğru.` };
   }

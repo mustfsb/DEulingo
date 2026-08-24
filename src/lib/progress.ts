@@ -3,10 +3,13 @@
  * Tum sayilar localStorage'daki denemelerden hesaplanir; ayrica ozet tutulmaz.
  */
 
-import type { Exercise } from '../content/types';
+import type { Exercise, LearningTrack } from '../content/types';
 import type { ValidationResult } from './validation';
+import { evaluateExercise } from './validation';
 import { addDailyActivity, answerDurationMs } from './daily-goal';
 import {
+  getTrackDays,
+  setTrackDays,
   createEmptyProgress,
   type AttemptResult,
   type ExerciseProgress,
@@ -16,6 +19,89 @@ import {
 } from './storage';
 
 const MASTERY_STREAK = 2;
+
+/**
+ * Geriye dönük klavye toleransi düzeltmesi.
+ *
+ * keyboardTolerance:true olan egzersizlerde, daha önce yanlış sayılan
+ * (incorrect / minor-typo) denemeleri yeniden değerlendirir.
+ * Eger yeni kurallara göre cevap dogruysa deneme 'correct' olarak
+ * güncellenir, hata kaydı temizlenir, istatistikler yeniden hesaplanir.
+ */
+export function correctKeyboardToleranceHistory(
+  progress: UserProgress,
+  lookup: (id: string) => Exercise | undefined,
+): UserProgress {
+  let changed = false;
+  const exercises: Record<string, ExerciseProgress> = {};
+  const mistakes = { ...progress.mistakes };
+
+  for (const [id, entry] of Object.entries(progress.exercises)) {
+    const exercise = lookup(id);
+    if (!exercise || !exercise.validation?.keyboardTolerance) {
+      exercises[id] = entry;
+      continue;
+    }
+
+    let corrected = false;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let typoCount = 0;
+    const attempts = entry.attempts.map((attempt) => {
+      let result = attempt.result;
+      if (result === 'incorrect' || result === 'minor-typo') {
+        const raw = typeof attempt.input === 'string' ? attempt.input : attempt.normalizedInput ?? '';
+        if (raw) {
+          const evalResult = evaluateExercise(exercise, raw);
+          if (evalResult.status === 'correct') {
+            result = 'correct';
+            corrected = true;
+          }
+        }
+      }
+      if (result === 'correct') correctCount += 1;
+      else if (result === 'incorrect') incorrectCount += 1;
+      else if (result === 'minor-typo') typoCount += 1;
+      return { ...attempt, result };
+    });
+
+    if (!corrected) {
+      exercises[id] = entry;
+      continue;
+    }
+    changed = true;
+    const recent = attempts.slice(-MASTERY_STREAK);
+    exercises[id] = {
+      ...entry,
+      attempts,
+      correctCount,
+      incorrectCount,
+      typoCount,
+      mastered: recent.length === MASTERY_STREAK && recent.every((a) => a.result === 'correct'),
+    };
+
+    // Hata kaydı varsa yeniden değerlendir
+    if (mistakes[id]) {
+      const evalResult = evaluateExercise(exercise, mistakes[id].userAnswer);
+      if (evalResult.status === 'correct') delete mistakes[id];
+    }
+  }
+
+  // keyboardTolerance etkilemeyen egzersizlerin verilerini de kopyala
+  for (const id of Object.keys(progress.exercises)) {
+    if (!exercises[id]) exercises[id] = progress.exercises[id];
+  }
+
+  if (!changed) return progress;
+
+  const stats = recomputeStats(exercises);
+  return {
+    ...progress,
+    exercises,
+    mistakes,
+    stats: { ...stats, studyDates: progress.stats.studyDates ?? [] },
+  };
+}
 
 export interface RecordOptions {
   hintUsed?: boolean;
@@ -70,9 +156,11 @@ export function recordAttempt(
   options: RecordOptions = {},
 ): UserProgress {
   const now = new Date().toISOString();
+  const track: LearningTrack = (exercise.track as LearningTrack | undefined) ?? 'normal';
   const previous: ExerciseProgress = progress.exercises[exercise.id] ?? {
     exerciseId: exercise.id,
     day: exercise.day,
+    track,
     attempts: [],
     firstSeenAt: now,
     lastSeenAt: now,
@@ -96,6 +184,7 @@ export function recordAttempt(
   const updated: ExerciseProgress = {
     ...previous,
     day: exercise.day,
+    track,
     attempts,
     lastSeenAt: now,
     correctCount: previous.correctCount + (result === 'correct' ? 1 : 0),
@@ -117,6 +206,7 @@ export function recordAttempt(
     const existing = mistakes[exercise.id];
     const record: MistakeRecord = {
       exerciseId: exercise.id,
+      track,
       day: exercise.day,
       topic: exercise.topic,
       prompt: exercise.prompt ?? exercise.instruction,
@@ -206,7 +296,9 @@ export function getDayStats(progress: UserProgress, day: number, exercises: Exer
   const graded = correct + typo + incorrect;
   const accuracy = graded > 0 ? (correct + typo) / graded : null;
   const completionPct = total > 0 ? completed / total : 0;
-  const mistakeCount = incorrect;
+  // Sadece bugün AÇIK (cozulmemis) hatalar sayısı — Hatalarım ekraniyla tutarlı.
+  const openMistakeIds = new Set(Object.keys(progress.mistakes));
+  const mistakeCount = exercises.filter((exercise) => openMistakeIds.has(exercise.id)).length;
   const state: DayStats['state'] =
     completed === 0 ? 'not-started' : completed >= total ? 'completed' : 'in-progress';
 
@@ -283,6 +375,7 @@ export function getGlobalSummary(
   progress: UserProgress,
   exercises: Exercise[],
   dayNumbers: number[],
+  track: LearningTrack = 'normal',
 ): GlobalSummary {
   const attempted = exercises.filter((exercise) => progress.exercises[exercise.id]?.attempts.length);
   const mastered = attempted.filter((exercise) => progress.exercises[exercise.id]?.mastered);
@@ -290,7 +383,7 @@ export function getGlobalSummary(
   const graded = totalCorrect + totalTypos + totalIncorrect;
 
   const completedDays = dayNumbers.filter((day) => {
-    const dayExercises = exercises.filter((exercise) => exercise.day === day);
+    const dayExercises = exercises.filter((exercise) => exercise.day === day && ((exercise.track as LearningTrack | undefined) ?? 'normal') === track);
     return dayExercises.length > 0 && getDayStats(progress, day, dayExercises).state === 'completed';
   }).length;
 
@@ -310,23 +403,27 @@ export function getGlobalSummary(
 /* Sifirlama                                                           */
 /* ------------------------------------------------------------------ */
 
-export function resetDayProgress(progress: UserProgress, day: number): UserProgress {
+export function resetDayProgress(progress: UserProgress, day: number, track: LearningTrack = 'normal'): UserProgress {
   const exercises = { ...progress.exercises };
   const mistakes = { ...progress.mistakes };
   for (const [id, entry] of Object.entries(progress.exercises)) {
-    if (entry.day === day) delete exercises[id];
+    const entryTrack: LearningTrack = (entry.track as LearningTrack | undefined) ?? 'normal';
+    if (entry.day === day && entryTrack === track) delete exercises[id];
   }
   for (const [id, record] of Object.entries(progress.mistakes)) {
-    if (record.day === day) delete mistakes[id];
+    const recTrack: LearningTrack = (record.track as LearningTrack | undefined) ?? 'normal';
+    if (record.day === day && recTrack === track) delete mistakes[id];
   }
-  const days = { ...progress.days };
-  delete days[day];
+  // track-aware days
+  const trackDays = { ...getTrackDays(progress, track) };
+  delete trackDays[day];
+  const updatedProgress = setTrackDays(progress, track, trackDays);
 
   const stats = recomputeStats(exercises);
   const activeLesson =
-    progress.activeLesson?.day === day ? undefined : progress.activeLesson;
+    progress.activeLesson?.day === day && ((progress.activeLesson.track as LearningTrack | undefined) ?? 'normal') === track ? undefined : progress.activeLesson;
 
-  return { ...progress, exercises, mistakes, days, activeLesson, stats: {
+  return { ...updatedProgress, exercises, mistakes, activeLesson, stats: {
     ...stats,
     studyDates: progress.stats.studyDates,
   } };

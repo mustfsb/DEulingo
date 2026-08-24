@@ -41,6 +41,8 @@ const QUOTES: Record<string, string> = {
 export interface NormalizeOptions {
   caseSensitive?: boolean;
   punctuationSensitive?: boolean;
+  /** Alman özel harfleri (ß/ä/ö/ü) icin klavye toleransi: ASCII yaklasimi tam dogru sayilir. */
+  keyboardTolerance?: boolean;
 }
 
 export function normalizeAnswer(value: string, options: NormalizeOptions = {}): string {
@@ -245,7 +247,19 @@ function compareOne(input: string, expected: string, options: NormalizeOptions):
     return { status: 'correct', expected, normalizedInput };
   }
 
+  // Klavye toleransi: Almanca özel harfler (ß/ä/ö/ü) iceren cevaplarda
+  // ASCII yaklasimi (ss/ae/oe/ue) ve kucuk yazim farklari tam dogru sayilir.
+  // Kullanici Almanca klavye olmadan da dogru cevap verebilmelidir.
+  if (options.keyboardTolerance && /[ßäöü]/.test(normalizedExpected)) {
+    const foldedInput = foldSpecialChars(normalizedInput);
+    const foldedExpected = foldSpecialChars(normalizedExpected);
+    if (foldedInput === foldedExpected || levenshtein(foldedInput, foldedExpected) <= 2) {
+      return { status: 'correct', expected, normalizedInput };
+    }
+  }
+
   // ß / ue gibi kabul edilebilir yazim varyantlari (harf buyuklugu farki degil).
+  // Klavye toleransi aktifken bu varyantlar yukarda yakalanir; normal modda minor-typo kalir.
   if (foldSpecialChars(normalizedInput) === foldSpecialChars(normalizedExpected)) {
     return {
       status: 'minor-typo',
@@ -298,6 +312,7 @@ export function evaluateText(
   const options: NormalizeOptions = {
     caseSensitive: validation.caseSensitive ?? false,
     punctuationSensitive: validation.punctuationSensitive ?? false,
+    keyboardTolerance: validation.keyboardTolerance ?? false,
   };
 
   const candidates = [answer, ...acceptedAnswers];

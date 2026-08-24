@@ -11,7 +11,10 @@ import {
   exercisesForDay,
   summaryTopicForExercise,
   topicDay,
+  topicTrack,
 } from '../lib/content';
+import type { LearningTrack } from '../content/types';
+import { getTrackDays } from '../lib/storage';
 import { cancelScheduledRetry, scheduleRetry } from '../lib/lesson';
 import { buildSessionPlan } from '../lib/session';
 import { buildLessonResult, completeLesson } from '../lib/session-result';
@@ -27,6 +30,7 @@ import { audioController, type SoundEffect } from '../lib/audio/playback';
 
 export interface LessonScreenProps {
   mode: LessonKind;
+  track?: LearningTrack;
   day?: number;
   sessionMode?: SessionMode;
   topicId?: string;
@@ -55,6 +59,7 @@ const MODE_LABEL: Record<SessionMode, string> = {
  */
 export function LessonScreen({
   mode,
+  track,
   day,
   sessionMode = 'normal',
   topicId,
@@ -62,16 +67,19 @@ export function LessonScreen({
   api,
   navigate,
 }: LessonScreenProps) {
+  const resolvedTrack: LearningTrack = track ?? 'normal';
   const { progress, update } = api;
   const active = progress.activeLesson;
   // İçerik güncellemesi bir soruyu kaldırmış olabilir. Böyle bir yarım ders
   // ekranda takılmak yerine güncel havuzdan güvenle yeniden kurulur.
   const hasRemovedExercise = active?.queue.some((item) => !exercisesById.has(item.exerciseId)) ?? false;
   // Yarim kalan oturum ancak AYNI tur + AYNI gun + AYNI mod + AYNI konu ise surdurulur.
+  const resolvedTrackForMatch = track ?? 'normal';
   const matches =
     active &&
     !hasRemovedExercise &&
     active.mode === mode &&
+    ((active.track as LearningTrack | undefined) ?? 'normal') === resolvedTrackForMatch &&
     (mode === 'day'
       ? active.day === day &&
         (active.sessionMode ?? 'normal') === sessionMode &&
@@ -101,28 +109,29 @@ export function LessonScreen({
   useEffect(() => {
     if (matches || finishing.current) return;
     if (mode === 'day' && day !== undefined) {
-      const pool = exercisesForDay(day);
+      const pool = exercisesForDay(day, resolvedTrack);
       // Birincil sıra ders başlamadan tamamen kurulur: ID'ler benzersizdir ve
       // hata tekrarları bu sıra yerine ayrı, gerekçeli sunumlar olarak eklenir.
       const plan = buildSessionPlan({
         pool,
-        previous: exercisesBeforeDay(day),
+        previous: exercisesBeforeDay(day, resolvedTrack),
         progress,
         mode: sessionMode,
         topicId,
         exerciseSetId,
         // Her oturumda değişen ama tekrar üretilebilir tohum.
-        seed: `${day}:${sessionMode}:${topicId ?? ''}:${exerciseSetId ?? ''}:${progress.days[day]?.sessionsCompleted ?? 0}`,
+        seed: `${resolvedTrack}:${day}:${sessionMode}:${topicId ?? ''}:${exerciseSetId ?? ''}:${getTrackDays(progress, resolvedTrack)[day]?.sessionsCompleted ?? 0}`,
       });
 
       if (!plan.primaryQueue.length) {
-        navigate({ name: 'day', day });
+        navigate({ name: 'day', track: resolvedTrack, day });
         return;
       }
       update((current) => ({
         ...current,
         activeLesson: {
           mode: 'day',
+          track: resolvedTrack,
           day,
           sessionMode,
           topicId,
@@ -138,9 +147,9 @@ export function LessonScreen({
     } else if (mode !== 'day') {
       // Tekrar oturumlari her zaman ONCEDEN kurulur (sonuc ekrani ya da
       // Hatalarim ekrani tarafindan). Dogrudan URL ile gelindiyse listeye don.
-      navigate({ name: 'mistakes' });
+      navigate({ name: 'mistakes', track: resolvedTrack });
     }
-  }, [matches, mode, day, sessionMode, topicId, exerciseSetId, progress, update, navigate]);
+  }, [matches, mode, resolvedTrack, day, sessionMode, topicId, exerciseSetId, progress, update, navigate]);
 
   if (!active || !matches) {
     return <div className="p-10 text-center text-ink-soft">Ders hazırlanıyor…</div>;
@@ -256,8 +265,8 @@ function LessonRunner({
       speechVoice={api.progress.settings.speechVoice}
       onCommit={commit}
       onAdvance={advance}
-      onExit={() => navigate(lesson.day ? { name: 'day', day: lesson.day } : { name: 'home' })}
-      onOpenSummary={(topicId, day) => navigate({ name: 'summary', day, topicId })}
+      onExit={() => navigate(lesson.day ? { name: 'day', track: (lesson.track as LearningTrack | undefined) ?? 'normal', day: lesson.day } : { name: 'home' })}
+      onOpenSummary={(topicId, day) => navigate({ name: 'summary', track: topicTrack.get(topicId) ?? 'normal', day, topicId })}
     />
   );
 }
@@ -430,7 +439,7 @@ function ExerciseStep({
         />
       )}
       <header className="sticky top-0 z-10 bg-paper/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[820px] items-center gap-4 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-[820px] items-center gap-2 px-4 py-4 sm:gap-4 sm:px-6">
           <button
             type="button"
             className="btn btn-quiet px-2 text-2xl leading-none"
@@ -466,6 +475,15 @@ function ExerciseStep({
         <div className={result?.status === 'incorrect' ? 'anim-shake' : 'anim-pop'}>
           <p className="eyebrow mb-3 flex flex-wrap items-center gap-2">
             <span>{exercise.topic}</span>
+            {lesson.mode === 'day' && lesson.day !== undefined && exercise.day !== lesson.day && (
+              <span
+                className="badge"
+                style={{ background: 'var(--color-brand-soft)', color: 'var(--color-brand)' }}
+                title={`Bu soru ${exercise.day}. Günden karma tekrar olarak geldi — hata değil.`}
+              >
+                🔁 {exercise.day}. Gün tekrarı
+              </span>
+            )}
             {exercise.difficulty === 'hard' && (
               <span
                 className="badge"

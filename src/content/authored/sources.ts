@@ -153,6 +153,52 @@ export function sourcesForDay(day: number): LearningSourceVideo[] {
   return DAY_4_6_SOURCE_INVENTORY.filter((source) => source.day === day);
 }
 
+// Private lesson — handwritten notes
+export interface PrivateHandwrittenSource {
+  id: string;
+  track: 'private';
+  day: number;
+  type: 'handwritten-note';
+  imageIndex: number;
+  description: string;
+  topics: string[];
+}
+
+export const PRIVATE_DAY1_SOURCES: PrivateHandwrittenSource[] = [
+  { id: 'private-note-1', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 1, description: 'E-Mail-Adresse, Telefonnummer, Formular (Vorname, Nachname, Wohnort, Beruf, Familienstand, Kinder, Heimat)', topics: ['private.day1.kontakt-formular'] },
+  { id: 'private-note-2', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 2, description: 'Wie ist dein/Ihr Name, Vorstellung, Wie alt bist du/Sie, Woher kommst du, Wo wohnst du, Beruf', topics: ['private.day1.vorstellung', 'private.day1.alter-herkunft-wohnort', 'private.day1.beruf'] },
+  { id: 'private-note-3', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 3, description: 'sagen, sprechen çekimleri, Welche Sprachen sprichst du?, Selamlaşma / Vedalaşma ve nezaket', topics: ['private.day1.fiil-cekimi', 'private.day1.diller-selamlasma'] },
+  { id: 'private-note-4', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 4, description: 'kommen, essen çekimleri (düzenli/düzensiz)', topics: ['private.day1.fiil-cekimi'] },
+  { id: 'private-note-5', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 5, description: 'kochen çekimi', topics: ['private.day1.fiil-cekimi'] },
+  { id: 'private-note-6', track: 'private', day: 1, type: 'handwritten-note', imageIndex: 6, description: 'Sich vorstellen, Wie heißt du, Wer bist du, sein/heißen çekimleri', topics: ['private.day1.vorstellung', 'private.day1.fiil-cekimi'] },
+];
+
+export const PRIVATE_DAY1_SOURCE_TOPICS: Array<{ track: 'private'; day: number; topicId: string; sourceIds: string[] }> = [
+  { track: 'private', day: 1, topicId: 'private.day1.vorstellung', sourceIds: ['private-note-2', 'private-note-6'] },
+  { track: 'private', day: 1, topicId: 'private.day1.alter-herkunft-wohnort', sourceIds: ['private-note-2'] },
+  { track: 'private', day: 1, topicId: 'private.day1.beruf', sourceIds: ['private-note-2'] },
+  { track: 'private', day: 1, topicId: 'private.day1.kontakt-formular', sourceIds: ['private-note-1'] },
+  { track: 'private', day: 1, topicId: 'private.day1.fiil-cekimi', sourceIds: ['private-note-3', 'private-note-4', 'private-note-5', 'private-note-6'] },
+  { track: 'private', day: 1, topicId: 'private.day1.diller-selamlasma', sourceIds: ['private-note-3'] },
+];
+
+export const PRIVATE_DAY2_SOURCES: PrivateHandwrittenSource[] = [
+  { id: 'private-note-7', track: 'private', day: 2, type: 'handwritten-note', imageIndex: 1, description: 'kochen çekimi (tekrar); der Artikel: bestimmter/unbestimmter Artikel, der/die/das/die(Pl.) → ein/eine → kein/keine → mein zinciri (Vater, Mutter, Kind, Blumen)', topics: ['private.day2.artikel-belirli-belirsiz', 'private.day2.artikel-kein-mein-dein'] },
+  { id: 'private-note-8', track: 'private', day: 2, type: 'handwritten-note', imageIndex: 2, description: 'Was ist das?, dein/mein ile soru-cevap (Buch, Schokolade), das/die/der → ein → kein → dein → mein zinciri (Handy, Tante, Wasser, Kinder), Cümle Yapısı (Präsens), machen, gehen + zur Schule/Arbeit', topics: ['private.day2.artikel-belirli-belirsiz', 'private.day2.artikel-kein-mein-dein', 'private.day2.cumle-olumlu'] },
+  { id: 'private-note-9', track: 'private', day: 2, type: 'handwritten-note', imageIndex: 3, description: 'zaman ifadeleriyle olumlu cümleler (jeden Morgen, um ... Uhr, jeden Tag, zur Arbeit), nicht/kein seçimi, olumsuz cümle örnekleri (arbeiten, gehen, kommen, haben + kein/keine)', topics: ['private.day2.cumle-olumlu', 'private.day2.cumle-olumsuz'] },
+  { id: 'private-note-10', track: 'private', day: 2, type: 'handwritten-note', imageIndex: 4, description: 'Frage: Fiil+Özne+Nesne soru yapısı, evet/hayır soru-cevap örnekleri (Schule, Kaffee, Sport, Buch), haben ve sein çekim tabloları (tekrar + haben tam tablo)', topics: ['private.day2.sorular', 'private.day2.haben-sein'] },
+];
+
+export const PRIVATE_DAY2_SOURCE_TOPICS: Array<{ track: 'private'; day: number; topicId: string; sourceIds: string[] }> = [
+  { track: 'private', day: 2, topicId: 'private.day2.artikel-belirli-belirsiz', sourceIds: ['private-note-7', 'private-note-8'] },
+  { track: 'private', day: 2, topicId: 'private.day2.artikel-kein-mein-dein', sourceIds: ['private-note-7', 'private-note-8'] },
+  { track: 'private', day: 2, topicId: 'private.day2.cumle-olumlu', sourceIds: ['private-note-8', 'private-note-9'] },
+  { track: 'private', day: 2, topicId: 'private.day2.cumle-olumsuz', sourceIds: ['private-note-9'] },
+  { track: 'private', day: 2, topicId: 'private.day2.sorular', sourceIds: ['private-note-10'] },
+  { track: 'private', day: 2, topicId: 'private.day2.haben-sein', sourceIds: ['private-note-10'] },
+  { track: 'private', day: 2, topicId: 'private.day2.gunluk-hayat', sourceIds: ['private-note-8', 'private-note-9', 'private-note-10'] },
+];
+
 /** Kaynak envanterinin özet ve kavram kaydıyla kopmadığını senkron sırasında doğrular. */
 export function validateSourceMappings({
   sources,

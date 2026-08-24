@@ -12,6 +12,7 @@ import {
   type Exercise,
   type LessonNote,
   type SummaryDay,
+  type LearningTrack,
 } from '../types.ts';
 import {
   EXERCISE_PATCHES,
@@ -48,22 +49,17 @@ type AnchoredConcept = Concept & { anchor: string };
 
 /**
  * Yazilmis icerik katmani.
- *
- * Verilmezse ayristirici yalnizca kasa icerigini uretir (mevcut testler bu
- * yolu kullanir). Verildiginde havuz genisletilir ve kapsam dogrulamasi calisir.
  */
 export interface AuthoredLayer {
   concepts: AnchoredConcept[];
   exercises: AuthoredExercise[];
   vaultTags: Record<string, VaultTag>;
-  /** Gün 4–6 gibi videoya dayalı genişletmelerin denetlenebilir kaynak kayıtları. */
   sources?: LearningSourceVideo[];
   sourceTopics?: SourceTopicMapping[];
 }
 
 export interface ParseOptions {
   authored?: AuthoredLayer;
-  /** Konu ID → UI'da gosterilecek baslik. */
   topicTitles?: Record<string, string>;
 }
 
@@ -75,12 +71,20 @@ function topicOf(section: RawSection): string {
   return section.title.split(/\s+[—–-]\s+/)[0].trim() || section.title;
 }
 
-/** "Artikel — der, die, das" → "Artikel"; "Kişi Zamirleri (Personalpronomen)" → "Kişi Zamirleri" */
 function cleanTopic(title: string): string {
   return title
     .split(/\s+[—–]\s+/)[0]
     .replace(/\s*\([^)]*\)\s*$/, '')
     .trim();
+}
+
+function inferTrack(fileName: string): LearningTrack {
+  const normalized = fileName.normalize('NFC').toLocaleLowerCase('tr');
+  return normalized.includes('özel') ? 'private' : 'normal';
+}
+
+function dayKey(track: LearningTrack, day: number): string {
+  return `${track}:${day}`;
 }
 
 /** ID'ler cevaptan bagimsizdir: cevap anahtari duzeltilse bile ilerleme korunur. */
@@ -92,7 +96,7 @@ function exerciseId(draft: DraftExercise, naturalKey: string): string {
 export function parseContent(files: SourceFile[], options: ParseOptions = {}): ContentBundle {
   const warnings: ContentWarning[] = [];
   const exercises: Exercise[] = [];
-  const days = new Map<number, Day>();
+  const days = new Map<string, Day>();
   const usedOverrides = new Set<string>();
   const authored = options.authored;
   const vaultTags = authored?.vaultTags ?? {};
@@ -101,10 +105,7 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
   const exerciseFiles = files.filter((file) => file.role === 'exercises');
   const summaryFiles = files.filter((file) => file.role === 'summary');
 
-  // 1) Ozet dosyasindan gunluk tekrar notlari, konu basliklari ve Ozetler bolumu.
-  // Yalnizca gun konu basliklarini turetmek icin; pakete YAZILMAZ
-  // (`Özetler` bolumu ayni icerigi yapili halde tasiyor).
-  const notesByDay = new Map<number, LessonNote[]>();
+  const notesByDay = new Map<string, LessonNote[]>();
   const summaries: SummaryDay[] = [];
   const missingTopicIds: string[] = [];
 
@@ -112,22 +113,23 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
   for (const concept of authored?.concepts ?? []) {
     conceptsByTopic.set(concept.topicId, [...(conceptsByTopic.get(concept.topicId) ?? []), concept.id]);
   }
-  // Kontrol listesi / "Kendine Sor" maddelerini konulara dagitmak icin anahtarlar.
   const attributionKeys = attributionKeywords(
     [...topicTitles].map(([id, title]) => ({ id, title })),
     authored?.concepts ?? [],
   );
 
   for (const file of summaryFiles) {
+    const track = inferTrack(file.name);
     const document = parseDocument(file.name, file.markdown);
     for (const rawDay of document.days) {
       const notes = rawDay.sections
         .map(sectionToNote)
         .filter((note): note is NonNullable<typeof note> => note !== null);
-      notesByDay.set(rawDay.day, [...(notesByDay.get(rawDay.day) ?? []), ...notes]);
+      const key = dayKey(track, rawDay.day);
+      notesByDay.set(key, [...(notesByDay.get(key) ?? []), ...notes]);
     }
     if (authored) {
-      const built = buildSummaries(document.days, file.markdown, attributionKeys, conceptsByTopic);
+      const built = buildSummaries(document.days, file.markdown, attributionKeys, conceptsByTopic, track);
       summaries.push(...built.days);
       missingTopicIds.push(...built.missingTopicIds);
     }
@@ -135,6 +137,7 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
 
   // 2) Alistirma dosyalarindan alistirmalar.
   for (const file of exerciseFiles) {
+    const track = inferTrack(file.name);
     const document = parseDocument(file.name, file.markdown);
     if (!document.days.length) {
       warnings.push({
@@ -201,21 +204,20 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
         }
 
         for (const draft of drafts) {
-          const naturalKey = `${key}/${draft.itemKey}`;
-          const patch = EXERCISE_PATCHES[naturalKey];
+          const trackAwareKey = track === 'private' ? `private/${key}/${draft.itemKey}` : `${key}/${draft.itemKey}`;
+          const patch = EXERCISE_PATCHES[trackAwareKey] ?? EXERCISE_PATCHES[`${key}/${draft.itemKey}`];
           if (patch) {
-            usedOverrides.add(naturalKey);
+            usedOverrides.add(trackAwareKey in EXERCISE_PATCHES ? trackAwareKey : `${key}/${draft.itemKey}`);
             const { reason: _reason, ...fields } = patch;
             Object.assign(draft, fields);
           }
 
-          refineDraft(draft, naturalKey);
+          refineDraft(draft, trackAwareKey);
 
-          // ID imzasi ustveriden BAGIMSIZDIR (naturalKey + tip + soru + yonerge),
-          // bu yuzden etiketleme mevcut ilerlemeyi bozmaz.
-          const id = exerciseId(draft, naturalKey);
+          const id = exerciseId(draft, trackAwareKey);
 
-          const tag = vaultTags[naturalKey];
+          const vaultNaturalKey = `${key}/${draft.itemKey}`;
+          const tag = vaultTags[vaultNaturalKey] ?? vaultTags[trackAwareKey];
           if (tag) {
             draft.difficulty = tag.difficulty;
             draft.skill = tag.skill;
@@ -228,7 +230,7 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
               level: 'warn',
               code: 'untagged-vault-exercise',
               message: `Kasa alıştırması etiketlenmemiş (kavram/zorluk yok).`,
-              ref: naturalKey,
+              ref: trackAwareKey,
             });
           }
 
@@ -238,19 +240,22 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
             section: section.title,
             sectionNumber: section.number,
             itemKey: draft.itemKey,
-            naturalKey,
+            naturalKey: trackAwareKey,
           });
+          (exercise as Exercise & { track?: LearningTrack }).track = track;
           dayExercises.push(attachPronunciation(exercise, tag?.pronounce));
         }
       }
 
       exercises.push(...dayExercises);
-      const existing = days.get(rawDay.day);
+      const dk = dayKey(track, rawDay.day);
+      const existing = days.get(dk);
       const ids = dayExercises.map((exercise) => exercise.id);
       if (existing) existing.exerciseIds.push(...ids);
       else
-        days.set(rawDay.day, {
+        days.set(dk, {
           day: rawDay.day,
+          track,
           topics: [],
           exerciseIds: ids,
           estimatedMinutes: 0,
@@ -262,15 +267,19 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
 
   // 3) Yazilmis alistirmalari havuza ekle.
   for (const item of authored?.exercises ?? []) {
+    const track: LearningTrack = (item.track as LearningTrack) ?? 'normal';
     const exercise = buildAuthoredExercise(item);
+    (exercise as Exercise & { track?: LearningTrack }).track = track;
     exercise.topic = topicTitles.get(item.topicId) ?? item.topicId;
     exercises.push(exercise);
 
-    const existing = days.get(item.day);
+    const dk = dayKey(track, item.day);
+    const existing = days.get(dk);
     if (existing) existing.exerciseIds.push(exercise.id);
     else
-      days.set(item.day, {
+      days.set(dk, {
         day: item.day,
+        track,
         topics: [],
         exerciseIds: [exercise.id],
         estimatedMinutes: 0,
@@ -280,28 +289,27 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
   }
 
   // 4) Gunleri tamamla.
-  // İlk üç gün, ekrandaki üç bağımsız set için burada tek merkezden bölünür.
-  // Kasa ve yazılmış alıştırmaların ikisi de aynı set kurallarına dahildir.
   exercises.splice(0, exercises.length, ...assignExerciseSets(exercises));
 
   for (const day of days.values()) {
-    // Konu basliklari yalnizca ana bolumlerden (H2) gelir; "Dikkat" gibi alt notlar sayilmaz.
-    const noteTopics = (notesByDay.get(day.day) ?? [])
+    const noteKey = dayKey((day.track as import('../types.ts').LearningTrack | undefined) ?? 'normal', day.day);
+    const noteTopics = (notesByDay.get(noteKey) ?? [])
       .filter((note) => note.level === 2)
       .map((note) => cleanTopic(note.title))
       .filter(Boolean);
     day.topics = noteTopics.length ? noteTopics : (FALLBACK_DAY_TOPICS[day.day] ?? []);
 
-    const dayExercises = exercises.filter((exercise) => exercise.day === day.day);
+    const dayExercises = exercises.filter((exercise) => exercise.day === day.day && (exercise.track ?? 'normal') === day.track);
     day.estimatedMinutes = Math.max(
       3,
       Math.round(dayExercises.reduce((total, item) => total + (item.estimatedSeconds ?? 25), 0) / 60),
     );
-    day.conceptIds = [...new Set((authored?.concepts ?? []).filter((c) => c.day === day.day).map((c) => c.id))];
-    day.summaryTopicIds = summaries.find((entry) => entry.day === day.day)?.topics.map((t) => t.id) ?? [];
+    day.conceptIds = [...new Set((authored?.concepts ?? []).filter((c) => c.day === day.day && ((c.track as LearningTrack | undefined) ?? 'normal') === day.track).map((c) => c.id))];
+    const summaryForDay = summaries.find((entry) => entry.day === day.day && ((entry.track as import('../types.ts').LearningTrack | undefined) ?? 'normal') === ((day.track as import('../types.ts').LearningTrack | undefined) ?? 'normal'));
+    day.summaryTopicIds = summaryForDay?.topics.map((t) => t.id) ?? [];
   }
 
-  // 5) Kullanilmayan override uyarilari (kaynak degistiginde fark edilsin).
+  // 5) Kullanilmayan override uyarilari
   for (const key of [
     ...Object.keys(SECTION_OVERRIDES),
     ...Object.keys(EXERCISE_PATCHES),
@@ -347,19 +355,15 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
     schemaVersion: CONTENT_SCHEMA_VERSION,
     contentVersion: contentVersionOf(exercises),
     sourceFiles: files.map((file) => file.name),
-    days: [...days.values()].sort((a, b) => a.day - b.day),
+    days: [...days.values()].sort((a, b) => ((a.track ?? 'normal') === (b.track ?? 'normal') ? a.day - b.day : (a.track ?? 'normal').localeCompare(b.track ?? 'normal'))),
     exercises,
     concepts: authored?.concepts.map(({ anchor: _anchor, ...rest }) => rest) ?? [],
-    summaries: summaries.sort((a, b) => a.day - b.day),
+    summaries: summaries.sort((a, b) => ((a.track ?? 'normal') === (b.track ?? 'normal') ? a.day - b.day : (a.track ?? 'normal').localeCompare(b.track ?? 'normal'))),
     warnings,
     coverage,
   };
 }
 
-/**
- * Havuzun icerik parmak izi. Alistirma eklenip cikarildiginda degisir.
- * Ilerlemeyi GECERSIZ KILMAZ — yalnizca gozlemlenebilirlik icindir.
- */
 function contentVersionOf(exercises: Exercise[]): string {
   const signature = exercises
     .map((exercise) => [
@@ -373,7 +377,6 @@ function contentVersionOf(exercises: Exercise[]): string {
   return `${CONTENT_SCHEMA_VERSION}.${stableHash(signature)}`;
 }
 
-/** Kelime-bankası değerlendirmesiyle aynı, yazım farklarına toleranslı anahtar. */
 function normalizeWordBankToken(text: string): string {
   return text
     .trim()
@@ -411,7 +414,7 @@ export function validateExercises(exercises: Exercise[]): ContentWarning[] {
       });
     }
 
-    const promptKey = `${exercise.day}|${exercise.type}|${exercise.instruction}|${exercise.prompt ?? ''}`;
+    const promptKey = `${exercise.track ?? 'normal'}|${exercise.day}|${exercise.type}|${exercise.instruction}|${exercise.prompt ?? ''}`;
     const previous = seenPrompts.get(promptKey);
     if (previous) {
       warnings.push({

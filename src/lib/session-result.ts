@@ -6,8 +6,9 @@
  * yalnizca bu nesneden beslenir; hicbiri rota state'inden yeniden kurulmaz.
  */
 
-import type { Exercise } from '../content/types';
+import type { Exercise, LearningTrack } from '../content/types';
 import type { ActiveLesson, AttemptResult, LessonResult, MistakeRecord, UserProgress } from './storage';
+import { getTrackDays, setTrackDays } from './storage';
 import { normalizeStreak } from './streak';
 import { addDailyActivity } from './daily-goal';
 
@@ -30,7 +31,7 @@ function emptyTally(): ExerciseTally {
 
 /** Oturum kimligi: ayni gun+mod tekrar calisilsa bile benzersizdir. */
 export function sessionIdFor(lesson: ActiveLesson): string {
-  return [lesson.mode, lesson.day ?? '-', lesson.sessionMode ?? '-', lesson.topicId ?? '-', lesson.exerciseSetId ?? '-', lesson.startedAt].join(
+  return [lesson.mode, lesson.track ?? '-', lesson.day ?? '-', lesson.sessionMode ?? '-', lesson.topicId ?? '-', lesson.exerciseSetId ?? '-', lesson.startedAt].join(
     '|',
   );
 }
@@ -101,6 +102,7 @@ export function buildLessonResult(lesson: ActiveLesson, context: ResultContext):
 
   return {
     sessionId: sessionIdFor(lesson),
+    track: lesson.track,
     day: lesson.day,
     mode: lesson.mode,
     sessionMode: lesson.sessionMode,
@@ -256,19 +258,22 @@ export function completeLesson(
   now = new Date(),
 ): UserProgress {
   const day = result.day;
-  const days = { ...progress.days };
+  const track: LearningTrack = (result.track as LearningTrack | undefined) ?? (result.day !== undefined ? 'normal' : 'normal');
+  // maintain legacy days + track-aware storage
+  let nextProgress = progress;
   if (day !== undefined && result.mode === 'day') {
-    const entry = days[day] ?? { day, sessionsCompleted: 0 };
-    days[day] = {
+    const trackDays = { ...getTrackDays(progress, track) };
+    const entry = trackDays[day] ?? { day, sessionsCompleted: 0 };
+    trackDays[day] = {
       ...entry,
       sessionsCompleted: entry.sessionsCompleted + 1,
       lastCompletedAt: now.toISOString(),
     };
+    nextProgress = setTrackDays(progress, track, trackDays);
   }
   return {
-    ...progress,
+    ...nextProgress,
     activeLesson: undefined,
-    days,
     lastResult: result,
     daily: addDailyActivity(progress.daily, { sessions: 1 }, now),
   };

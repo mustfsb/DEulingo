@@ -52,12 +52,12 @@ describe('Gün 4–6 çalışma başlangıcı', () => {
         const button = view.find(label);
         expect(button?.disabled, `${day}/${mode}`).toBe(false);
         act(() => button!.click());
-        expect(view.routes).toEqual([{ name: 'lesson', day, mode }]);
+        expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day, mode }]);
         act(() => view.root.unmount());
       }
       const view = mount(day);
       act(() => view.find('Özeti Oku')!.click());
-      expect(view.routes).toEqual([{ name: 'summary', day }]);
+      expect(view.routes).toEqual([{ name: 'summary', track: 'normal', day }]);
       act(() => view.root.unmount());
     }
   });
@@ -73,6 +73,7 @@ describe('Gün 1–3 alıştırma seti seçimi', () => {
         act(() => button!.click());
         expect(view.routes.at(-1)).toEqual({
           name: 'lesson',
+          track: 'normal',
           day,
           mode: 'set',
           exerciseSetId: `set-${set}`,

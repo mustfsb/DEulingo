@@ -38,6 +38,8 @@ export function assignExerciseSets(exercises: Exercise[]): Exercise[] {
 
   for (const exercise of exercises) {
     if (!SET_DAYS.has(exercise.day)) continue;
+    const track = (exercise.track as string | undefined) ?? 'normal';
+    if (track !== 'normal') continue;
     // Aynı konu ve zorluk aynı setin üstüne yığılmasın.
     const key = `${exercise.day}|${exercise.topicId}|${exercise.difficulty}`;
     buckets.set(key, [...(buckets.get(key) ?? []), exercise]);

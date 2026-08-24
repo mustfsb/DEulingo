@@ -104,6 +104,7 @@ export function buildAuthoredExercise(item: AuthoredExercise): Exercise {
   const exercise: Exercise = {
     id: item.id,
     day: item.day,
+    track: (item.track as import('../types.ts').LearningTrack) ?? 'normal',
     topic: item.topicId,
     type: item.type,
     instruction: draft.instruction,

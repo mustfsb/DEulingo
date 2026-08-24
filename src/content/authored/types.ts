@@ -24,6 +24,7 @@ export interface AuthoredExercise {
   /** Elle verilen kararli ID: `d2-konj-du-kommst-fill`. */
   id: string;
   day: number;
+  track?: import('../types.ts').LearningTrack;
   /** Bagli oldugu ozet konusu (`SUMMARY_TOPICS` ID'si). */
   topicId: string;
   type: ExerciseType;
@@ -40,6 +41,7 @@ export interface AuthoredExercise {
   acceptedAnswers?: string[];
   options?: string[];
   pairs?: ExercisePair[];
+  words?: string[];
   wordBank?: WordBankTranslation;
   audio?: ExerciseAudio;
   requirements?: string[];

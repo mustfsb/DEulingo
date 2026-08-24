@@ -17,7 +17,7 @@ const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as C
 
 describe('ozet ayristirma', () => {
   it('ilk alti gunun ozetini sirayla uretir', () => {
-    expect(bundle.summaries.map((day) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(bundle.summaries.filter((d: any) => (d.track ?? 'normal') === 'normal').map((day) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it('4–6. günlerin her biri kayıtlı ana konularını ve aktif hatırlamayı taşır', () => {
@@ -119,7 +119,7 @@ describe('"Kendine Sor" cevaplari', () => {
   });
 
   it('her gunun sorulari cevaplariyla eslesir', () => {
-    for (const day of bundle.summaries) {
+    for (const day of bundle.summaries.filter((d: any) => (d.track ?? 'normal') === 'normal')) {
       const recall = day.topics.flatMap((topic) => topic.recallQuestions);
       expect(recall.length, `${day.day}. Gün`).toBeGreaterThan(0);
       for (const item of recall) {

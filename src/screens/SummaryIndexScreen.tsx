@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { searchSummaries, summaries } from '../lib/content';
+import { searchSummaries, summariesForTrack } from '../lib/content';
+import { topicTrack } from '../lib/content';
+import type { LearningTrack } from '../content/types';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
@@ -12,17 +14,26 @@ export function SummaryIndexScreen({
 }) {
   const { progress } = api;
   const [query, setQuery] = useState('');
+  const [track, setTrack] = useState<LearningTrack>('normal');
   const hits = useMemo(() => searchSummaries(query), [query]);
   const bookmarks = progress.settings.bookmarks ?? [];
   const read = progress.settings.readSummaries ?? {};
 
+  const filteredSummaries = useMemo(() => summariesForTrack(track), [track]);
+
   const bookmarked = useMemo(
     () =>
-      summaries.flatMap((day) =>
-        day.topics.filter((topic) => bookmarks.includes(topic.id)).map((topic) => ({ day: day.day, topic })),
+      filteredSummaries.flatMap((day) =>
+        day.topics.filter((topic) => bookmarks.includes(topic.id)).map((topic) => ({ day: day.day, track: day.track, topic })),
       ),
-    [bookmarks],
+    [bookmarks, filteredSummaries],
   );
+
+  const displayedHits = useMemo(() => {
+    if (query.trim().length < 2) return [];
+    // hits includes track info via topicTrack map
+    return hits;
+  }, [hits, query]);
 
   return (
     <main className="mx-auto w-full max-w-[760px] px-5 pb-24 pt-6 sm:pt-10">
@@ -33,6 +44,23 @@ export function SummaryIndexScreen({
           Alıştırmalarda karşına çıkan her konunun açıklaması burada.
         </p>
       </header>
+
+      <div className="mt-6 flex rounded-xl border-2 border-line overflow-hidden w-fit">
+        {(['normal','private'] as LearningTrack[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            className="px-4 py-2 text-sm font-bold"
+            style={{
+              background: track === t ? 'var(--color-brand)' : 'transparent',
+              color: track === t ? '#fff' : 'var(--color-ink-soft)',
+            }}
+            onClick={() => setTrack(t)}
+          >
+            {t === 'normal' ? 'Normal' : '🎓 Özel Ders'}
+          </button>
+        ))}
+      </div>
 
       <div className="mt-7">
         <label className="eyebrow" htmlFor="ozet-arama">
@@ -50,24 +78,27 @@ export function SummaryIndexScreen({
 
       {query.trim().length >= 2 && (
         <section className="mt-5" aria-live="polite">
-          {hits.length === 0 ? (
+          {displayedHits.length === 0 ? (
             <p className="text-ink-soft">Sonuç bulunamadı.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {hits.map((hit) => (
-                <li key={`${hit.day}-${hit.topic.id}`}>
-                  <button
-                    type="button"
-                    className="card w-full p-4 text-left"
-                    onClick={() => navigate({ name: 'summary', day: hit.day, topicId: hit.topic.id })}
-                  >
-                    <p className="eyebrow">
-                      {hit.day}. Gün · {hit.topic.title}
-                    </p>
-                    <p className="mt-1 text-[0.95rem] leading-snug text-ink-soft">{hit.excerpt}</p>
-                  </button>
-                </li>
-              ))}
+              {displayedHits.map((hit) => {
+                const hitTrack: LearningTrack = topicTrack.get(hit.topic.id) ?? 'normal';
+                return (
+                  <li key={`${hitTrack}-${hit.day}-${hit.topic.id}`}>
+                    <button
+                      type="button"
+                      className="card w-full p-4 text-left"
+                      onClick={() => navigate({ name: 'summary', track: (hitTrack ?? 'normal'), day: hit.day, topicId: hit.topic.id })}
+                    >
+                      <p className="eyebrow">
+                        {hitTrack === 'private' ? '🎓 Özel Ders · ' : ''}{hit.day}. Gün · {hit.topic.title}
+                      </p>
+                      <p className="mt-1 text-[0.95rem] leading-snug text-ink-soft">{hit.excerpt}</p>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -77,13 +108,13 @@ export function SummaryIndexScreen({
         <section className="mt-9">
           <h2 className="eyebrow mb-3">Kaydedilenler</h2>
           <ul className="flex flex-wrap gap-2">
-            {bookmarked.map(({ day, topic }) => (
+            {bookmarked.map(({ day, track: t, topic }) => (
               <li key={topic.id}>
                 <button
                   type="button"
                   className="badge"
                   style={{ background: 'var(--color-signal)', color: '#14141b' }}
-                  onClick={() => navigate({ name: 'summary', day, topicId: topic.id })}
+                  onClick={() => navigate({ name: 'summary', track: ((t ?? 'normal') as LearningTrack), day, topicId: topic.id })}
                 >
                   ⭐ {topic.title}
                 </button>
@@ -94,21 +125,21 @@ export function SummaryIndexScreen({
       )}
 
       <section className="mt-9">
-        <h2 className="eyebrow mb-4">Günler</h2>
+        <h2 className="eyebrow mb-4">Günler {track === 'private' ? '— Özel Ders' : ''}</h2>
         <ul className="flex flex-col gap-4">
-          {summaries.map((day) => {
+          {filteredSummaries.map((day) => {
             const readCount = day.topics.filter((topic) => read[topic.id]).length;
             const allRead = readCount === day.topics.length && day.topics.length > 0;
 
             return (
-              <li key={day.day}>
+              <li key={`${day.track}-${day.day}`}>
                 <button
                   type="button"
                   className="day-tile w-full"
-                  onClick={() => navigate({ name: 'summary', day: day.day })}
+                  onClick={() => navigate({ name: 'summary', track: (day.track ?? 'normal'), day: day.day })}
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-2xl">{day.title}</h3>
+                    <h3 className="text-2xl">{day.track === 'private' ? `🎓 ${day.title}` : day.title}</h3>
                     <span className="text-sm font-bold text-ink-faint">
                       ~{day.estimatedReadingMinutes} dk
                     </span>
@@ -153,6 +184,9 @@ export function SummaryIndexScreen({
             );
           })}
         </ul>
+        {filteredSummaries.length === 0 && (
+          <p className="mt-4 text-ink-soft">Bu izlek için henüz özet yok.</p>
+        )}
       </section>
     </main>
   );

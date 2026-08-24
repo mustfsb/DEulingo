@@ -607,6 +607,16 @@
     color: var(--color-ink-soft);
     cursor: pointer;
     transition: background-color 120ms ease;
+    flex: none;
+  }
+
+  .nav-scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-link:hover {

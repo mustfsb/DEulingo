@@ -16,8 +16,8 @@ import { createEmptyProgress, type UserProgress } from './storage';
 import { recordAttempt } from './progress';
 
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
-const forDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day);
-const beforeDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day < day);
+const forDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && ((exercise as any).track ?? 'normal') === 'normal');
+const beforeDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day < day && ((exercise as any).track ?? 'normal') === 'normal');
 
 function answer(
   progress: UserProgress,

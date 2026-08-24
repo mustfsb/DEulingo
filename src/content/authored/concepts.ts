@@ -26,6 +26,7 @@ import type { Concept } from '../types.ts';
 export interface SummaryTopicDef {
   id: string;
   day: number;
+  track?: import('../types.ts').LearningTrack;
   /** UI'da gosterilen kisa ad. */
   title: string;
   /** Kaynak Ozet dosyasindaki H2 basliklariyla eslestirme adaylari. */
@@ -36,12 +37,14 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
   {
     id: 'day1.alfabe-telaffuz',
     day: 1,
+    track: 'normal',
     title: 'Alfabe ve Telaffuz',
     matchTitles: ['Alfabe ve Telaffuz'],
   },
   {
     id: 'day1.selamlasma-vedalasma',
     day: 1,
+    track: 'normal',
     title: 'Selamlaşma ve Vedalaşma',
     matchTitles: ['Selamlaşma ve Vedalaşma'],
   },
@@ -141,6 +144,99 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: 'Uyruklar ve Diller',
     matchTitles: ['Uyruklar ve Diller'],
   },
+  // Private track — 1. Gün
+  {
+    id: 'private.day1.vorstellung',
+    day: 1,
+    track: 'private',
+    title: 'Kendini Tanıtma',
+    matchTitles: ['Kendini Tanıtma — İsim ve Tanışma', 'Kendini Tanıtma'],
+  },
+  {
+    id: 'private.day1.alter-herkunft-wohnort',
+    day: 1,
+    track: 'private',
+    title: 'Yaş, Köken ve İkamet',
+    matchTitles: ['Yaş, Köken ve İkamet'],
+  },
+  {
+    id: 'private.day1.beruf',
+    day: 1,
+    track: 'private',
+    title: 'Meslek',
+    matchTitles: ['Meslek — Ne İş Yapıyorsun?', 'Meslek'],
+  },
+  {
+    id: 'private.day1.kontakt-formular',
+    day: 1,
+    track: 'private',
+    title: 'İletişim ve Form',
+    matchTitles: ['İletişim ve Form — Kişisel Bilgiler', 'İletişim ve Form'],
+  },
+  {
+    id: 'private.day1.fiil-cekimi',
+    day: 1,
+    track: 'private',
+    title: 'Fiil Çekimi',
+    matchTitles: ['Fiil Çekimi — Düzenli ve Düzensiz Fiiller', 'Fiil Çekimi'],
+  },
+  {
+    id: 'private.day1.diller-selamlasma',
+    day: 1,
+    track: 'private',
+    title: 'Diller ve Selamlaşma',
+    matchTitles: ['Diller ve Selamlaşma'],
+  },
+  // Private track — 2. Gün
+  {
+    id: 'private.day2.artikel-belirli-belirsiz',
+    day: 2,
+    track: 'private',
+    title: 'Belirli ve Belirsiz Artikeller',
+    matchTitles: ['Belirli ve Belirsiz Artikeller — der, die, das, die (Pl.) / ein, eine', 'Belirli ve Belirsiz Artikeller'],
+  },
+  {
+    id: 'private.day2.artikel-kein-mein-dein',
+    day: 2,
+    track: 'private',
+    title: 'Olumsuz ve İyelik Artikelleri',
+    matchTitles: ['Olumsuz ve İyelik Artikelleri — kein, dein, mein', 'Olumsuz ve İyelik Artikelleri'],
+  },
+  {
+    id: 'private.day2.cumle-olumlu',
+    day: 2,
+    track: 'private',
+    title: 'Olumlu Cümle Kurma',
+    matchTitles: ['Olumlu Cümle Kurma'],
+  },
+  {
+    id: 'private.day2.cumle-olumsuz',
+    day: 2,
+    track: 'private',
+    title: 'Olumsuz Cümle Kurma',
+    matchTitles: ['Olumsuz Cümle Kurma — nicht / kein', 'Olumsuz Cümle Kurma'],
+  },
+  {
+    id: 'private.day2.sorular',
+    day: 2,
+    track: 'private',
+    title: 'Evet/Hayır Soruları',
+    matchTitles: ['Evet/Hayır Soruları'],
+  },
+  {
+    id: 'private.day2.haben-sein',
+    day: 2,
+    track: 'private',
+    title: 'haben ve sein — Kısa Tekrar',
+    matchTitles: ['haben ve sein — Kısa Tekrar'],
+  },
+  {
+    id: 'private.day2.gunluk-hayat',
+    day: 2,
+    track: 'private',
+    title: 'Günlük Hayat Cümleleri',
+    matchTitles: ['Günlük Hayat Cümleleri'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -155,9 +251,18 @@ interface ConceptSpec {
 }
 
 function build(day: number, specs: ConceptSpec[]): Array<Concept & { anchor: string }> {
+  return buildTrack(day, 'normal', specs);
+}
+
+function buildTrack(
+  day: number,
+  track: import('../types.ts').LearningTrack,
+  specs: ConceptSpec[],
+): Array<Concept & { anchor: string }> {
   return specs.map((spec) => ({
     id: spec.id,
     day,
+    track: track === 'normal' ? undefined : track,
     topicId: spec.topicId,
     label: spec.label,
     anchor: spec.anchor,
@@ -183,6 +288,19 @@ const D5_BEL = 'day5.belirli-belirsiz';
 const D6_FII = 'day6.onemli-fiiller';
 const D6_ULK = 'day6.ulkeler-aus';
 const D6_UYR = 'day6.uyruklar-diller';
+const PV = 'private.day1.vorstellung';
+const PA = 'private.day1.alter-herkunft-wohnort';
+const PB = 'private.day1.beruf';
+const PK = 'private.day1.kontakt-formular';
+const PF = 'private.day1.fiil-cekimi';
+const PD = 'private.day1.diller-selamlasma';
+const P2_ART = 'private.day2.artikel-belirli-belirsiz';
+const P2_KMD = 'private.day2.artikel-kein-mein-dein';
+const P2_POS = 'private.day2.cumle-olumlu';
+const P2_NEG = 'private.day2.cumle-olumsuz';
+const P2_SOR = 'private.day2.sorular';
+const P2_HS = 'private.day2.haben-sein';
+const P2_GUN = 'private.day2.gunluk-hayat';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -339,6 +457,88 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'day6.uyruk.erkek-kadin', topicId: D6_UYR, label: 'uyrukta erkek / kadın biçimi', anchor: 'Türke / Türkin', prerequisites: ['day6.uyruk.ich-bin'] },
     { id: 'day6.diller.ich-spreche', topicId: D6_UYR, label: 'Ich spreche Deutsch / Türkisch', anchor: 'Ich spreche ...', prerequisites: ['day6.sprechen.anlam-cekim'] },
     { id: 'day6.yazim.ulke-dil-buyuk', topicId: D6_UYR, label: 'ülke ve dil adları büyük harfle yazılır', anchor: 'Ülke adları ve dil adları isim olduğu için büyük harfle', prerequisites: ['day2.artikel.isim-buyuk-harf'] },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 1. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(1, 'private', [
+    { id: 'private.day1.vorstellung.wie-heisst-du', topicId: PV, label: 'Wie heißt du? / Wie heißen Sie?', anchor: 'Wie heißt du?' },
+    { id: 'private.day1.vorstellung.wie-ist-dein-name', topicId: PV, label: 'Wie ist dein Name? / Ihr Name?', anchor: 'Wie ist dein Name?' },
+    { id: 'private.day1.vorstellung.wer-bist-du', topicId: PV, label: 'Wer bist du? / Wer sind Sie?', anchor: 'Wer bist du?' },
+    { id: 'private.day1.vorstellung.freut-mich', topicId: PV, label: 'Freut mich! / Ich habe mich gefreut!', anchor: 'Freut mich!' },
+    { id: 'private.day1.vorstellung.sich-vorstellen', topicId: PV, label: 'Kannst du dich bitte vorstellen?', anchor: 'Kannst du dich bitte vorstellen?' },
+
+    { id: 'private.day1.alter.wie-alt', topicId: PA, label: 'Wie alt bist du? / Wie alt sind Sie?', anchor: 'Wie alt bist du?' },
+    { id: 'private.day1.herkunft.woher', topicId: PA, label: 'Woher kommst du? / Woher kommen Sie?', anchor: 'Woher kommst du?' },
+    { id: 'private.day1.wohnort.wo-wohnst', topicId: PA, label: 'Wo wohnst du? / Wo wohnen Sie?', anchor: 'Wo wohnst du?' },
+    { id: 'private.day1.herkunft.aus', topicId: PA, label: 'Ich komme aus ...', anchor: 'Ich komme aus Sakarya' },
+    { id: 'private.day1.wohnort.in', topicId: PA, label: 'Ich wohne in ...', anchor: 'Ich wohne in Sakarya' },
+
+    { id: 'private.day1.beruf.frage', topicId: PB, label: 'Was machst du beruflich?', anchor: 'Was machst du beruflich?' },
+    { id: 'private.day1.beruf.antwort-bin', topicId: PB, label: 'Ich bin Student.', anchor: 'Ich bin Student' },
+    { id: 'private.day1.beruf.als-bei', topicId: PB, label: 'Ich arbeite als / bei ...', anchor: 'Ich arbeite als Lehrerin' },
+
+    { id: 'private.day1.kontakt.email', topicId: PK, label: 'Wie ist deine E-Mail-Adresse?', anchor: 'Wie ist deine E-Mail-Adresse?' },
+    { id: 'private.day1.kontakt.punkt', topicId: PK, label: 'Punkt (e-posta nokta)', anchor: 'Punkt' },
+    { id: 'private.day1.kontakt.telefon', topicId: PK, label: 'Wie ist deine Telefonnummer?', anchor: 'Wie ist deine Telefonnummer?' },
+    { id: 'private.day1.kontakt.antwort-telefon', topicId: PK, label: 'Meine Telefonnummer ist ...', anchor: 'Meine Telefonnummer ist' },
+    { id: 'private.day1.formular.felder', topicId: PK, label: 'Form alanları: Vorname, Nachname...', anchor: 'Vorname' },
+    { id: 'private.day1.formular.familienstand', topicId: PK, label: 'Familienstand: ledig', anchor: 'Familienstand' },
+    { id: 'private.day1.formular.kinder', topicId: PK, label: 'Ich habe keine Kinder.', anchor: 'Ich habe keine Kinder' },
+    { id: 'private.day1.formular.heimat', topicId: PK, label: 'Heimat: Türkei', anchor: 'Heimat' },
+
+    { id: 'private.day1.verben.sein', topicId: PF, label: 'sein: ich bin, du bist ...', anchor: 'ich bin' },
+    { id: 'private.day1.verben.heissen', topicId: PF, label: 'heißen: ich heiße ...', anchor: 'ich heiße' },
+    { id: 'private.day1.verben.kommen', topicId: PF, label: 'kommen: ich komme ...', anchor: 'ich komme' },
+    { id: 'private.day1.verben.essen', topicId: PF, label: 'essen: ich esse, du isst', anchor: 'ich esse' },
+    { id: 'private.day1.verben.sagen', topicId: PF, label: 'sagen: ich sage ...', anchor: 'ich sage' },
+    { id: 'private.day1.verben.sprechen', topicId: PF, label: 'sprechen: ich spreche, du sprichst', anchor: 'ich spreche' },
+    { id: 'private.day1.verben.kochen', topicId: PF, label: 'kochen: ich koche ...', anchor: 'ich koche' },
+
+    { id: 'private.day1.sprachen.welche', topicId: PD, label: 'Welche Sprachen sprichst du?', anchor: 'Welche Sprachen sprichst du?' },
+    { id: 'private.day1.sprachen.antwort', topicId: PD, label: 'Ich spreche Englisch, Türkisch ...', anchor: 'Ich spreche Englisch' },
+    { id: 'private.day1.selamlasma.hallo', topicId: PD, label: 'Hallo!, Guten Morgen ...', anchor: 'Hallo!' },
+    { id: 'private.day1.nezaket.entschuldigung', topicId: PD, label: 'Entschuldigung, Danke schön, Bitte', anchor: 'Entschuldigung' },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 2. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(2, 'private', [
+    { id: 'private.day2.artikel.der-die-das-die-pl', topicId: P2_ART, label: 'der / die / das / die (Pl.)', anchor: 'der, die, das, die (Pl.)' },
+    { id: 'private.day2.artikel.ein-eine', topicId: P2_ART, label: 'ein / eine', anchor: 'ein, eine' },
+    { id: 'private.day2.artikel.cogul-belirsiz-yok', topicId: P2_ART, label: 'çoğulda belirsiz artikel yok', anchor: 'çoğulda belirsiz artikel yoktur' },
+    { id: 'private.day2.artikel.was-ist-das', topicId: P2_ART, label: 'Was ist das? → Das ist ein/eine ...', anchor: 'Was ist das?' },
+    { id: 'private.day2.wortschatz.nesneler', topicId: P2_ART, label: '2. Gün nesne kelimeleri (der Vater, die Mutter ...)', anchor: 'der Vater' },
+
+    { id: 'private.day2.artikel.kein-keine', topicId: P2_KMD, label: 'kein / keine', anchor: 'kein, keine', prerequisites: ['private.day2.artikel.ein-eine'] },
+    { id: 'private.day2.artikel.mein-meine', topicId: P2_KMD, label: 'mein / meine', anchor: 'mein, meine', prerequisites: ['private.day2.artikel.kein-keine'] },
+    { id: 'private.day2.artikel.dein-deine', topicId: P2_KMD, label: 'dein / deine', anchor: 'dein, deine', prerequisites: ['private.day2.artikel.kein-keine'] },
+    { id: 'private.day2.artikel.zincir', topicId: P2_KMD, label: 'artikel zinciri: der/das → ein → kein → dein → mein', anchor: 'Artikel zinciri', prerequisites: ['private.day2.artikel.ein-eine', 'private.day2.artikel.kein-keine', 'private.day2.artikel.mein-meine', 'private.day2.artikel.dein-deine'] },
+    { id: 'private.day2.artikel.wie-ist-dein', topicId: P2_KMD, label: 'Wie ist dein/deine ...?', anchor: 'Wie ist dein', prerequisites: ['private.day2.artikel.dein-deine', 'private.day2.artikel.mein-meine'] },
+
+    { id: 'private.day2.cumle.olumlu-yapi', topicId: P2_POS, label: 'Özne + Fiil + Nesne + diğer bilgiler', anchor: 'Özne + Fiil + Nesne' },
+    { id: 'private.day2.verben.machen', topicId: P2_POS, label: 'machen = yapmak', anchor: 'machen = yapmak', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.verben.gehen-zur', topicId: P2_POS, label: 'gehen + zur Schule / zur Arbeit', anchor: 'zur Schule', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.zaman.jeden-tag-heute', topicId: P2_POS, label: 'jeden Tag, heute, jeden Morgen, um ... Uhr', anchor: 'jeden Morgen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+
+    { id: 'private.day2.olumsuzluk.nicht', topicId: P2_NEG, label: 'nicht: fiili/diğer bilgiyi olumsuzlar', anchor: 'fiili ya da zaman/yer bilgisini olumsuzlar', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.olumsuzluk.kein-haben', topicId: P2_NEG, label: 'kein/keine: haben + nesneyi olumsuzlar', anchor: 'haben + isim kalıbında nesneyi olumsuzlamak', prerequisites: ['private.day2.artikel.kein-keine', 'private.day1.formular.kinder'] },
+    { id: 'private.day2.olumsuzluk.donusum', topicId: P2_NEG, label: 'olumlu → olumsuz cümle dönüşümü', anchor: 'Sie geht heute nicht zur Schule', prerequisites: ['private.day2.olumsuzluk.nicht', 'private.day2.olumsuzluk.kein-haben'] },
+
+    { id: 'private.day2.sorular.evet-hayir-yapi', topicId: P2_SOR, label: 'Fiil + Özne + ... ? yapısı', anchor: 'Fiil + Özne + Nesne + (diğer bilgiler) ?', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.sorular.donusum', topicId: P2_SOR, label: 'cümle → soru dönüşümü', anchor: 'Cümle → Soru dönüşümü', prerequisites: ['private.day2.sorular.evet-hayir-yapi'] },
+    { id: 'private.day2.sorular.ja-nein-cevap', topicId: P2_SOR, label: 'Ja / Nein tam cümle cevap', anchor: 'Soru + Ja/Nein cevabı', prerequisites: ['private.day2.sorular.donusum', 'private.day2.olumsuzluk.kein-haben'] },
+
+    { id: 'private.day2.haben.tablo', topicId: P2_HS, label: 'haben çekimi: habe, hast, hat, haben, habt', anchor: 'haben — sahip olmak' },
+    { id: 'private.day2.sein.tekrar', topicId: P2_HS, label: 'sein çekimi tekrar', anchor: 'sein çekimi (tekrar)', prerequisites: ['private.day1.verben.sein'] },
+    { id: 'private.day2.haben.kein-ile', topicId: P2_HS, label: 'haben + kein/keine kalıbı (pekiştirme)', anchor: 'Ich habe kein Geld', prerequisites: ['private.day2.haben.tablo', 'private.day2.artikel.kein-keine'] },
+
+    { id: 'private.day2.gunluk.okul-is', topicId: P2_GUN, label: 'zur Schule / zur Arbeit gitmek', anchor: 'Okul ve iş', prerequisites: ['private.day2.verben.gehen-zur'] },
+    { id: 'private.day2.gunluk.kahve-spor', topicId: P2_GUN, label: 'Kaffee trinken, Sport machen', anchor: 'Kaffee trinken, Sport machen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.gunluk.kitap-okuma', topicId: P2_GUN, label: 'ein Buch lesen', anchor: 'ein Buch lesen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
+    { id: 'private.day2.gunluk.mini-dialog', topicId: P2_GUN, label: 'mini diyalog: soru + Ja/Nein cevap', anchor: 'Mini diyalog', prerequisites: ['private.day2.sorular.ja-nein-cevap'] },
   ]),
 ];
 

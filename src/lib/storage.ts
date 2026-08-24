@@ -14,11 +14,12 @@ import {
   type GermanVoiceId,
   type SpeechSpeed,
 } from './audio/tts';
-import type { ExerciseSetId } from '../content/types';
+import type { ExerciseSetId, LearningTrack } from '../content/types';
+import { isLearningTrack } from '../content/types';
 
 export const STORAGE_KEY = 'almanca-alistirma:progress';
 export const BACKUP_KEY = 'almanca-alistirma:progress-backup';
-export const STORAGE_VERSION = 7;
+export const STORAGE_VERSION = 8;
 
 export type AttemptResult = 'correct' | 'minor-typo' | 'incorrect' | 'skipped' | 'self-assessed';
 
@@ -44,6 +45,7 @@ export interface ExerciseAttempt {
 export interface ExerciseProgress {
   exerciseId: string;
   day: number;
+  track?: import('../content/types').LearningTrack;
   attempts: ExerciseAttempt[];
   firstSeenAt: string;
   lastSeenAt: string;
@@ -55,6 +57,7 @@ export interface ExerciseProgress {
 
 export interface MistakeRecord {
   exerciseId: string;
+  track?: import('../content/types').LearningTrack;
   day: number;
   topic: string;
   prompt: string;
@@ -103,6 +106,8 @@ export interface StreakState {
 export interface ActiveLesson {
   /** Gunluk ders icin gun numarasi; tekrar oturumunda `review` / `mistakes`. */
   mode: LessonKind;
+  /** Hangi izlek — normal ve private birbirinden bağımsızdır. */
+  track?: LearningTrack;
   day?: number;
   queue: SessionPresentation[];
   index: number;
@@ -139,6 +144,7 @@ export type SessionMode = 'normal' | 'full' | 'quick' | 'challenge' | 'topic' | 
  */
 export interface LessonResult {
   sessionId: string;
+  track?: LearningTrack;
   day?: number;
   mode: LessonKind;
   sessionMode?: SessionMode;
@@ -225,6 +231,8 @@ export interface UserProgress {
   createdAt: string;
   updatedAt: string;
   days: Record<number, DayProgressState>;
+  /** v8: izlek bazlı gün sayaçları — tracks.normal.days === days (senkron tutulur). */
+  tracks?: Record<LearningTrack, { days: Record<number, DayProgressState> }>;
   exercises: Record<string, ExerciseProgress>;
   mistakes: Record<string, MistakeRecord>;
   activeLesson?: ActiveLesson;
@@ -238,13 +246,34 @@ export interface UserProgress {
   daily: Record<string, DailyActivity>;
 }
 
+export function getTrackDays(progress: UserProgress, track: LearningTrack): Record<number, DayProgressState> {
+  if (progress.tracks && progress.tracks[track]) return progress.tracks[track].days;
+  if (track === 'normal') return progress.days;
+  return {};
+}
+
+export function setTrackDays(progress: UserProgress, track: LearningTrack, days: Record<number, DayProgressState>): UserProgress {
+  const tracks = progress.tracks ?? { normal: { days: progress.days }, private: { days: {} } };
+  const nextTracks: Record<LearningTrack, { days: Record<number, DayProgressState> }> = {
+    normal: { days: track === 'normal' ? days : tracks.normal.days },
+    private: { days: track === 'private' ? days : tracks.private.days },
+  };
+  // keep legacy days in sync for normal
+  return { ...progress, days: nextTracks.normal.days, tracks: nextTracks };
+}
+
 export function createEmptyProgress(): UserProgress {
   const now = new Date().toISOString();
+  const tracks: Record<LearningTrack, { days: Record<number, DayProgressState> }> = {
+    normal: { days: {} },
+    private: { days: {} },
+  };
   return {
     version: STORAGE_VERSION,
     createdAt: now,
     updatedAt: now,
-    days: {},
+    days: tracks.normal.days,
+    tracks,
     exercises: {},
     mistakes: {},
     daily: {},
@@ -383,6 +412,63 @@ function migrateV5ToV6(progress: UserProgress): UserProgress {
  * tasinir. Yarim kalan ders varsa seri durumu sifirdan baslar (kutlama esikleri
  * yeniden kazanilabilir), sorular ve cevaplar korunur.
  */
+function migrateV7ToV8(progress: UserProgress): UserProgress {
+  const rawTracks = (progress as unknown as { tracks?: unknown }).tracks;
+  if (rawTracks && typeof rawTracks === 'object' && 'normal' in (rawTracks as object) && 'private' in (rawTracks as object)) {
+    const tracks = rawTracks as Record<LearningTrack, { days: Record<number, DayProgressState> }>;
+    const rawNormal = tracks.normal?.days;
+    const rawPrivate = tracks.private?.days;
+    const normalDays = rawNormal && Object.keys(rawNormal).length ? rawNormal : (progress.days ?? {});
+    const privateDays = rawPrivate && Object.keys(rawPrivate).length ? rawPrivate : {};
+    // ensure valid shape
+    const validatedTracks: Record<LearningTrack, { days: Record<number, DayProgressState> }> = {
+      normal: { days: typeof normalDays === 'object' && normalDays !== null ? normalDays : {} },
+      private: { days: typeof privateDays === 'object' && privateDays !== null ? privateDays : {} },
+    };
+    return {
+      ...progress,
+      version: 8,
+      days: validatedTracks.normal.days,
+      tracks: validatedTracks,
+      activeLesson: progress.activeLesson
+        ? {
+            ...progress.activeLesson,
+            track: isLearningTrack((progress.activeLesson as unknown as { track?: unknown }).track) ? (progress.activeLesson as unknown as { track: LearningTrack }).track : undefined,
+          }
+        : undefined,
+      lastResult: progress.lastResult
+        ? {
+            ...progress.lastResult,
+            track: isLearningTrack((progress.lastResult as unknown as { track?: unknown }).track) ? (progress.lastResult as unknown as { track: LearningTrack }).track : undefined,
+          }
+        : undefined,
+    };
+  }
+  const days = isDailyMap(progress.days) ? (progress.days as Record<number, DayProgressState>) : {};
+  // also handle legacy days that might be Record<string,?>
+  return {
+    ...progress,
+    version: 8,
+    days,
+    tracks: {
+      normal: { days },
+      private: { days: {} },
+    },
+    activeLesson: progress.activeLesson
+      ? {
+          ...progress.activeLesson,
+          track: isLearningTrack((progress.activeLesson as unknown as { track?: unknown }).track) ? (progress.activeLesson as unknown as { track: LearningTrack }).track : undefined,
+        }
+      : undefined,
+    lastResult: progress.lastResult
+      ? {
+          ...progress.lastResult,
+          track: isLearningTrack((progress.lastResult as unknown as { track?: unknown }).track) ? (progress.lastResult as unknown as { track: LearningTrack }).track : undefined,
+        }
+      : undefined,
+  };
+}
+
 function migrateV6ToV7(progress: UserProgress): UserProgress {
   const daily = isDailyMap(progress.daily) ? progress.daily : {};
   return {
@@ -446,6 +532,7 @@ export function migrate(raw: unknown): UserProgress | null {
   if (progress.version === 4) progress = migrateV4ToV5(progress);
   if (progress.version === 5) progress = migrateV5ToV6(progress);
   if (progress.version === 6) progress = migrateV6ToV7(progress);
+  if (progress.version === 7) progress = migrateV7ToV8(progress);
 
   if (!isGermanVoiceId(progress.settings.speechVoice)) {
     progress = {
@@ -460,6 +547,15 @@ export function migrate(raw: unknown): UserProgress | null {
     };
   }
 
+  // ensure tracks exists even if file was manually edited
+  if (!progress.tracks || !progress.tracks.normal || !progress.tracks.private) {
+    const normalDays = progress.tracks?.normal?.days ?? progress.days ?? {};
+    const privateDays = progress.tracks?.private?.days ?? {};
+    progress = { ...progress, days: normalDays, tracks: { normal: { days: normalDays }, private: { days: privateDays } } };
+  } else {
+    // keep legacy days in sync
+    progress = { ...progress, days: progress.tracks.normal.days };
+  }
   progress.version = STORAGE_VERSION;
   return progress;
 }

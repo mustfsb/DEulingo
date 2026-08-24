@@ -1,9 +1,11 @@
-import { allExercises, days, exercisesForDay } from '../lib/content';
+import { useState } from 'react';
+import { daysForTrack, exercisesForDay, allExercisesForTrack } from '../lib/content';
 import { getDayStats, getGlobalSummary } from '../lib/progress';
 import { goalProgress } from '../lib/daily-goal';
 import { recommendNext } from '../lib/recommendation';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
+import type { LearningTrack } from '../content/types';
 
 const GREETINGS: Array<{ until: number; de: string; tr: string }> = [
   { until: 9, de: 'Guten Morgen', tr: 'Günaydın' },
@@ -20,20 +22,19 @@ function greeting(date = new Date()) {
 export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (route: Route) => void }) {
   const { progress } = api;
   const hello = greeting();
+  const [track, setTrack] = useState<LearningTrack>('normal');
 
-  // Tek bir "sıradaki adım": yarım oturum, zayıf gün, hatalar ya da yeni gün.
+  const trackDays = daysForTrack(track);
   const recommendation = recommendNext({
     progress,
-    dayNumbers: days.map((day) => day.day),
-    exercisesForDay,
-  });
+    dayNumbers: trackDays.map((day) => day.day),
+    exercisesForDay: (day: number) => exercisesForDay(day, track),
+    track,
+  } as any);
   const goal = goalProgress(progress);
-  const overall = getGlobalSummary(
-    progress,
-    allExercises,
-    days.map((day) => day.day),
-  );
-  const openMistakes = Object.keys(progress.mistakes).length;
+  const overallNormal = getGlobalSummary(progress, allExercisesForTrack('normal'), daysForTrack('normal').map((d) => d.day), 'normal');
+  const overallPrivate = getGlobalSummary(progress, allExercisesForTrack('private'), daysForTrack('private').map((d) => d.day), 'private');
+  const totalMistakes = Object.keys(progress.mistakes).length;
 
   return (
     <main className="mx-auto w-full max-w-[820px] px-5 pb-24 pt-6 sm:pt-10">
@@ -67,7 +68,6 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
         </span>
       </button>
 
-      {/* Günlük hedef: yalnızca bugünün sayacı — seri baskısı yok (§38). */}
       <section className="card mt-4 px-5 py-4" aria-label="Bugünkü hedef">
         <div className="flex items-baseline justify-between gap-3">
           <p className="eyebrow">Bugünkü hedef</p>
@@ -94,30 +94,52 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
       <section className="mt-8">
         <h2 className="eyebrow mb-3">Son durum</h2>
         <div className="flex flex-wrap gap-3">
-          <MiniStat label="Gün" value={String(days.length)} />
+          <MiniStat label="Normal gün" value={String(daysForTrack('normal').length)} />
+          <MiniStat label="Özel Ders gün" value={String(daysForTrack('private').length)} />
           <MiniStat
-            label="Genel doğruluk"
-            value={overall.accuracy === null ? '—' : `%${Math.round(overall.accuracy * 100)}`}
+            label="Normal doğruluk"
+            value={overallNormal.accuracy === null ? '—' : `%${Math.round(overallNormal.accuracy * 100)}`}
           />
-          <MiniStat label="Aktif hata" value={String(openMistakes)} />
+          <MiniStat
+            label="Özel Ders doğruluk"
+            value={overallPrivate.accuracy === null ? '—' : `%${Math.round(overallPrivate.accuracy * 100)}`}
+          />
+          <MiniStat label="Aktif hata" value={String(totalMistakes)} />
         </div>
       </section>
 
       <section className="mt-10">
-        <h2 className="eyebrow mb-5">Öğrenme yolu</h2>
+        <div className="flex items-center gap-2 mb-5">
+          <h2 className="eyebrow">Öğrenme yolu</h2>
+          <div className="ml-auto flex rounded-xl border-2 border-line overflow-hidden">
+            {(['normal','private'] as LearningTrack[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className="px-3 py-1.5 text-sm font-bold"
+                style={{
+                  background: track === t ? 'var(--color-brand)' : 'transparent',
+                  color: track === t ? '#fff' : 'var(--color-ink-soft)',
+                }}
+                onClick={() => setTrack(t)}
+              >
+                {t === 'normal' ? 'Normal Çalışma' : '🎓 Özel Ders'}
+              </button>
+            ))}
+          </div>
+        </div>
         <ol className="relative flex flex-col gap-4">
-          {days.map((day, index) => {
-            const exercises = exercisesForDay(day.day);
+          {trackDays.map((day, index) => {
+            const exercises = exercisesForDay(day.day, track);
             const stats = getDayStats(progress, day.day, exercises);
             const accuracy = stats.accuracy === null ? null : Math.round(stats.accuracy * 100);
 
             return (
-              <li key={day.day} className="relative flex gap-4">
-                {/* Umlaut omurgasi: ciftli noktalardan olusan dikey ray */}
+              <li key={`${track}-${day.day}`} className="relative flex gap-4">
                 <div className="relative flex w-10 flex-none justify-center">
                   <div
                     className="spine absolute inset-y-0 w-[9px]"
-                    style={{ opacity: index === days.length - 1 ? 0.35 : 1 }}
+                    style={{ opacity: index === trackDays.length - 1 ? 0.35 : 1 }}
                     aria-hidden="true"
                   />
                   <span
@@ -142,10 +164,10 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
                   className="day-tile flex-1"
                   data-state={stats.state}
                   data-review={stats.reviewRecommended}
-                  onClick={() => navigate({ name: 'day', day: day.day })}
+                  onClick={() => navigate({ name: 'day', track, day: day.day })}
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-2xl">{day.day}. Gün</h3>
+                    <h3 className="text-2xl">{track === 'private' ? `🎓 ${day.day}. Gün` : `${day.day}. Gün`}</h3>
                     <span className="text-sm font-bold text-ink-faint">
                       {stats.completed}/{stats.total} alıştırma
                     </span>
@@ -217,6 +239,9 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
             );
           })}
         </ol>
+        {track === 'private' && trackDays.length === 0 && (
+          <p className="mt-4 text-ink-soft">Özel Ders için henüz içerik yok.</p>
+        )}
       </section>
     </main>
   );

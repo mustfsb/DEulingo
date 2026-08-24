@@ -5,3 +5,4 @@ generated/*.wav
 .piper
 .DS_Store
 *.log
+.playwright-mcp

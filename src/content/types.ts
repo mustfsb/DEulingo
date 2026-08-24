@@ -19,6 +19,13 @@ export type ExerciseType =
 /** İlk üç günün birbirini tekrar etmeyen, seçilebilir alıştırma paketleri. */
 export type ExerciseSetId = 'set-1' | 'set-2' | 'set-3';
 
+/** Öğrenme izleği — normal ve özel ders birbirinden bağımsızdır. */
+export type LearningTrack = 'normal' | 'private';
+
+export function isLearningTrack(value: unknown): value is LearningTrack {
+  return value === 'normal' || value === 'private';
+}
+
 export interface ExerciseValidation {
   /** Buyuk/kucuk harf farki cevabin bir parcasiysa true (orn. `Sie` vs `sie`). */
   caseSensitive?: boolean;
@@ -34,6 +41,13 @@ export interface ExerciseValidation {
    * gibi ayni sesi anlatan yazimlar ayni cevap sayilir.
    */
   approximation?: boolean;
+  /**
+   * Almanca özel harfler (ß, ä, ö, ü) icin klavye toleransi.
+   * Aktifken bu harflerin ASCII karsiliklari (ss, ae, oe, ue) ve
+   * ikinci bir harflik yazim farki tam dogru sayilir.
+   * Kullanici Almanca klavye olmadan da dogru cevap verebilir.
+   */
+  keyboardTolerance?: boolean;
 }
 
 export interface ExercisePair {
@@ -113,6 +127,8 @@ export interface Concept {
   label: string;
   /** Bu kavramdan once ogrenilmis olmasi gereken kavramlar. */
   prerequisites?: string[];
+  /** Hangi izleğe ait — yoksa normal varsayılır (geriye dönük uyum). */
+  track?: LearningTrack;
 }
 
 export interface ExerciseSource {
@@ -128,6 +144,8 @@ export interface ExerciseSource {
 export interface Exercise {
   id: string;
   day: number;
+  /** Hangi izleğe ait — normal ve private izlekler ayrıdır. */
+  track?: LearningTrack;
   topic: string;
   type: ExerciseType;
 
@@ -210,6 +228,7 @@ export type NoteBlock =
 
 export interface Day {
   day: number;
+  track?: LearningTrack;
   /** Ozet dosyasindaki H2 basliklarindan turetilen ana konular. */
   topics: string[];
   exerciseIds: string[];
@@ -249,6 +268,7 @@ export interface SummaryTopic {
   /** Kararli ID; kaynak baslik yeniden yazilsa da degismez. */
   id: string;
   title: string;
+  track?: LearningTrack;
   /** Bu konunun ogrettigi kavramlar. */
   conceptIds: string[];
   /** Aciklama govdesi (paragraf / liste / tablo / kod / callout). */
@@ -269,6 +289,7 @@ export interface SummaryTopic {
 
 export interface SummaryDay {
   day: number;
+  track?: LearningTrack;
   title: string;
   estimatedReadingMinutes: number;
   topics: SummaryTopic[];
@@ -303,6 +324,7 @@ export interface ContentBundle {
 /** Bir kavramin ne kadar pratigi oldugunu gosterir; bundle'dan turetilir. */
 export interface ConceptCoverage {
   day: number;
+  track?: LearningTrack;
   topicId: string;
   conceptId: string;
   label: string;

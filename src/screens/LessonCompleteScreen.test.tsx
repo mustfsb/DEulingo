@@ -182,7 +182,7 @@ describe('ders sonucu eylemleri', () => {
     expect(lesson?.index).toBe(0);
     expect(lesson?.queue.map((item) => item.exerciseId)).toEqual([day2[1].id, day2[2].id]);
     expect(lesson?.sourceSessionId).toBe(result.sessionId);
-    expect(view.routes).toEqual([{ name: 'mistake-review', day: 2 }]);
+    expect(view.routes).toEqual([{ name: 'mistake-review', track: 'normal', day: 2 }]);
     act(() => view.root.unmount());
   });
 
@@ -195,7 +195,7 @@ describe('ders sonucu eylemleri', () => {
     );
 
     view.click('Zor Sorular');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'challenge' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 2, mode: 'challenge' }]);
     act(() => view.root.unmount());
   });
 
@@ -219,7 +219,7 @@ describe('ders sonucu eylemleri', () => {
 
       expect(view.find(`${nextDay}. Güne Geç`)).toBeDefined();
       view.click(`${nextDay}. Güne Geç`);
-      expect(view.routes).toEqual([{ name: 'day', day: nextDay }]);
+      expect(view.routes).toEqual([{ name: 'day', track: 'normal', day: nextDay }]);
       act(() => view.root.unmount());
     }
   });
@@ -229,7 +229,7 @@ describe('ders sonucu eylemleri', () => {
 
     expect(view.find('2. Sete Geç')).toBeDefined();
     view.click('2. Sete Geç');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'set', exerciseSetId: 'set-2' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 2, mode: 'set', exerciseSetId: 'set-2' }]);
     act(() => view.root.unmount());
   });
 
@@ -244,7 +244,7 @@ describe('ders sonucu eylemleri', () => {
     expect(view.find('Güne Geç')).toBeUndefined();
     expect(view.find('Hızlı Tekrar')).toBeDefined();
     view.click('Hızlı Tekrar');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 6, mode: 'quick' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 6, mode: 'quick' }]);
     act(() => view.root.unmount());
   });
 

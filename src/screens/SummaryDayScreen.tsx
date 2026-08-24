@@ -3,28 +3,32 @@ import { Markup } from '../components/Markup';
 import { NoteBlockView } from '../components/NoteBlocks';
 import { AudioButton } from '../components/AudioButton';
 import { getSummary } from '../lib/content';
+import type { LearningTrack } from '../content/types';
 import { audioController } from '../lib/audio/playback';
 import type { GermanExample, RecallQuestion, SummaryTopic } from '../content/types';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
 export function SummaryDayScreen({
+  track = 'normal',
   day,
   topicId,
   api,
   navigate,
 }: {
+  track?: LearningTrack;
   day: number;
   topicId?: string;
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
-  const summary = getSummary(day);
+  const resolvedTrack: LearningTrack = track ?? 'normal';
+  const summary = getSummary(day, resolvedTrack);
   const { progress, update } = api;
   const showPronunciation = progress.settings.showPronunciation;
   const speechSpeed = progress.settings.speechSpeed;
   const speechVoice = progress.settings.speechVoice;
-  const audioContextId = `summary:${day}`;
+  const audioContextId = `summary:${resolvedTrack}:${day}`;
 
   // Özet sayfasından ayrılınca elle başlatılmış telaffuz da sayfada kalmaz.
   useEffect(() => {
@@ -114,8 +118,8 @@ export function SummaryDayScreen({
         </button>
 
         <header className="mt-4 anim-pop">
-          <p className="eyebrow">{summary.topics.map((topic) => topic.title).join(' • ')}</p>
-          <h1 className="mt-1 text-[2.75rem] sm:text-6xl">{summary.title}</h1>
+          <p className="eyebrow">{resolvedTrack === 'private' ? '🎓 Özel Ders • ' : ''}{summary.topics.map((topic) => topic.title).join(' • ')}</p>
+          <h1 className="mt-1 text-[2.75rem] sm:text-6xl">{summary.title}{resolvedTrack === 'private' ? ' — Özel Ders' : ''}</h1>
           <p className="mt-3 text-ink-soft">~{summary.estimatedReadingMinutes} dakikalık okuma</p>
         </header>
 
@@ -131,7 +135,7 @@ export function SummaryDayScreen({
               speechVoice={speechVoice}
               audioContextId={audioContextId}
               onToggleBookmark={() => toggleBookmark(topic.id)}
-              onPractice={() => navigate({ name: 'lesson', day, mode: 'topic', topicId: topic.id })}
+              onPractice={() => navigate({ name: 'lesson', track: resolvedTrack, day, mode: 'topic', topicId: topic.id })}
             />
           ))}
         </div>

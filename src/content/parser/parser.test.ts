@@ -219,7 +219,7 @@ describe('gercek Obsidian icerigi', () => {
   const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8'));
 
   it('ilk alti gunu uretir', () => {
-    expect(bundle.days.map((day: { day: number }) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(bundle.days.filter((d: any) => (d.track ?? 'normal') === 'normal').map((day: { day: number }) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it('hicbir icerik hatasi yok', () => {

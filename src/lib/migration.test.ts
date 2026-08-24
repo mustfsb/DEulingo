@@ -104,7 +104,7 @@ describe('v1 → guncel surum gocu', () => {
   it('gocu basariyla tamamlar ve surumu yukseltir', () => {
     expect(migrated).not.toBeNull();
     expect(migrated.version).toBe(STORAGE_VERSION);
-    expect(STORAGE_VERSION).toBe(7);
+    expect(STORAGE_VERSION).toBe(8);
   });
 
   it('v7 alanlarini bos ama kullanilabilir baslatir', () => {
@@ -125,7 +125,7 @@ describe('v1 → guncel surum gocu', () => {
   });
 
   it('gun ve istatistik verisini korur', () => {
-    expect(migrated.days[1].sessionsCompleted).toBe(2);
+    expect((migrated.tracks?.normal.days[1] ?? migrated.days[1]).sessionsCompleted).toBe(2);
     expect(migrated.stats.totalAttempts).toBe(2);
     expect(migrated.stats.studyDates).toEqual(['2026-08-14', '2026-08-15']);
     expect(migrated.createdAt).toBe('2026-08-10T09:00:00.000Z');

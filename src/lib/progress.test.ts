@@ -9,7 +9,14 @@ import {
   type SessionPresentation,
   type UserProgress,
 } from './storage';
-import { getDayStats, getTopicStats, recordAttempt, resetDayProgress, weaknessScore } from './progress';
+import {
+  correctKeyboardToleranceHistory,
+  getDayStats,
+  getTopicStats,
+  recordAttempt,
+  resetDayProgress,
+  weaknessScore,
+} from './progress';
 import { buildReviewQueue, MAX_RETRIES, scheduleRetry } from './lesson';
 
 function exercise(id: string, day = 1, topic = 'Fiil Çekimi'): Exercise {
@@ -250,5 +257,75 @@ describe('depolama semasi', () => {
   it('bozuk yedegi reddeder', () => {
     expect(parseImportedProgress('{sözde json').ok).toBe(false);
     expect(parseImportedProgress('{"foo":1}').ok).toBe(false);
+  });
+});
+
+describe('klavye toleransi geriye dönük düzeltme', () => {
+  /** keyboardTolerance:true ve Almanca özel harfli cevabi olan bir egzersiz. */
+  function keyboardExercise(id: string): Exercise {
+    return {
+      ...exercise(id, 1, 'Özel Ders'),
+      answer: 'heißt',
+      validation: { keyboardTolerance: true },
+    };
+  }
+
+  it('klavye yazimiyla yanlis sayilan denemeyi dogruya cevirir, hatayi temizler', () => {
+    const target = keyboardExercise('k1');
+    let progress = createEmptyProgress();
+    progress = recordAttempt(progress, target, 'heist', 'incorrect', {
+      status: 'incorrect',
+      expected: 'heißt',
+      normalizedInput: 'heist',
+    });
+    expect(progress.mistakes.k1).toBeDefined();
+    expect(progress.exercises.k1.incorrectCount).toBe(1);
+
+    const corrected = correctKeyboardToleranceHistory(progress, (id) =>
+      id === 'k1' ? keyboardExercise('k1') : undefined,
+    );
+
+    expect(corrected.mistakes.k1).toBeUndefined();
+    expect(corrected.exercises.k1.incorrectCount).toBe(0);
+    expect(corrected.exercises.k1.correctCount).toBe(1);
+    expect(corrected.exercises.k1.attempts[0].result).toBe('correct');
+  });
+
+  it('klavye toleransi olmayan egzersizlerde gercek yanlisi korur', () => {
+    const target = exercise('z');
+    let progress = createEmptyProgress();
+    progress = recordAttempt(progress, target, 'kommen', 'incorrect', {
+      status: 'incorrect',
+      expected: 'kommst',
+      normalizedInput: 'kommen',
+    });
+    const corrected = correctKeyboardToleranceHistory(progress, () => undefined);
+    expect(corrected.mistakes.z).toBeDefined();
+    expect(corrected.exercises.z.incorrectCount).toBe(1);
+  });
+
+  it('gun rozeti yalnizca ACIK hatalari sayar (Hatalarim ile tutarli)', () => {
+    const a = keyboardExercise('a');
+    const b = exercise('b');
+    let progress = createEmptyProgress();
+    progress = recordAttempt(progress, a, 'heist', 'incorrect', {
+      status: 'incorrect',
+      expected: 'heißt',
+      normalizedInput: 'heist',
+    });
+    progress = recordAttempt(progress, b, 'kommen', 'incorrect', {
+      status: 'incorrect',
+      expected: 'kommst',
+      normalizedInput: 'kommen',
+    });
+
+    // Duzeltme oncesi: ikisi de hata olarak gorunur.
+    expect(getDayStats(progress, 1, [a, b]).mistakeCount).toBe(2);
+
+    const corrected = correctKeyboardToleranceHistory(progress, (id) =>
+      id === 'a' ? keyboardExercise('a') : undefined,
+    );
+    // 'a' duzeltildi, 'b' gercek hata kaldi.
+    expect(getDayStats(corrected, 1, [a, b]).mistakeCount).toBe(1);
   });
 });

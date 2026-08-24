@@ -29,9 +29,10 @@ const SOURCES = /Bu Özeti Oluşturan/i;
 const WARNING_TITLE = /Dikkat/i;
 
 /** Konu basligini kayitli konu tanimiyla eslestirir. */
-function matchTopic(title: string): SummaryTopicDef | undefined {
+function matchTopic(title: string, track?: import('../types.ts').LearningTrack): SummaryTopicDef | undefined {
   const normalized = collapseSpaces(plain(title)).toLocaleLowerCase('tr');
-  return SUMMARY_TOPICS.find((topic) =>
+  const candidates = SUMMARY_TOPICS.filter((topic) => ((topic.track as import('../types.ts').LearningTrack | undefined) ?? 'normal') === (track ?? 'normal'));
+  return candidates.find((topic) =>
     topic.matchTitles.some((candidate) => collapseSpaces(plain(candidate)).toLocaleLowerCase('tr') === normalized),
   );
 }
@@ -214,6 +215,7 @@ export function buildSummaries(
   markdown: string,
   attributionKeys: Map<string, string[]>,
   conceptsByTopic: Map<string, string[]>,
+  track: import('../types.ts').LearningTrack = 'normal',
 ): SummaryParseResult {
   const recallAnswers = parseRecallAnswers(markdown);
   const days: SummaryDay[] = [];
@@ -238,7 +240,7 @@ export function buildSummaries(
       }
 
       if (section.level === 2) {
-        const def = matchTopic(section.title);
+        const def = matchTopic(section.title, track);
         if (!def) {
           current = undefined;
           continue;
@@ -248,6 +250,7 @@ export function buildSummaries(
         current = {
           id: def.id,
           title: def.title,
+          track,
           conceptIds: conceptsByTopic.get(def.id) ?? [],
           blocks: note?.blocks ?? [],
           warnings: [],
@@ -321,6 +324,7 @@ export function buildSummaries(
 
     days.push({
       day: rawDay.day,
+      track,
       title: `${rawDay.day}. Gün`,
       estimatedReadingMinutes: readingMinutes(topics),
       topics,
@@ -329,7 +333,7 @@ export function buildSummaries(
 
   return {
     days,
-    missingTopicIds: SUMMARY_TOPICS.filter((topic) => !found.has(topic.id)).map((topic) => topic.id),
+    missingTopicIds: SUMMARY_TOPICS.filter((topic) => ((topic.track as import('../types.ts').LearningTrack | undefined) ?? 'normal') === track && !found.has(topic.id)).map((topic) => topic.id),
   };
 }
 

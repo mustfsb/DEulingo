@@ -6,8 +6,8 @@ import { recordAttempt } from './progress';
 import { createEmptyProgress, type UserProgress } from './storage';
 
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
-const dayNumbers = bundle.days.map((day) => day.day);
-const exercisesForDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day);
+const dayNumbers = bundle.days.filter((d: any) => (d.track ?? 'normal') === 'normal').map((day) => day.day);
+const exercisesForDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && ((exercise as any).track ?? 'normal') === 'normal');
 
 function answerAll(
   progress: UserProgress,
@@ -23,7 +23,7 @@ describe('sonraki adim onerisi', () => {
   it('hicbir sey yapilmamissa ilk gunu onerir', () => {
     const recommendation = recommendNext({ progress: createEmptyProgress(), ...base });
     expect(recommendation.kind).toBe('next-day');
-    expect(recommendation.route).toEqual({ name: 'day', day: 1 });
+    expect(recommendation.route).toEqual({ name: 'day', track: 'normal', day: 1 });
   });
 
   it('yarim kalan oturum her seyin onune gecer', () => {
@@ -45,7 +45,7 @@ describe('sonraki adim onerisi', () => {
     };
     const recommendation = recommendNext({ progress, ...base });
     expect(recommendation.kind).toBe('resume');
-    expect(recommendation.route).toEqual({ name: 'lesson', day: 2, mode: 'full', topicId: undefined });
+    expect(recommendation.route).toEqual({ name: 'lesson', track: 'normal', day: 2, mode: 'full', topicId: undefined });
   });
 
   it('yarim kalan hata tekrarina dogru rotayla doner', () => {
@@ -61,14 +61,14 @@ describe('sonraki adim onerisi', () => {
         retries: {},
       },
     };
-    expect(recommendNext({ progress, ...base }).route).toEqual({ name: 'mistake-review', day: 2 });
+    expect(recommendNext({ progress, ...base }).route).toEqual({ name: 'mistake-review', track: 'normal', day: 2 });
   });
 
   it('dogrulugu dusuk kalan gunu hizli tekrara yonlendirir', () => {
     const progress = answerAll(createEmptyProgress(), exercisesForDay(1), 'incorrect');
     const recommendation = recommendNext({ progress, ...base });
     expect(recommendation.kind).toBe('weak-day');
-    expect(recommendation.route).toEqual({ name: 'lesson', day: 1, mode: 'quick' });
+    expect(recommendation.route).toEqual({ name: 'lesson', track: 'normal', day: 1, mode: 'quick' });
   });
 
   it('tum gunler tamamsa tazeleme tekrari onerir', () => {
