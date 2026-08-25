@@ -223,7 +223,7 @@ export class AudioController {
         try {
           this.abort = abort;
           this.currentState = 'speaking';
-          await speakWithWebSpeech(target, speed, abort.signal);
+          await speakWithWebSpeech(target, speed, abort.signal, voice);
           if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
           return;
         } catch (speechError) {
