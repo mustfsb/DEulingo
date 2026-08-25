@@ -208,7 +208,7 @@ export function validateSourceMappings({
 }: {
   sources: LearningSourceVideo[];
   mappings: SourceTopicMapping[];
-  concepts: Array<{ id: string; day: number; topicId: string }>;
+  concepts: Array<{ id: string; day: number; topicId: string; track?: import('../types.ts').LearningTrack }>;
   summaries: Array<{ day: number; topics: Array<{ id: string }> }>;
 }): Array<import('../types.ts').ContentWarning> {
   const warnings: Array<import('../types.ts').ContentWarning> = [];
@@ -259,7 +259,7 @@ export function validateSourceMappings({
       warnings.push({ level: 'error', code: 'source-video-unmapped', message: 'Kaynak video hiçbir özet konusuna bağlanmamış.', ref: source.id });
     }
   }
-  for (const concept of concepts.filter((item) => item.day >= 4 && item.day <= 6)) {
+  for (const concept of concepts.filter((item) => item.day >= 4 && item.day <= 6 && (item.track ?? 'normal') === 'normal')) {
     if (!mappedTopicIds.has(concept.topicId)) {
       warnings.push({ level: 'error', code: 'source-concept-unmapped', message: 'Yeni gün kavramının kaynak özet eşlemesi yok.', ref: concept.id });
     }

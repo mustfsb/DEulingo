@@ -237,6 +237,105 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: 'Günlük Hayat Cümleleri',
     matchTitles: ['Günlük Hayat Cümleleri'],
   },
+  // Private track — 3. Gün
+  {
+    id: 'private.day3.hedef',
+    day: 3,
+    track: 'private',
+    title: 'Bugünün Hedefi',
+    matchTitles: ['Bugünün Hedefi'],
+  },
+  {
+    id: 'private.day3.mogen-moechten-gern',
+    day: 3,
+    track: 'private',
+    title: 'Sevmek ve İstemek',
+    matchTitles: ['Sevmek ve İstemek — mögen, gern, möchten', 'Sevmek ve İstemek'],
+  },
+  {
+    id: 'private.day3.es-gibt',
+    day: 3,
+    track: 'private',
+    title: 'es gibt — Var / Yok',
+    matchTitles: ['es gibt — Var / Yok', 'es gibt'],
+  },
+  {
+    id: 'private.day3.yer-yon',
+    day: 3,
+    track: 'private',
+    title: 'Yer, Yön ve Küçük Ama Önemli Kelimeler',
+    matchTitles: ['Yer, Yön ve Küçük Ama Önemli Kelimeler'],
+  },
+  {
+    id: 'private.day3.ayrilabilen-fiiller',
+    day: 3,
+    track: 'private',
+    title: 'Ayrılabilen Fiiller',
+    matchTitles: ['Ayrılabilen Fiiller'],
+  },
+  {
+    id: 'private.day3.refleksif',
+    day: 3,
+    track: 'private',
+    title: 'Refleksif Fiiller',
+    matchTitles: ['Refleksif Fiiller'],
+  },
+  {
+    id: 'private.day3.sifat-ekleri',
+    day: 3,
+    track: 'private',
+    title: 'Sıfatlar ve Ekler',
+    matchTitles: ['Sıfatlar ve Ekler'],
+  },
+  {
+    id: 'private.day3.iyelik',
+    day: 3,
+    track: 'private',
+    title: 'İyelik Yapıları',
+    matchTitles: ['İyelik Yapıları — mein, dein, unser, ihr', 'İyelik Yapıları'],
+  },
+  {
+    id: 'private.day3.miktar-cogul',
+    day: 3,
+    track: 'private',
+    title: 'Sayılar, Miktarlar ve Çoğullar',
+    matchTitles: ['Sayılar, Miktarlar ve Çoğullar'],
+  },
+  {
+    id: 'private.day3.zaman',
+    day: 3,
+    track: 'private',
+    title: 'Zaman İfadeleri',
+    matchTitles: ['Zaman İfadeleri'],
+  },
+  {
+    id: 'private.day3.cumle-dizilisi',
+    day: 3,
+    track: 'private',
+    title: 'Cümle Dizilişi',
+    matchTitles: ['Cümle Dizilişi — Verb İkinci Sırada', 'Cümle Dizilişi'],
+  },
+  {
+    id: 'private.day3.gunluk-hayat',
+    day: 3,
+    track: 'private',
+    title: 'Günlük Hayat, Hava, Hayvanlar ve Alışveriş',
+    matchTitles: ['Günlük Hayat, Hava, Hayvanlar ve Alışveriş'],
+  },
+  {
+    id: 'private.day3.master-cumleler',
+    day: 3,
+    track: 'private',
+    title: '8 Temsilci Cümle',
+    matchTitles: ['8 Temsilci Cümle — Detaylı Çözümleme', '8 Temsilci Cümle'],
+  },
+  {
+    id: 'private.day3.tum-cumleler',
+    day: 3,
+    track: 'private',
+    title: '80 Cümlenin Doğru Almancası',
+    matchTitles: ['80 Cümlenin Doğru Almancası'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -301,6 +400,18 @@ const P2_NEG = 'private.day2.cumle-olumsuz';
 const P2_SOR = 'private.day2.sorular';
 const P2_HS = 'private.day2.haben-sein';
 const P2_GUN = 'private.day2.gunluk-hayat';
+const P3_HED = 'private.day3.hedef';
+const P3_MG = 'private.day3.mogen-moechten-gern';
+const P3_EG = 'private.day3.es-gibt';
+const P3_YY = 'private.day3.yer-yon';
+const P3_AF = 'private.day3.ayrilabilen-fiiller';
+const P3_RF = 'private.day3.refleksif';
+const P3_SF = 'private.day3.sifat-ekleri';
+const P3_IY = 'private.day3.iyelik';
+const P3_MK = 'private.day3.miktar-cogul';
+const P3_ZI = 'private.day3.zaman';
+const P3_CD = 'private.day3.cumle-dizilisi';
+const P3_GH = 'private.day3.gunluk-hayat';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -539,6 +650,79 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'private.day2.gunluk.kahve-spor', topicId: P2_GUN, label: 'Kaffee trinken, Sport machen', anchor: 'Kaffee trinken, Sport machen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
     { id: 'private.day2.gunluk.kitap-okuma', topicId: P2_GUN, label: 'ein Buch lesen', anchor: 'ein Buch lesen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
     { id: 'private.day2.gunluk.mini-dialog', topicId: P2_GUN, label: 'mini diyalog: soru + Ja/Nein cevap', anchor: 'Mini diyalog', prerequisites: ['private.day2.sorular.ja-nein-cevap'] },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 3. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(3, 'private', [
+    { id: 'private.day3.hedef.giris', topicId: P3_HED, label: '4. Gün hedefi: 80 cümleyi üretmek', anchor: '80 Türkçe cümle' },
+
+    { id: 'private.day3.mogen.cekim', topicId: P3_MG, label: 'mögen çekimi: ich mag, du magst ...', anchor: 'ich mag' },
+    { id: 'private.day3.moechten.cekim', topicId: P3_MG, label: 'möchten çekimi: ich möchte, du möchtest ...', anchor: 'ich möchte' },
+    { id: 'private.day3.gern.kullanim', topicId: P3_MG, label: 'Fiil + gern kalıbı', anchor: 'Fiil + gern' },
+    { id: 'private.day3.mogen-gern-farki', topicId: P3_MG, label: 'mag (isim ister) ↔ gern (fiilden sonra gelir)', anchor: 'mag bir ismi doğrudan sever' },
+
+    { id: 'private.day3.esgibt.temel', topicId: P3_EG, label: 'es gibt = var', anchor: 'Es gibt' },
+    { id: 'private.day3.esgibt.akkusativ', topicId: P3_EG, label: 'es gibt + Akkusativ (der → einen)', anchor: 'es gibt her zaman Akkusativ ister', prerequisites: ['private.day3.esgibt.temel'] },
+    { id: 'private.day3.esgibt.genel-cogul', topicId: P3_EG, label: 'genel ifadede çoğul isim artikelsiz kullanılır', anchor: 'Genel ve sayılamayan durumlarda' },
+
+    { id: 'private.day3.kontraksiyon.zum', topicId: P3_YY, label: 'zum = zu + dem', anchor: 'zum = zu + dem' },
+    { id: 'private.day3.kontraksiyon.zur', topicId: P3_YY, label: 'zur = zu + der', anchor: 'zur = zu + der' },
+    { id: 'private.day3.kontraksiyon.im', topicId: P3_YY, label: 'im = in + dem', anchor: 'im = in + dem' },
+    { id: 'private.day3.kontraksiyon.ins', topicId: P3_YY, label: 'ins = in + das', anchor: 'ins = in + das' },
+    { id: 'private.day3.kontraksiyon.am', topicId: P3_YY, label: 'am = an + dem', anchor: 'am = an + dem' },
+    { id: 'private.day3.kontraksiyon.ans', topicId: P3_YY, label: 'ans = an + das (bonus)', anchor: 'ans = an + das' },
+    { id: 'private.day3.im-ins-farki', topicId: P3_YY, label: 'im (yerde) ↔ ins (yöne) farkı', anchor: 'im yerde kalmayı, ins ise bir yöne gitmeyi anlatır', prerequisites: ['private.day3.kontraksiyon.im', 'private.day3.kontraksiyon.ins'] },
+    { id: 'private.day3.nach-hause', topicId: P3_YY, label: 'nach Hause = eve (yöne)', anchor: 'nach Hause' },
+    { id: 'private.day3.zu-hause', topicId: P3_YY, label: 'zu Hause = evde', anchor: 'zu Hause' },
+    { id: 'private.day3.mit-dativ', topicId: P3_YY, label: 'mit + Dativ ister', anchor: 'mit her zaman Dativ ister' },
+    { id: 'private.day3.mit-meinen-freunden', topicId: P3_YY, label: 'mit meinen Freunden — Dativ çoğulda -n', anchor: 'meinen Freunden', prerequisites: ['private.day3.mit-dativ'] },
+    { id: 'private.day3.der-den-dem', topicId: P3_YY, label: 'der (Nominativ) / den (Akkusativ) / dem (Dativ)', anchor: 'der / den / dem' },
+    { id: 'private.day3.in-akkusativ-yon', topicId: P3_YY, label: 'in + Akkusativ (yöne giderken): in den Park', anchor: 'in den Park', prerequisites: ['private.day3.der-den-dem'] },
+    { id: 'private.day3.auf-dem', topicId: P3_YY, label: 'auf + dem (üzerinde)', anchor: 'auf dem' },
+    { id: 'private.day3.bei-der', topicId: P3_YY, label: 'bei + Dativ (yanında)', anchor: 'bei der Schule' },
+
+    { id: 'private.day3.ayrilabilen.kural', topicId: P3_AF, label: 'ayrılabilen fiil kuralı: önek cümlenin sonuna gider', anchor: 'önek cümlenin en sonuna gider' },
+    { id: 'private.day3.aufstehen', topicId: P3_AF, label: 'aufstehen = kalkmak', anchor: 'aufstehen = kalkmak', prerequisites: ['private.day3.ayrilabilen.kural'] },
+    { id: 'private.day3.aufraeumen', topicId: P3_AF, label: 'aufräumen = toplamak/düzenlemek', anchor: 'aufräumen = toplamak', prerequisites: ['private.day3.ayrilabilen.kural'] },
+    { id: 'private.day3.zurueckkommen', topicId: P3_AF, label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['private.day3.ayrilabilen.kural'] },
+
+    { id: 'private.day3.refleksif.temel', topicId: P3_RF, label: 'refleksif zamirler: mich, dich, sich, uns, euch, sich', anchor: 'mich, dich, sich' },
+    { id: 'private.day3.sich-duschen', topicId: P3_RF, label: 'sich duschen = duş almak', anchor: 'sich duschen', prerequisites: ['private.day3.refleksif.temel'] },
+    { id: 'private.day3.sich-ausruhen', topicId: P3_RF, label: 'sich ausruhen = dinlenmek', anchor: 'sich ausruhen', prerequisites: ['private.day3.refleksif.temel'] },
+    { id: 'private.day3.refleksif-ayrilabilen', topicId: P3_RF, label: 'refleksif + ayrılabilen birlikte: ruhe mich ... aus', anchor: 'ruhe mich', prerequisites: ['private.day3.sich-ausruhen', 'private.day3.ayrilabilen.kural'] },
+
+    { id: 'private.day3.sifat.yuklem', topicId: P3_SF, label: 'sein + sıfat → ek almaz', anchor: 'sein fiilinden sonra sıfat ek almaz' },
+    { id: 'private.day3.sifat.ein-notr', topicId: P3_SF, label: 'ein + nötr isim + sıfat → -es', anchor: 'ein neues T-Shirt' },
+    { id: 'private.day3.sifat.cogul-artikelsiz', topicId: P3_SF, label: 'artikelsiz çoğul + sıfat → -e', anchor: 'schwarze Schuhe' },
+
+    { id: 'private.day3.iyelik.unser', topicId: P3_IY, label: 'unser / unsere = bizim', anchor: 'unser / unsere' },
+    { id: 'private.day3.iyelik.ihr', topicId: P3_IY, label: 'ihr / ihre = onun (kadın) / onların', anchor: 'ihr / ihre' },
+    { id: 'private.day3.iyelik.dativ-cogul', topicId: P3_IY, label: 'iyelik + Dativ çoğul: meinen, deinen ...', anchor: 'meinen, deinen', prerequisites: ['private.day3.mit-meinen-freunden'] },
+
+    { id: 'private.day3.miktar.sise', topicId: P3_MK, label: 'Zahl + Flasche(n) + Nomen: zwei Flaschen Wasser', anchor: 'zwei Flaschen' },
+    { id: 'private.day3.miktar.oda', topicId: P3_MK, label: 'Zahl + Zimmer (çoğulu değişmez)', anchor: 'drei Zimmer' },
+    { id: 'private.day3.cogul.genel', topicId: P3_MK, label: 'genel ifadelerde çoğul isim artikelsiz', anchor: 'Genel ifadelerde' },
+    { id: 'private.day3.cogul.umlaut', topicId: P3_MK, label: 'Buch → Bücher (Umlaut çoğul, tekrar)', anchor: 'Bücher' },
+
+    { id: 'private.day3.zaman.um-uhr', topicId: P3_ZI, label: 'um + saat', anchor: 'um 7 Uhr' },
+    { id: 'private.day3.zaman.am', topicId: P3_ZI, label: 'am Morgen / am Abend / am Wochenende', anchor: 'am Morgen', prerequisites: ['private.day3.kontraksiyon.am'] },
+    { id: 'private.day3.zaman.im-mevsim', topicId: P3_ZI, label: 'im Winter / im Sommer', anchor: 'im Winter', prerequisites: ['private.day3.kontraksiyon.im'] },
+    { id: 'private.day3.zaman.dann', topicId: P3_ZI, label: 'dann / danach = sonra', anchor: 'Dann' },
+    { id: 'private.day3.zaman.morgen-cift-anlam', topicId: P3_ZI, label: 'morgen (yarın, küçük harf) ↔ der Morgen (sabah, isim)', anchor: 'morgen küçük harfle' },
+
+    { id: 'private.day3.dizilisi.verb-ikinci', topicId: P3_CD, label: 'fiil her zaman ikinci sırada (V2)', anchor: 'fiil her zaman ikinci sırada' },
+    { id: 'private.day3.dizilisi.zaman-basta', topicId: P3_CD, label: 'zaman ifadesi başa geldiğinde fiil hemen arkasından gelir', anchor: 'Zaman ifadesi cümle başına', prerequisites: ['private.day3.dizilisi.verb-ikinci'] },
+    { id: 'private.day3.moechten-infinitiv', topicId: P3_CD, label: 'möchte + ... + fiil (mastar) cümle sonunda', anchor: 'mastar halinde cümlenin en sonuna gider', prerequisites: ['private.day3.moechten.cekim'] },
+
+    { id: 'private.day3.hava.ifadeler', topicId: P3_GH, label: 'Wetter ifadeleri: schön, warm, kalt', anchor: 'Das Wetter ist' },
+    { id: 'private.day3.hayvanlar.kelime', topicId: P3_GH, label: 'Hayvan kelimeleri: die Katze, der Hund, das Tier', anchor: 'die Katze' },
+    { id: 'private.day3.hobiler.kelime', topicId: P3_GH, label: 'Hobi kelimeleri: schwimmen, Fußball, lesen, fotografieren', anchor: 'gern Fußball' },
+    { id: 'private.day3.alisveris.kelime', topicId: P3_GH, label: 'Alışveriş kelimeleri: kaufen, T-Shirt, Schuhe, Hose', anchor: 'kaufen' },
+    { id: 'private.day3.ev-kelime', topicId: P3_GH, label: 'Ev kelimeleri: die Wohnung, das Zimmer, der Balkon, der Garten', anchor: 'die Wohnung' },
+    { id: 'private.day3.gunluk-rutin', topicId: P3_GH, label: 'Günlük rutin fiilleri: frühstücken, putzen, gießen, hören', anchor: 'frühstücken' },
+    { id: 'private.day3.es-geht-mir', topicId: P3_GH, label: 'Es geht mir gut = iyiyim', anchor: 'Es geht mir gut' },
   ]),
 ];
 
