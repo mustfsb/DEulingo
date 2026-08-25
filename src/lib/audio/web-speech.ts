@@ -8,13 +8,20 @@ const RATE_BY_SPEED: Record<SpeechSpeed, number> = {
 };
 
 /** Web Speech fallback'te her Piper profili için ayırt edici perde.
- *  Tek Alman sesi olan tarayıcılarda (Chrome/Goggle Deutsch) bile
- *  erkek/kadın farkı net duyulsun diye aralık bilerek açıktır. */
+ *  Tek Alman sesi olan tarayıcılarda bile 4 seçenek ayrım duyulsun
+ *  ama erkek sesler doğal kalsın diye aralık ölçülü tutuldu. */
 const PITCH_BY_VOICE: Record<GermanVoiceId, number> = {
-  thorsten: 0.88,
-  'thorsten-soft': 0.72,
-  kerstin: 1.45,
-  eva: 1.22,
+  thorsten: 0.97,
+  'thorsten-soft': 0.86,
+  kerstin: 1.24,
+  eva: 1.12,
+};
+
+const RATE_ADJUST_BY_VOICE: Record<GermanVoiceId, number> = {
+  thorsten: 1,
+  'thorsten-soft': 0.93,
+  kerstin: 1.04,
+  eva: 1,
 };
 
 const VOICE_GENDER: Record<GermanVoiceId, 'male' | 'female'> = {
@@ -40,6 +47,15 @@ const MALE_HINTS = [
   'thomas',
   'daniel',
   'paul',
+  'alex',
+  'oliver',
+  'david',
+  'aaron',
+  'fred',
+  'george',
+  'james',
+  'john',
+  'arthur',
 ];
 
 const FEMALE_HINTS = [
@@ -62,6 +78,15 @@ const FEMALE_HINTS = [
   'birgit',
   'ines',
   'google deutsch',
+  'samantha',
+  'karen',
+  'moira',
+  'tessa',
+  'allison',
+  'ava',
+  'aura',
+  'sara',
+  'zuzana',
 ];
 
 function guessVoiceGender(voice: SpeechSynthesisVoice): 'male' | 'female' | 'unknown' {
@@ -86,9 +111,19 @@ export function pickGermanVoice(preferredVoiceId: GermanVoiceId = DEFAULT_GERMAN
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
   const german = voices.filter((v) => v.lang.toLowerCase().startsWith('de'));
-  if (german.length === 0) return null;
 
   const preferredGender = VOICE_GENDER[preferredVoiceId] ?? 'male';
+
+  // Alman sesleri yoksa → doğrudan tüm seslerden cinsiyete göre seç
+  if (german.length === 0) {
+    const globalMapped = voices.map((voice) => ({ voice, gender: guessVoiceGender(voice) }));
+    const globalCandidates = globalMapped
+      .filter((e) => e.gender === preferredGender)
+      .map((e) => e.voice)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (globalCandidates.length > 0) return globalCandidates[0];
+    return voices[0] ?? null;
+  }
 
   const mapped = german.map((voice) => ({ voice, gender: guessVoiceGender(voice) }));
   const maleVoices = mapped.filter((entry) => entry.gender === 'male').map((entry) => entry.voice).sort(sortByLangPreference);
@@ -99,7 +134,14 @@ export function pickGermanVoice(preferredVoiceId: GermanVoiceId = DEFAULT_GERMAN
   if (preferredGender === 'male') {
     if (maleVoices.length > 0) candidates = maleVoices;
     else if (unknownVoices.length > 0) candidates = unknownVoices;
-    else candidates = femaleVoices;
+    else {
+      // Almanca erkek yoksa: herhangi bir dilden erkek sese düş (pitch-shiftli kadın kullanmaktan doğal)
+      const globalMale = voices
+        .filter((v) => guessVoiceGender(v) === 'male')
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (globalMale.length > 0) return globalMale[0];
+      candidates = femaleVoices;
+    }
     const order: GermanVoiceId[] = ['thorsten', 'thorsten-soft'];
     const idx = order.indexOf(preferredVoiceId);
     if (candidates.length > 1 && idx >= 0) return candidates[idx % candidates.length] ?? candidates[0];
@@ -108,7 +150,13 @@ export function pickGermanVoice(preferredVoiceId: GermanVoiceId = DEFAULT_GERMAN
   // female
   if (femaleVoices.length > 0) candidates = femaleVoices;
   else if (unknownVoices.length > 0) candidates = unknownVoices;
-  else candidates = maleVoices;
+  else {
+    const globalFemale = voices
+      .filter((v) => guessVoiceGender(v) === 'female')
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (globalFemale.length > 0) return globalFemale[0];
+    candidates = maleVoices;
+  }
   const order: GermanVoiceId[] = ['kerstin', 'eva'];
   const idx = order.indexOf(preferredVoiceId);
   if (candidates.length > 1 && idx >= 0) return candidates[idx % candidates.length] ?? candidates[0];
@@ -117,6 +165,12 @@ export function pickGermanVoice(preferredVoiceId: GermanVoiceId = DEFAULT_GERMAN
 
 export function pitchForVoice(voiceId: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID): number {
   return PITCH_BY_VOICE[voiceId] ?? 1;
+}
+
+export function rateForVoice(voiceId: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID, speed: SpeechSpeed = 'normal'): number {
+  const base = RATE_BY_SPEED[speed] ?? 1;
+  const adjust = RATE_ADJUST_BY_VOICE[voiceId] ?? 1;
+  return Number((base * adjust).toFixed(3));
 }
 
 export function isWebSpeechAvailable(): boolean {
@@ -171,7 +225,7 @@ export async function speakWithWebSpeech(
 
     const utterance = new SpeechSynthesisUtterance(target.text);
     utterance.lang = 'de-DE';
-    utterance.rate = RATE_BY_SPEED[speed] ?? 1;
+    utterance.rate = rateForVoice(voiceId, speed);
     utterance.pitch = pitchForVoice(voiceId);
 
     const voice = pickGermanVoice(voiceId);
