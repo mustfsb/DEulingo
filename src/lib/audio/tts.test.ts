@@ -31,7 +31,7 @@ describe('local TTS contract', () => {
   it('rejects empty, oversized and non-German speech requests', () => {
     expect(validateSpeechRequest({ text: 'Guten Morgen', language: 'de-DE', speed: 'normal' })).toEqual({
       ok: true,
-      value: { text: 'Guten Morgen', language: 'de-DE', speed: 'normal', voice: 'thorsten' },
+      value: { text: 'Guten Morgen', language: 'de-DE', speed: 'normal', voice: 'kerstin' },
     });
     expect(validateSpeechRequest({ text: '   ', language: 'de-DE', speed: 'normal' }).ok).toBe(false);
     expect(validateSpeechRequest({ text: 'a'.repeat(501), language: 'de-DE', speed: 'normal' }).ok).toBe(false);
@@ -59,7 +59,7 @@ describe('local TTS contract', () => {
   it('offers fast, normal and slow speeds with a per-voice normal-speed calibration', () => {
     expect(validateSpeechRequest({ text: 'Guten Morgen', language: 'de-DE', speed: 'fast' })).toEqual({
       ok: true,
-      value: { text: 'Guten Morgen', language: 'de-DE', speed: 'fast', voice: 'thorsten' },
+      value: { text: 'Guten Morgen', language: 'de-DE', speed: 'fast', voice: 'kerstin' },
     });
 
     for (const profile of GERMAN_VOICE_PROFILES) {

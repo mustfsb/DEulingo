@@ -4,7 +4,7 @@ import type { LearningTrack } from '../content/types';
 import { getDayStats, getGlobalSummary, getTopicStats, resetAllProgress, resetDayProgress } from '../lib/progress';
 import { parseImportedProgress, serializeProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
-import { GERMAN_VOICE_PROFILES, isSpeechSpeed } from '../lib/audio/tts';
+import { DEFAULT_GERMAN_VOICE_ID, GERMAN_VOICE_PROFILES, isSpeechSpeed } from '../lib/audio/tts';
 import { GOAL_OPTIONS, goalProgress } from '../lib/daily-goal';
 
 export function StatsScreen({ api }: { api: ProgressApi }) {
@@ -242,7 +242,7 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             value={api.progress.settings.speechVoice}
             aria-label="Telaffuz sesi"
             onChange={(event) => {
-              const speechVoice = GERMAN_VOICE_PROFILES.find((profile) => profile.id === event.target.value)?.id ?? 'thorsten';
+              const speechVoice = GERMAN_VOICE_PROFILES.find((profile) => profile.id === event.target.value)?.id ?? DEFAULT_GERMAN_VOICE_ID;
               api.update((current) => ({
                 ...current,
                 settings: { ...current.settings, speechVoice },

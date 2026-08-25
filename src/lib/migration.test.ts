@@ -149,7 +149,7 @@ describe('v1 → guncel surum gocu', () => {
     expect(migrated.settings.soundEffects).toBe(true);
     expect(migrated.settings.autoPronunciation).toBe(true);
     expect(migrated.settings.speechSpeed).toBe('normal');
-    expect(migrated.settings.speechVoice).toBe('thorsten');
+    expect(migrated.settings.speechVoice).toBe('kerstin');
     expect(migrated.settings.readSummaries).toEqual({});
     expect(migrated.settings.bookmarks).toEqual([]);
     expect(migrated.settings.themePreference).toBe('system');

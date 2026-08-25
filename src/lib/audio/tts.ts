@@ -58,16 +58,16 @@ export const GERMAN_VOICE_PROFILES = [
 ] as const;
 
 export type GermanVoiceId = (typeof GERMAN_VOICE_PROFILES)[number]['id'];
-export const DEFAULT_GERMAN_VOICE_ID: GermanVoiceId = 'thorsten';
-export const PIPER_GERMAN_VOICE = GERMAN_VOICE_PROFILES[0].model;
-export const PIPER_GERMAN_VOICE_VERSION = GERMAN_VOICE_PROFILES[0].version;
+export const DEFAULT_GERMAN_VOICE_ID: GermanVoiceId = 'kerstin';
+export const PIPER_GERMAN_VOICE = GERMAN_VOICE_PROFILES.find((p) => p.id === DEFAULT_GERMAN_VOICE_ID)!.model;
+export const PIPER_GERMAN_VOICE_VERSION = GERMAN_VOICE_PROFILES.find((p) => p.id === DEFAULT_GERMAN_VOICE_ID)!.version;
 
 export function isGermanVoiceId(value: unknown): value is GermanVoiceId {
   return typeof value === 'string' && GERMAN_VOICE_PROFILES.some((profile) => profile.id === value);
 }
 
 export function germanVoiceProfile(voice: GermanVoiceId | undefined = DEFAULT_GERMAN_VOICE_ID) {
-  return GERMAN_VOICE_PROFILES.find((profile) => profile.id === voice) ?? GERMAN_VOICE_PROFILES[0];
+  return GERMAN_VOICE_PROFILES.find((profile) => profile.id === voice) ?? GERMAN_VOICE_PROFILES.find((p) => p.id === DEFAULT_GERMAN_VOICE_ID)!;
 }
 
 export type SpeechSpeed = 'slow' | 'normal' | 'fast';
