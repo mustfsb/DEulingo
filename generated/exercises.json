@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T08:26:05.349Z",
+  "generatedAt": "2026-08-25T08:48:25.201Z",
   "schemaVersion": 2,
   "contentVersion": "2.1rdxwmw",
   "sourceFiles": [
@@ -876,12 +876,10 @@
       "track": "private",
       "topics": [
         "Bugünün Hedefi",
-        "Sevmek ve İstemek",
         "es gibt",
         "Yer, Yön ve Küçük Ama Önemli Kelimeler",
         "Ayrılabilen Fiiller",
         "Refleksif Fiiller",
-        "Sıfatlar ve Ekler",
         "İyelik Yapıları",
         "Sayılar, Miktarlar ve Çoğullar",
         "Zaman İfadeleri",
@@ -48650,7 +48648,7 @@
       "day": 3,
       "track": "private",
       "title": "3. Gün",
-      "estimatedReadingMinutes": 52,
+      "estimatedReadingMinutes": 28,
       "topics": [
         {
           "id": "private.day3.hedef",
@@ -48662,15 +48660,11 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "3. Gün, önceki günlerden farklı çalışır: sana **80 Türkçe cümle** verildi (günlük rutin, ev, alışveriş, hava durumu, hayvanlar, hobiler, saatler ve planlar). Hedef, bu cümlelerin Almancasını ezberlemek değil — her cümlenin **neden o şekilde kurulduğunu** anlayıp kendi başına benzer cümleler üretebilmektir."
+              "text": "Sana **80 Türkçe cümle** verildi (günlük rutin, ev, alışveriş, hava durumu, hayvanlar, hobiler, saatler, planlar). Hedef ezber değil — her cümlenin **neden o şekilde kurulduğunu** anlayıp benzerlerini kendin üretebilmek."
             },
             {
               "kind": "paragraph",
-              "text": "Bu gün şunları yeni öğretir: `mögen / möchten / gern` ile sevme-isteme, `es gibt` ile varlık bildirme, `zum/zur/im/ins/am` kısaltmaları ve bunların arkasındaki Dativ/Akkusativ mantığı, ayrılabilen fiiller (`aufstehen`, `aufräumen`, `zurückkommen`), birkaç refleksif fiil, sıfat sonlarının ne zaman değiştiği, `unser/ihr` iyelik ekleri, miktar ifadeleri, saat/zaman kalıpları ve cümle dizilişinin (fiil hep ikinci sırada) mantığı. Sayfanın sonunda 80 cümlenin tamamının doğru Almancası tek tek listelenmiştir."
-            },
-            {
-              "kind": "callout",
-              "text": "💡 **Unutma:** Bu konuların hiçbiri tek başına zor değildir; zorluk hepsinin bir cümlede aynı anda geçmesindedir. Bu yüzden özet, her parçayı ayrı ayrı ve küçük örneklerle anlatır."
+              "text": "Yeni öğrenilenler: `mögen / möchten / gern`, `es gibt`, `zum/zur/im/ins/am` kısaltmaları (+ hafif Dativ/Akkusativ mantığı), ayrılabilen fiiller, birkaç refleksif fiil, sıfat ekleri, `unser/ihr` iyelik ekleri, miktar ifadeleri, zaman kalıpları ve cümle dizilişi. Sonda 80 cümlenin tamamının doğru Almancası listelenmiştir."
             },
             {
               "kind": "paragraph",
@@ -48679,7 +48673,8 @@
           ],
           "warnings": [],
           "keyPoints": [
-            "`zum = zu + dem`, `zur = zu + der`, `im = in + dem`, `ins = in + das`, `am = an + dem` kısaltmalarını açabiliyorum."
+            "`zum = zu + dem`, `zur = zu + der`, `im = in + dem`, `ins = in + das`, `am = an + dem` kısaltmalarını açabiliyorum.",
+            "`der / den / dem` üçlüsünün aynı eril ismin farklı hâlleri olduğunu biliyorum."
           ],
           "recallQuestions": [
             {
@@ -48703,15 +48698,7 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Türkçede \"sevmek\" ve \"istemek\" tek tek fiillerle anlatılır. Almancada üç farklı araç vardır ve her biri farklı bir yerde kullanılır."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**mögen — bir ismi sevmek**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`mögen` çekimi düzensizdir:"
+              "text": "**mögen — bir ismi sevmek (düzensiz)**"
             },
             {
               "kind": "table",
@@ -48729,19 +48716,7 @@
                   "magst"
                 ],
                 [
-                  "er/sie/es",
-                  "mag"
-                ],
-                [
                   "wir",
-                  "mögen"
-                ],
-                [
-                  "ihr",
-                  "mögt"
-                ],
-                [
-                  "sie/Sie",
                   "mögen"
                 ]
               ]
@@ -48750,17 +48725,12 @@
               "kind": "code",
               "lines": [
                 "Ich mag Katzen.           (Kedileri severim.)",
-                "Meine Schwester mag Tiere. (Kız kardeşim hayvanları sever.)",
                 "Ich mag den Regen nicht.  (Yağmuru sevmem.)"
               ]
             },
             {
               "kind": "paragraph",
-              "text": "**möchten — bir şey istemek**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`möchten` de düzensizdir ve \"istiyorum\" anlamına gelir — `mögen`'in kibar/istek hâli gibi düşünülebilir:"
+              "text": "**möchten — kibarca istemek (düzensiz)**"
             },
             {
               "kind": "table",
@@ -48778,19 +48748,7 @@
                   "möchtest"
                 ],
                 [
-                  "er/sie/es",
-                  "möchte"
-                ],
-                [
                   "wir",
-                  "möchten"
-                ],
-                [
-                  "ihr",
-                  "möchtet"
-                ],
-                [
-                  "sie/Sie",
                   "möchten"
                 ]
               ]
@@ -48798,8 +48756,6 @@
             {
               "kind": "code",
               "lines": [
-                "Ich möchte ein Brot.              (Bir ekmek istiyorum.)",
-                "Ich möchte schwarze Schuhe.       (Siyah ayakkabı istiyorum.)",
                 "Ich möchte ein Brot kaufen.       (Bir ekmek almak istiyorum.)"
               ]
             },
@@ -48809,47 +48765,37 @@
             },
             {
               "kind": "paragraph",
-              "text": "`gern` bir isim ya da fiil değil, küçük bir zarftır (kelime). Tek başına anlamı yoktur; her zaman bir fiille birlikte kullanılır:"
+              "text": "`gern` tek başına anlamsız küçük bir zarftır; her zaman bir fiilden hemen sonra gelir:"
             },
             {
               "kind": "code",
               "lines": [
-                "Fiil + gern"
-              ]
-            },
-            {
-              "kind": "code",
-              "lines": [
+                "Fiil + gern",
+                "",
                 "Ich schwimme gern im Meer.    (Denizde yüzmeyi severim.)",
-                "Ich esse gern Äpfel.          (Elma yemeyi severim.)",
-                "Ich spiele gern Fußball.      (Futbol oynamayı severim.)",
                 "Ich lese gern Bücher.         (Kitap okumayı severim.)"
               ]
             },
             {
               "kind": "paragraph",
-              "text": "**Hangisini ne zaman kullanmalı?**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`mag bir ismi doğrudan sever` (`Ich mag Katzen.` — nesne doğrudan isimdir); `gern` ise bir *fiilden sonra* gelir ve o fiilin yapılmasının sevildiğini anlatır (`Ich schwimme gern.` — burada seviyorum dediğim şey \"yüzmek\" fiilidir, bir isim değil). Türkçedeki \"-mayı/-meyi seviyorum\" kalıbı (kitap oku**maı** seviyorum) çoğu zaman Almancada `gern + fiil` ile karşılanır, `mag + fiil` ile değil — `mögen` bir fiille birlikte çıplak mastar almaz (`Ich mag schwimmen` gibi bir kalıp A1 seviyesinde doğal değildir)."
+              "text": "`mag bir ismi doğrudan sever` (`Ich mag Katzen.`); `gern` bir *fiilden sonra* gelir ve o eylemi sevmeyi anlatır. Türkçedeki \"-mayı/-meyi seviyorum\" çoğu zaman `gern + fiil` ile karşılanır, `mag + fiil` ile değil."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** İsim seviyorsan → `mag`. Bir *eylemi* seviyorsan → `gern` + o fiilin çekimi. Bir şey istiyorsan (kibarca) → `möchte`."
+              "text": "💡 **Unutma:** İsim seviyorsan → `mag`. Eylemi seviyorsan → `gern` + fiil. Kibarca istiyorsan → `möchte`."
             }
           ],
           "warnings": [
-            "`möchte` bir modal fiil gibi davranır: cümlede ikinci sırada `möchte` durur, ama asıl fiil **mastar hâlinde cümlenin en sonuna gider** (`Ich möchte ein Brot kaufen.` — `kaufen` sonda). Bunu Cümle Dizilişi bölümünde ayrıca göreceksin.",
-            "**Yaklaşık okunuş:** `ich mag` → \"ih mak\", `ich möchte` → \"ih möhte\", `gern` → \"gern\"",
+            "`möchte` ikinci sırada durur, ama asıl fiil **mastar hâlinde cümlenin en sonuna gider** (`Ich möchte ein Brot kaufen.`).",
             "---"
           ],
           "keyPoints": [
-            "`mögen` (isim sever: `ich mag`), `möchten` (istek: `ich möchte`) ve `gern` (fiilden sonra: `schwimme gern`) farkını biliyorum."
+            "`mögen` (`ich mag`), `möchten` (`ich möchte`) ve `gern` (`Fiil + gern`) farkını biliyorum.",
+            "`Es gibt` kalıbını ve `es gibt her zaman Akkusativ ister` kuralını biliyorum."
           ],
           "recallQuestions": [
             {
-              "question": "`möchte`, `mag` ve `gern` arasındaki fark nedir? → `möchte` kibarca istemek, `mag` bir ismi sevmek, `gern` bir fiilden sonra gelip o eylemi sevmeyi anlatır",
+              "question": "`möchte`, `mag` ve `gern` arasındaki fark nedir? → `möchte` istemek, `mag` isim sevmek, `gern` fiilden sonra gelip eylemi sevmek",
               "answer": "Örn. `Super!`, `Gut.`, `Es geht.`"
             }
           ],
@@ -48864,38 +48810,11 @@
               }
             },
             {
-              "german": "Meine Schwester mag Tiere.",
-              "turkish": "Kız kardeşim hayvanları sever.",
-              "pronunciation": {
-                "german": "Meine Schwester mag Tiere.",
-                "turkishApproximation": "Mayne Şvesta mak Tiire.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
               "german": "Ich mag den Regen nicht.",
               "turkish": "Yağmuru sevmem.",
               "pronunciation": {
                 "german": "Ich mag den Regen nicht.",
                 "turkishApproximation": "İh mak den Regen niht.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich möchte ein Brot.",
-              "turkish": "Bir ekmek istiyorum.",
-              "pronunciation": {
-                "german": "Ich möchte ein Brot.",
-                "turkishApproximation": "İh möhte ayn Brot.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich möchte schwarze Schuhe.",
-              "turkish": "Siyah ayakkabı istiyorum.",
-              "pronunciation": {
-                "german": "Ich möchte schwarze Schuhe.",
-                "turkishApproximation": "İh möhte şvartse Şue.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
@@ -48925,24 +48844,6 @@
               }
             },
             {
-              "german": "Ich esse gern Äpfel.",
-              "turkish": "Elma yemeyi severim.",
-              "pronunciation": {
-                "german": "Ich esse gern Äpfel.",
-                "turkishApproximation": "İh ese gern Epfel.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich spiele gern Fußball.",
-              "turkish": "Futbol oynamayı severim.",
-              "pronunciation": {
-                "german": "Ich spiele gern Fußball.",
-                "turkishApproximation": "İh şpiile gern Fusball.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
               "german": "Ich lese gern Bücher.",
               "turkish": "Kitap okumayı severim.",
               "pronunciation": {
@@ -48965,10 +48866,6 @@
             {
               "german": "wir",
               "turkishApproximation": "viia"
-            },
-            {
-              "german": "ihr",
-              "turkishApproximation": "iia"
             }
           ]
         },
@@ -48983,14 +48880,6 @@
           ],
           "blocks": [
             {
-              "kind": "paragraph",
-              "text": "Türkçedeki \"var/yok\" ifadesinin çok kullanılan bir Almanca karşılığını öğreniyorsun."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Temel anlam**"
-            },
-            {
               "kind": "code",
               "lines": [
                 "Es gibt ..."
@@ -48998,61 +48887,42 @@
             },
             {
               "kind": "paragraph",
-              "text": "`Es gibt` = \"... var\" demektir. Türkçedeki \"var/yok\" ifadesinin çok kullanılan bir Almanca karşılığıdır ve **her zaman tekil çekilir** (`gibt`, özne \"es\"tir — ne var olduğu önemli değildir):"
+              "text": "`Es gibt` = \"... var\", **her zaman tekil** çekilir:"
             },
             {
               "kind": "code",
               "lines": [
-                "Auf dem Balkon gibt es Blumen.     (Balkonda çiçekler var.)",
-                "Im Markt gibt es viele Leute.      (Markette çok insan var.)"
+                "Auf dem Balkon gibt es Blumen.     (Balkonda çiçekler var.)"
               ]
             },
             {
               "kind": "paragraph",
-              "text": "**es gibt + Akkusativ**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Önemli bir kural: `es gibt` her zaman Akkusativ ister — yani cümledeki nesne Akkusativ (yönelme değil, doğrudan nesne) hâlinde olur. Dişil (`die`) ve nötr (`das`) isimlerde bu görünmez (`eine Tasche`, `ein Buch` zaten aynı kalır), ama eril (`der`) isimlerde `ein` → `einen` olur:"
+              "text": "**es gibt her zaman Akkusativ ister** — dişil/nötrde görünmez, ama eril (`der`) isimlerde `ein` → `einen` olur:"
             },
             {
               "kind": "code",
               "lines": [
-                "der Tisch  → In meinem Zimmer gibt es einen Tisch.   (Odamda bir masa var.)",
-                "der Balkon → Wir haben einen Balkon.                  (Bir balkonumuz var. — haben de Akkusativ ister)"
+                "der Tisch → In meinem Zimmer gibt es einen Tisch.   (Odamda bir masa var.)"
               ]
+            },
+            {
+              "kind": "paragraph",
+              "text": "**Genel ve sayılamayan durumlarda** (belirli bir şeyden değil, genelden bahsederken) çoğul isim artikelsiz kullanılır: `Auf dem Balkon gibt es Blumen.` (belirli çiçekler değil)."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** `es gibt her zaman Akkusativ ister`. Pratik kural: eril (`der`) bir isim `es gibt` ya da `haben` ile geldiğinde `ein` → `einen` olur. Dişil ve nötrde hiçbir şey değişmez."
+              "text": "💡 **Unutma:** `es gibt` \"bu ortamda X var\" derken, `haben` \"benim X'im var\" derken kullanılır — çoğu zaman ikisi de olur."
             },
             {
               "kind": "paragraph",
-              "text": "**Genel ifadelerde artikel yok**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Genel ve sayılamayan durumlarda (belirli bir şeyden değil, genel olarak bir şeyin var olduğundan bahsederken) çoğul isim **artikelsiz** kullanılır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Auf dem Balkon gibt es Blumen.     (belirli çiçekler değil, genel olarak çiçek var)",
-                "Im Markt gibt es viele Leute."
-              ]
+              "text": "---"
             }
           ],
-          "warnings": [
-            "`es gibt` ile `haben` bazen aynı anlamı verebilir (`Wir haben einen Balkon.` = `Es gibt einen Balkon [bei uns].`), ama `es gibt` daha çok \"bu ortamda/yerde X var\" derken, `haben` \"benim/bizim X'im var\" derken kullanılır.",
-            "**Yaklaşık okunuş:** `Es gibt` → \"es gipt\"",
-            "---"
-          ],
-          "keyPoints": [
-            "`Es gibt` kalıbını ve `es gibt her zaman Akkusativ ister` kuralını (`der Tisch` → `einen Tisch`) biliyorum."
-          ],
+          "warnings": [],
+          "keyPoints": [],
           "recallQuestions": [
             {
-              "question": "`es gibt` neden `einen Tisch` der, `ein Tisch` demez? → `es gibt` her zaman Akkusativ ister, eril isimlerde `ein` → `einen` olur",
+              "question": "`es gibt` neden `einen Tisch` der? → Akkusativ ister, eril isimlerde `ein` → `einen`",
               "answer": "`einundzwanzig`."
             }
           ],
@@ -49070,29 +48940,6 @@
               "pronunciation": {
                 "german": "Auf dem Balkon gibt es Blumen.",
                 "turkishApproximation": "Auf dem Balkon gibt es Blumen."
-              }
-            },
-            {
-              "german": "Im Markt gibt es viele Leute.",
-              "turkish": "Markette çok insan var.",
-              "pronunciation": {
-                "german": "Im Markt gibt es viele Leute.",
-                "turkishApproximation": "İm Markt gibt es fiile Loyte."
-              }
-            },
-            {
-              "german": "Auf dem Balkon gibt es Blumen.",
-              "turkish": "belirli çiçekler değil, genel olarak çiçek var",
-              "pronunciation": {
-                "german": "Auf dem Balkon gibt es Blumen.",
-                "turkishApproximation": "Auf dem Balkon gibt es Blumen."
-              }
-            },
-            {
-              "german": "Im Markt gibt es viele Leute.",
-              "pronunciation": {
-                "german": "Im Markt gibt es viele Leute.",
-                "turkishApproximation": "İm Markt gibt es fiile Loyte."
               }
             }
           ],
@@ -49122,15 +48969,11 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Bu bölüm 3. Günün en yoğun kısmıdır: `zum`, `zur`, `im`, `ins`, `am` gibi kısa kelimeler aslında iki kelimenin birleşimidir ve **neden** o şekilde büzüldüklerini bilmek onları ezberlemekten çok daha kalıcıdır."
+              "text": "3. Günün en yoğun kısmı: `zum, zur, im, ins, am` gibi kısa kelimeler iki kelimenin birleşimidir."
             },
             {
               "kind": "paragraph",
-              "text": "**Kısaltmalar (kontraksiyonlar) nereden gelir?**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Almancada bazı edatlar (`zu`, `in`, `an`) isimden önceki artikelle (\"dem\", \"der\", \"das\") birleşip kısalır:"
+              "text": "**Kısaltmalar nereden gelir?**"
             },
             {
               "kind": "code",
@@ -49140,18 +48983,18 @@
                 "im  = in + dem      (in + eril/nötr artikel)",
                 "ins = in + das      (in + nötr artikel, yöne giderken)",
                 "am  = an + dem      (an + eril/nötr artikel)",
-                "ans = an + das      (an + nötr artikel, yöne giderken — bonus kalıp)"
+                "ans = an + das      (an + nötr artikel, yöne giderken — bonus)"
               ]
             },
             {
               "kind": "code",
               "lines": [
-                "Ich gehe zum Markt.            (zu + dem Markt)     — Markete gidiyorum.",
-                "Ich gehe zur Schule.           (zu + der Schule)     — Okula gidiyorum.",
-                "Mein Hund spielt im Garten.    (in + dem Garten)     — Köpeğim bahçede oynuyor.",
-                "Wir gehen ins Kino.            (in + das Kino)       — Sinemaya gidiyoruz.",
-                "Ich stehe am Morgen auf.       (an + dem Morgen)     — Sabah kalkarım.",
-                "Ich gehe ans Meer.             (an + das Meer)       — Denize gidiyorum."
+                "Ich gehe zum Markt.            — Markete gidiyorum.",
+                "Ich gehe zur Schule.           — Okula gidiyorum.",
+                "Mein Hund spielt im Garten.    — Köpeğim bahçede oynuyor.",
+                "Wir gehen ins Kino.            — Sinemaya gidiyoruz.",
+                "Ich stehe am Morgen auf.       — Sabah kalkarım.",
+                "Ich gehe ans Meer.             — Denize gidiyorum."
               ]
             },
             {
@@ -49160,20 +49003,20 @@
             },
             {
               "kind": "paragraph",
-              "text": "`der/die/das` dediğimiz artikeller aslında sadece **Nominativ** (özne) hâlidir. Bir isim cümlede özne değil de bir edattan sonra (yerde/yöne) geldiğinde artikel biçim değiştirir — buna **Dativ** ve **Akkusativ** denir. A1 seviyesinde bunun tamamını öğrenmene gerek yok; sadece şu pratik kuralları tanı:"
+              "text": "`der/die/das` aslında sadece **Nominativ** (özne) hâlidir. Bir isim bir edattan sonra (yerde/yöne) geldiğinde biçim değiştirir — **Dativ** ve **Akkusativ**. A1'de tamamını öğrenmene gerek yok, sadece pratik kuralları tanı:"
             },
             {
               "kind": "table",
               "head": [
                 "",
-                "Nominativ (özne)",
-                "Dativ (yerde, \"kime/neye\")",
-                "Akkusativ (yöne, nesne)"
+                "Nominativ",
+                "Dativ (yerde)",
+                "Akkusativ (yöne)"
               ],
               "rows": [
                 [
                   "eril (der)",
-                  "der / den / dem",
+                  "der / **den** / **dem**",
                   "der Tisch → **dem** Tisch",
                   "der Park → **den** Park"
                 ],
@@ -49181,27 +49024,19 @@
                   "dişil (die)",
                   "die",
                   "die Schule → **der** Schule",
-                  "die Schule → die Schule"
+                  "die Schule"
                 ],
                 [
                   "nötr (das)",
                   "das",
                   "das Meer → **dem** Meer",
-                  "das Meer → **das** Meer"
+                  "das Meer"
                 ]
               ]
             },
             {
               "kind": "paragraph",
-              "text": "Yani `der` (Nominativ), `den` (Akkusativ) ve `dem` (Dativ) aynı eril ismin (`der Regen` gibi) üç farklı görünümüdür:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "der / den / dem",
-                "Der Regen ist kalt.        (Nominativ — özne)",
-                "Ich mag den Regen nicht.   (Akkusativ — mögen'in doğrudan nesnesi)"
-              ]
+              "text": "`der / den / dem` aynı eril ismin üç görünümüdür: `Der Regen ist kalt.` (Nominativ) / `Ich mag den Regen nicht.` (Akkusativ)."
             },
             {
               "kind": "paragraph",
@@ -49214,23 +49049,9 @@
             {
               "kind": "code",
               "lines": [
-                "im Park       (Parkta — bir yerdesin, hareket yok)",
-                "in den Park   (Parka — bir yöne gidiyorsun)",
-                "im Meer       (Denizde yüzüyorsun — konum)",
-                "ans Meer      (Denize gidiyorsun — yön)",
-                "ins Kino      (Sinemaya gidiyorsun — yön)"
+                "Wir machen einen Spaziergang im Park.      (konum)",
+                "Ich gehe mit meinen Freunden in den Park.  (yön — der Park eril → in den Park)"
               ]
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Wir machen einen Spaziergang im Park.      (Parkta yürüyüş yapıyoruz. — konum)",
-                "Ich gehe mit meinen Freunden in den Park.  (Arkadaşlarımla parka gidiyorum. — yön)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "`der Park` eril bir isim olduğu için yöne giderken `in den Park` olur (`in` + Akkusativ); parkın içinde bir şey yaparken ise `im Park` (`in` + Dativ, `in+dem=im`) kullanılır."
             },
             {
               "kind": "paragraph",
@@ -49238,248 +49059,137 @@
             },
             {
               "kind": "paragraph",
-              "text": "Bu ikisi sabit (ezberlenecek) kalıplardır ve neredeyse her gün kullanılır:"
+              "text": "Sabit (ezberlenecek) kalıplar:"
             },
             {
               "kind": "code",
               "lines": [
-                "nach Hause     (eve — bir yöne gidiyorsun)",
-                "zu Hause       (evde — bulunduğun yer)"
-              ]
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Ich komme am Abend nach Hause zurück.   (Akşam eve dönüyorum. — yöne)",
-                "Ich höre zu Hause ein bisschen Musik.   (Evde biraz müzik dinliyorum. — konum)"
-              ]
-            },
-            {
-              "kind": "callout",
-              "text": "💡 **Unutma:** `Hause` burada eski bir Dativ biçimidir, günlük kullanımda tek başına ayrı bir kelime gibi ezberlenir. `nach Hause` yönü, `zu Hause` konumu anlatır — tıpkı `ins Kino` (yön) ve `im Park` (konum) gibi."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**mit + Dativ — \"ile\" demek**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`mit` (ile) mit her zaman Dativ ister. Bir zamirle kullanıldığında hazır bir form vardır (`mit mir` = benimle), ama bir isimle kullanıldığında isim ve artikel Dativ'e döner:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Mein Freund sitzt mit mir.              (Arkadaşım benimle oturuyor.)"
+                "nach Hause     (eve — yöne)",
+                "zu Hause       (evde — konum)",
+                "",
+                "Ich komme am Abend nach Hause zurück.",
+                "Ich höre zu Hause ein bisschen Musik."
               ]
             },
             {
               "kind": "paragraph",
-              "text": "Çoğul bir isimle (`meine Freunde` = arkadaşlarım) kullanıldığında iki şey birden değişir:"
+              "text": "**mit + Dativ — \"ile\"**"
             },
             {
               "kind": "paragraph",
-              "text": "1. `meine` (Nominativ/Akkusativ çoğul) → `meinen` (Dativ çoğul) olur."
-            },
-            {
-              "kind": "paragraph",
-              "text": "2. `Freunde` isminin sonuna, zaten `-n` ile bitmiyorsa, bir `-n` eklenir: `Freunde` → `Freunden`."
+              "text": "`mit her zaman Dativ ister`. Zamirle hazır form vardır (`mit mir`); çoğul isimle iki şey değişir: iyelik `meine`→`meinen`, isim `Freunde`→`Freunden` (`-n` eklenir):"
             },
             {
               "kind": "code",
               "lines": [
+                "Mein Freund sitzt mit mir.",
                 "Ich gehe mit meinen Freunden in den Park.   (Arkadaşlarımla parka gidiyorum.)"
               ]
             },
             {
-              "kind": "callout",
-              "text": "💡 **Unutma:** `meinen Freunden` tek kelime gibi görünse de aslında iki değişikliğin toplamıdır: `meinen` (Dativ çoğul iyelik) + `Freunden` (Dativ çoğul isim, `-n` ekli). Bu değişim yalnızca `mit` yüzünden değil, her Dativ çoğulda böyledir."
-            },
-            {
               "kind": "paragraph",
-              "text": "**auf dem ve bei der — iki pratik edat daha**"
+              "text": "**auf dem ve bei der**"
             },
             {
               "kind": "code",
               "lines": [
-                "auf dem Tisch      (masanın üzerinde)     — auf + dem (Dativ)",
-                "auf dem Balkon      (balkonda)             — auf + dem (Dativ)",
-                "bei der Schule      (okulun yanında)       — bei + der (Dativ)"
-              ]
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Auf dem Tisch gibt es Bücher.           (Masanın üzerinde kitaplar var.)",
-                "Meine Wohnung ist nah bei der Schule.   (Evim okula yakın.)"
+                "auf dem Tisch      (masanın üzerinde — Dativ)",
+                "bei der Schule      (okulun yanında — Dativ)",
+                "",
+                "Auf dem Tisch gibt es Bücher.",
+                "Meine Wohnung ist nah bei der Schule."
               ]
             }
           ],
           "warnings": [
-            "`zur Schule` (okula gitmek, Day 2'den tanıdık) ile `bei der Schule` (okulun yanında/yakınında olmak) karıştırılmamalı — biri yön (`zu`), diğeri konum/yakınlık (`bei`) bildirir.",
-            "**Yaklaşık okunuş:** `zum` → \"tsum\", `zur` → \"tsua\", `im` → \"im\", `ins` → \"ins\", `am` → \"am\", `mit` → \"mit\"",
+            "`zur Schule` (okula gitmek) ile `bei der Schule` (okulun yanında olmak) karıştırılmamalı.",
             "---"
           ],
           "keyPoints": [
             "`im yerde kalmayı, ins ise bir yöne gitmeyi anlatır` farkını örnekle açıklayabiliyorum.",
             "`nach Hause` (yöne) ile `zu Hause` (konum) arasındaki farkı biliyorum.",
-            "`mit her zaman Dativ ister` ve `meinen Freunden`de neden iki değişiklik olduğunu (iyelik + isim) açıklayabiliyorum.",
-            "`der / den / dem` üçlüsünün aynı eril ismin Nominativ/Akkusativ/Dativ hâlleri olduğunu biliyorum."
+            "`mit her zaman Dativ ister` ve `meinen Freunden`de neden iki değişiklik olduğunu biliyorum."
           ],
           "recallQuestions": [
             {
-              "question": "`im Park` ile `in den Park` arasındaki fark nedir? → `im Park` konum (Dativ, parkın içinde bir şey yapmak), `in den Park` yön (Akkusativ, parka doğru gitmek)",
+              "question": "`im Park` ile `in den Park` arasındaki fark nedir? → `im Park` konum (Dativ), `in den Park` yön (Akkusativ)",
               "answer": "`Wie heißt du?` (samimi) / `Wie heißen Sie?` (resmî)."
             },
             {
-              "question": "\"Arkadaşlarımla\" cümlede neden `meinen Freunden` olur, `meine Freunde` değil? → `mit` Dativ ister; iyelik Dativ çoğulda `-en` alır (`meinen`), isim de `-n` alır (`Freunden`)",
+              "question": "\"Arkadaşlarımla\" neden `meinen Freunden` olur? → `mit` Dativ ister; iyelik `-en`, isim `-n` alır",
               "answer": "`Wo wohnst du?` nerede oturduğunu, `Woher kommst du?` nereli olduğunu/nereden geldiğini sorar."
             },
             {
-              "question": "`nach Hause` ile `zu Hause` arasındaki fark nedir? → `nach Hause` eve gitmek (yön), `zu Hause` evde olmak (konum)",
+              "question": "`nach Hause` ile `zu Hause` arasındaki fark nedir? → `nach Hause` yön, `zu Hause` konum",
               "answer": "`nach Hause` yön (eve gitmek), `zu Hause` konum (evde olmak)."
             }
           ],
           "examples": [
             {
-              "german": "Ich gehe zum Markt.            (zu + dem Markt)",
+              "german": "Ich gehe zum Markt.",
               "turkish": "Markete gidiyorum.",
               "pronunciation": {
-                "german": "Ich gehe zum Markt.            (zu + dem Markt)",
-                "turkishApproximation": "İh geee tsum Markt. (tsu + dem Markt)",
+                "german": "Ich gehe zum Markt.",
+                "turkishApproximation": "İh geee tsum Markt.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
-              "german": "Ich gehe zur Schule.           (zu + der Schule)",
+              "german": "Ich gehe zur Schule.",
               "turkish": "Okula gidiyorum.",
               "pronunciation": {
-                "german": "Ich gehe zur Schule.           (zu + der Schule)",
-                "turkishApproximation": "İh geee tsur Şuule. (tsu + dea Şule)",
+                "german": "Ich gehe zur Schule.",
+                "turkishApproximation": "İh geee tsur Şuule.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
-              "german": "Mein Hund spielt im Garten.    (in + dem Garten)",
+              "german": "Mein Hund spielt im Garten.",
               "turkish": "Köpeğim bahçede oynuyor.",
               "pronunciation": {
-                "german": "Mein Hund spielt im Garten.    (in + dem Garten)",
-                "turkishApproximation": "Mayn Hunt şpiilt im Garten. (in + dem Garten)"
+                "german": "Mein Hund spielt im Garten.",
+                "turkishApproximation": "Mayn Hunt şpiilt im Garten."
               }
             },
             {
-              "german": "Wir gehen ins Kino.            (in + das Kino)",
+              "german": "Wir gehen ins Kino.",
               "turkish": "Sinemaya gidiyoruz.",
               "pronunciation": {
-                "german": "Wir gehen ins Kino.            (in + das Kino)",
-                "turkishApproximation": "Viia geen ins Kino. (in + das Kino)",
+                "german": "Wir gehen ins Kino.",
+                "turkishApproximation": "Viia geen ins Kino.",
                 "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
               }
             },
             {
-              "german": "Ich stehe am Morgen auf.       (an + dem Morgen)",
+              "german": "Ich stehe am Morgen auf.",
               "turkish": "Sabah kalkarım.",
               "pronunciation": {
-                "german": "Ich stehe am Morgen auf.       (an + dem Morgen)",
-                "turkishApproximation": "İh ştee am Morgen auf. (an + dem Morgen)",
+                "german": "Ich stehe am Morgen auf.",
+                "turkishApproximation": "İh ştee am Morgen auf.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
-              "german": "Ich gehe ans Meer.             (an + das Meer)",
+              "german": "Ich gehe ans Meer.",
               "turkish": "Denize gidiyorum.",
               "pronunciation": {
-                "german": "Ich gehe ans Meer.             (an + das Meer)",
-                "turkishApproximation": "İh geee ans Mea. (an + das Meer)",
+                "german": "Ich gehe ans Meer.",
+                "turkishApproximation": "İh geee ans Mea.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
-              "german": "der / den / dem",
+              "german": "Wir machen einen Spaziergang im Park.",
+              "turkish": "konum",
               "pronunciation": {
-                "german": "der / den / dem",
-                "turkishApproximation": "dea / den / dem",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Der Regen ist kalt.        (Nominativ",
-              "turkish": "özne)",
-              "pronunciation": {
-                "german": "Der Regen ist kalt.        (Nominativ",
-                "turkishApproximation": "Dea Regen ist kalt. (nominatif",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Ich mag den Regen nicht.   (Akkusativ",
-              "turkish": "mögen'in doğrudan nesnesi)",
-              "pronunciation": {
-                "german": "Ich mag den Regen nicht.   (Akkusativ",
-                "turkishApproximation": "İh mak den Regen niht. (akkusatif",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "im Park       (Parkta",
-              "turkish": "bir yerdesin, hareket yok)",
-              "pronunciation": {
-                "german": "im Park       (Parkta",
-                "turkishApproximation": "im Park (parkta"
-              }
-            },
-            {
-              "german": "in den Park   (Parka",
-              "turkish": "bir yöne gidiyorsun)",
-              "pronunciation": {
-                "german": "in den Park   (Parka",
-                "turkishApproximation": "in den Park (parka"
-              }
-            },
-            {
-              "german": "im Meer       (Denizde yüzüyorsun",
-              "turkish": "konum)",
-              "pronunciation": {
-                "german": "im Meer       (Denizde yüzüyorsun",
-                "turkishApproximation": "im Mea (denitsde yütsüyorsun"
-              }
-            },
-            {
-              "german": "ans Meer      (Denize gidiyorsun",
-              "turkish": "yön)",
-              "pronunciation": {
-                "german": "ans Meer      (Denize gidiyorsun",
-                "turkishApproximation": "ans Mea (denitse gidiyorsun"
-              }
-            },
-            {
-              "german": "ins Kino      (Sinemaya gidiyorsun",
-              "turkish": "yön)",
-              "pronunciation": {
-                "german": "ins Kino      (Sinemaya gidiyorsun",
-                "turkishApproximation": "ins Kino (sinemaya gidiyorsun"
-              }
-            },
-            {
-              "german": "Wir machen einen Spaziergang im Park.      (Parkta yürüyüş yapıyoruz.",
-              "turkish": "konum)",
-              "pronunciation": {
-                "german": "Wir machen einen Spaziergang im Park.      (Parkta yürüyüş yapıyoruz.",
-                "turkishApproximation": "Viia mahen aynen Şpatsiirgank im Park. (parkta yürüyüş yapıyoruts.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich gehe mit meinen Freunden in den Park.  (Arkadaşlarımla parka gidiyorum.",
-              "turkish": "yön)",
-              "pronunciation": {
-                "german": "Ich gehe mit meinen Freunden in den Park.  (Arkadaşlarımla parka gidiyorum.",
-                "turkishApproximation": "İh geee mit maynen Froynden in den Park. (arkadaşlarımla parka gidiyorum.",
+                "german": "Wir machen einen Spaziergang im Park.",
+                "turkishApproximation": "Viia mahen aynen Şpatsiirgank im Park.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
               "german": "nach Hause     (eve",
-              "turkish": "bir yöne gidiyorsun)",
+              "turkish": "yöne)",
               "pronunciation": {
                 "german": "nach Hause     (eve",
                 "turkishApproximation": "nah Hauze (efe",
@@ -49488,33 +49198,30 @@
             },
             {
               "german": "zu Hause       (evde",
-              "turkish": "bulunduğun yer)",
+              "turkish": "konum)",
               "pronunciation": {
                 "german": "zu Hause       (evde",
                 "turkishApproximation": "tsu Hauze (efde"
               }
             },
             {
-              "german": "Ich komme am Abend nach Hause zurück.   (Akşam eve dönüyorum.",
-              "turkish": "yöne)",
+              "german": "Ich komme am Abend nach Hause zurück.",
               "pronunciation": {
-                "german": "Ich komme am Abend nach Hause zurück.   (Akşam eve dönüyorum.",
-                "turkishApproximation": "İh kome am Abent nah Hauze tsurück. (akşam efe dönüyorum.",
+                "german": "Ich komme am Abend nach Hause zurück.",
+                "turkishApproximation": "İh kome am Abent nah Hauze tsurück.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
-              "german": "Ich höre zu Hause ein bisschen Musik.   (Evde biraz müzik dinliyorum.",
-              "turkish": "konum)",
+              "german": "Ich höre zu Hause ein bisschen Musik.",
               "pronunciation": {
-                "german": "Ich höre zu Hause ein bisschen Musik.   (Evde biraz müzik dinliyorum.",
-                "turkishApproximation": "İh höre tsu Hauze ayn bisşen Musik. (efde birats mütsik dinliyorum.",
+                "german": "Ich höre zu Hause ein bisschen Musik.",
+                "turkishApproximation": "İh höre tsu Hauze ayn bisşen Musik.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
               "german": "Mein Freund sitzt mit mir.",
-              "turkish": "Arkadaşım benimle oturuyor.",
               "pronunciation": {
                 "german": "Mein Freund sitzt mit mir.",
                 "turkishApproximation": "Mayn Froynt zittst mit mir."
@@ -49530,33 +49237,24 @@
               }
             },
             {
-              "german": "auf dem Tisch      (masanın üzerinde)",
-              "turkish": "auf + dem (Dativ)",
+              "german": "auf dem Tisch      (masanın üzerinde",
+              "turkish": "Dativ)",
               "pronunciation": {
-                "german": "auf dem Tisch      (masanın üzerinde)",
-                "turkishApproximation": "auf dem Tiş (masanın ütserinde)"
+                "german": "auf dem Tisch      (masanın üzerinde",
+                "turkishApproximation": "auf dem Tiş (masanın ütserinde"
               }
             },
             {
-              "german": "auf dem Balkon      (balkonda)",
-              "turkish": "auf + dem (Dativ)",
+              "german": "bei der Schule      (okulun yanında",
+              "turkish": "Dativ)",
               "pronunciation": {
-                "german": "auf dem Balkon      (balkonda)",
-                "turkishApproximation": "auf dem Balkon (balkonda)"
-              }
-            },
-            {
-              "german": "bei der Schule      (okulun yanında)",
-              "turkish": "bei + der (Dativ)",
-              "pronunciation": {
-                "german": "bei der Schule      (okulun yanında)",
-                "turkishApproximation": "bay dea Şuule (okulun yanında)",
+                "german": "bei der Schule      (okulun yanında",
+                "turkishApproximation": "bay dea Şuule (okulun yanında",
                 "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
               }
             },
             {
               "german": "Auf dem Tisch gibt es Bücher.",
-              "turkish": "Masanın üzerinde kitaplar var.",
               "pronunciation": {
                 "german": "Auf dem Tisch gibt es Bücher.",
                 "turkishApproximation": "Auf dem Tiş gibt es Büha.",
@@ -49565,7 +49263,6 @@
             },
             {
               "german": "Meine Wohnung ist nah bei der Schule.",
-              "turkish": "Evim okula yakın.",
               "pronunciation": {
                 "german": "Meine Wohnung ist nah bei der Schule.",
                 "turkishApproximation": "Mayne Voonunk ist naa bay dea Şuule.",
@@ -49588,24 +49285,7 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Almancada bazı fiiller iki parçadan oluşur: bir **önek** (`auf-`, `zurück-`) ve bir **temel fiil** (`stehen`, `räumen`, `kommen`). Sözlükte birleşik yazılırlar (`aufstehen`), ama normal bir cümlede fiil çekilir ve önek cümlenin en sonuna gider:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "aufstehen = kalkmak",
-                "stehen (durmak) + auf (yukarı) → aufstehen (kalkmak)",
-                "",
-                "Ich stehe um 7 Uhr auf.        (Saat 7'de kalkıyorum.)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "Fiilin çekimlenen kısmı (`stehe`) normal yerinde (ikinci sırada) kalır; sadece önek (`auf`) sona atlar."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Bu günün üç ayrılabilen fiili**"
+              "text": "Bazı fiiller bir **önek** (`auf-`, `zurück-`) ve bir **temel fiil**den oluşur. Sözlükte birleşik yazılırlar ama cümlede çekimli kısım ikinci sırada kalır, **önek cümlenin en sonuna gider**:"
             },
             {
               "kind": "code",
@@ -49613,7 +49293,7 @@
                 "aufstehen = kalkmak",
                 "Ich stehe jeden Tag früh auf.        (Ben her gün erken kalkıyorum.)",
                 "",
-                "aufräumen = toplamak (bir yeri/eşyayı düzenlemek)",
+                "aufräumen = toplamak",
                 "Meine Schwester räumt ihr Bett auf.  (Kardeşim yatağını topluyor.)",
                 "",
                 "zurückkommen = geri dönmek",
@@ -49622,38 +49302,24 @@
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** `Ich aufstehe` gibi bir cümle YANLIŞTIR — önek asla fiille birlikte ikinci sırada durmaz, her zaman en sona gider."
+              "text": "💡 **Unutma:** `Ich aufstehe` YANLIŞTIR — önek asla fiille birlikte ikinci sırada durmaz."
             }
           ],
           "warnings": [
-            "`zurückkommen` içindeki `zurück` de bir öneçtir (`komme ... zurück`), tıpkı `auf` gibi davranır. Refleksif bölümünde göreceğin `sich ausruhen` de aslında ayrılabilen bir fiildir (`ruhe ... aus`) — orada refleksif zamirle birlikte nasıl sıralandığını öğreneceksin.",
-            "**Yaklaşık okunuş:** `aufstehen` → \"aufşteen\", `aufräumen` → \"aufroymen\", `zurückkommen` → \"tsurükkomen\"",
+            "Refleksif bölümündeki `sich ausruhen` de aslında ayrılabilen bir fiildir (`ruhe ... aus`).",
             "---"
           ],
           "keyPoints": [
-            "Ayrılabilen fiillerde `önek cümlenin en sonuna gider` kuralını `aufstehen`, `aufräumen`, `zurückkommen` ile uygulayabiliyorum.",
-            "`möchte` cümlesinde asıl fiilin `mastar halinde cümlenin en sonuna gider`diğini biliyorum (`Ich möchte ... kaufen.`)."
+            "Ayrılabilen fiillerde `önek cümlenin en sonuna gider` kuralını uygulayabiliyorum (`aufstehen`, `aufräumen`, `zurückkommen`).",
+            "`möchte` cümlesinde asıl fiilin `mastar halinde cümlenin en sonuna gider`diğini biliyorum."
           ],
           "recallQuestions": [
             {
               "question": "`aufstehen` gibi bir fiilde önek cümlede nereye gider? → cümlenin en sonuna",
               "answer": "Cümlenin en sonuna gider."
-            },
-            {
-              "question": "`Ich ruhe mich am Abend aus.` cümlesinde `mich` ve `aus` neden birbirinden ayrı yerlerde durur? → `mich` refleksif zamir olarak fiilden hemen sonra gelir, `aus` ayrılabilen önek olarak cümlenin sonuna gider",
-              "answer": "`mich` refleksif zamir olarak fiilden hemen sonra, `aus` ayrılabilen önek olarak cümle sonunda durur."
             }
           ],
           "examples": [
-            {
-              "german": "Ich stehe um 7 Uhr auf.",
-              "turkish": "Saat 7'de kalkıyorum.",
-              "pronunciation": {
-                "german": "Ich stehe um 7 Uhr auf.",
-                "turkishApproximation": "İh ştee um 7 Uur auf.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
             {
               "german": "Ich stehe jeden Tag früh auf.",
               "turkish": "Ben her gün erken kalkıyorum.",
@@ -49697,88 +49363,40 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Bazı Almanca fiiller, eylemi öznenin kendine yaptığını göstermek için küçük bir zamire ihtiyaç duyar. Bu zamirlere **refleksif zamir** denir: mich, dich, sich, uns, euch, sich."
-            },
-            {
-              "kind": "table",
-              "head": [
-                "Zamir",
-                "Refleksif zamir"
-              ],
-              "rows": [
-                [
-                  "ich",
-                  "mich"
-                ],
-                [
-                  "du",
-                  "dich"
-                ],
-                [
-                  "er/sie/es",
-                  "sich"
-                ],
-                [
-                  "wir",
-                  "uns"
-                ],
-                [
-                  "ihr",
-                  "euch"
-                ],
-                [
-                  "sie/Sie",
-                  "sich"
-                ]
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**sich duschen — duş almak**"
+              "text": "Bazı fiiller eylemin öznenin kendine yapıldığını göstermek için refleksif zamir ister: **mich, dich, sich**, uns, euch, sich."
             },
             {
               "kind": "code",
               "lines": [
                 "sich duschen",
-                "Dann dusche ich mich.        (Sonra duş alıyorum.)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**sich ausruhen — dinlenmek**"
-            },
-            {
-              "kind": "code",
-              "lines": [
+                "Dann dusche ich mich.        (Sonra duş alıyorum.)",
+                "",
                 "sich ausruhen",
                 "Ich ruhe mich am Abend ein bisschen aus.   (Akşam biraz dinleniyorum.)"
               ]
             },
             {
               "kind": "paragraph",
-              "text": "`sich ausruhen` hem refleksif hem ayrılabilen bir fiildir — iki kural aynı anda çalışır: refleksif zamir (`mich`) çekimli fiilden hemen sonra gelir, önek (`aus`) ise cümlenin en sonuna gider:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Ich ruhe mich aus.              (temel hâl)",
-                "Ich ruhe mich am Abend aus.     (zaman eklenince \"am Abend\" arada kalır)"
-              ]
+              "text": "`sich ausruhen` hem refleksif hem ayrılabilendir: refleksif zamir (`mich`) çekimli fiilden hemen sonra, önek (`aus`) cümlenin en sonuna gider — `ruhe mich ... aus`."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** Sıralama şaşırtıcı gelebilir: `Ich ruhe mich am Abend ein bisschen aus.` cümlesinde `ruhe mich` bir arada, `aus` en sonda. Yaygın hata `mich`'i sona atmaktır (`Ich ruhe am Abend aus mich` YANLIŞ) — refleksif zamir her zaman fiilin hemen ardından gelir, ayrılabilen önek en sona gider."
+              "text": "💡 **Unutma:** Yaygın hata `mich`'i sona atmaktır (`Ich ruhe am Abend aus mich` YANLIŞ)."
             }
           ],
           "warnings": [
-            "Her Almanca fiil refleksif değildir — sadece belirli fiiller (`sich duschen`, `sich ausruhen`, `sich vorstellen` gibi, 1. Günden `Kannst du dich bitte vorstellen?` hatırlarsın) refleksif zamir ister. Zorla her fiile refleksif zamir ekleme.",
-            "**Yaklaşık okunuş:** `mich` → \"mih\", `dich` → \"dih\", `sich` → \"zih\", `sich duschen` → \"zih duuşen\", `sich ausruhen` → \"zih ausruuen\"",
+            "Her fiil refleksif değildir — sadece belirli fiiller (`sich duschen`, `sich ausruhen`, `sich vorstellen`) refleksif zamir ister.",
             "---"
           ],
           "keyPoints": [
             "Refleksif zamirleri (`mich, dich, sich`) ve `sich duschen` / `sich ausruhen` kullanımını biliyorum."
           ],
-          "recallQuestions": [],
+          "recallQuestions": [
+            {
+              "question": "`Ich ruhe mich am Abend aus.` cümlesinde `mich` ve `aus` neden ayrı yerlerde durur? → `mich` fiilden hemen sonra, `aus` cümle sonunda",
+              "answer": "`mich` refleksif zamir olarak fiilden hemen sonra, `aus` ayrılabilen önek olarak cümle sonunda durur."
+            }
+          ],
           "examples": [
             {
               "german": "sich duschen",
@@ -49813,45 +49431,9 @@
                 "turkishApproximation": "İh rue mih am Abent ayn bisşen aus.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
-            },
-            {
-              "german": "Ich ruhe mich aus.",
-              "turkish": "temel hâl",
-              "pronunciation": {
-                "german": "Ich ruhe mich aus.",
-                "turkishApproximation": "İh rue mih aus.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich ruhe mich am Abend aus.",
-              "turkish": "zaman eklenince \"am Abend\" arada kalır",
-              "pronunciation": {
-                "german": "Ich ruhe mich am Abend aus.",
-                "turkishApproximation": "İh rue mih am Abent aus.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
             }
           ],
-          "pronunciation": [
-            {
-              "german": "ich",
-              "turkishApproximation": "ih",
-              "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-            },
-            {
-              "german": "du",
-              "turkishApproximation": "du"
-            },
-            {
-              "german": "wir",
-              "turkishApproximation": "viia"
-            },
-            {
-              "german": "ihr",
-              "turkishApproximation": "iia"
-            }
-          ]
+          "pronunciation": []
         },
         {
           "id": "private.day3.sifat-ekleri",
@@ -49865,25 +49447,15 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Almancada bir sıfat bazen değişmeden kalır, bazen sonuna ek alır. Bunu belirleyen tek şey sıfatın **cümledeki yeri**dir."
-            },
-            {
-              "kind": "paragraph",
               "text": "**sein + sıfat → ek yok**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bir sıfat `sein` fiilinden sonra (cümlenin yüklemi olarak) geliyorsa, hiçbir ek almaz:"
             },
             {
               "kind": "code",
               "lines": [
                 "sein fiilinden sonra sıfat ek almaz",
                 "",
-                "Das Kleid ist sehr schön.        (Bu elbise çok güzel.)",
-                "Mein Zimmer ist klein, aber schön.  (Odam küçük ama güzel.)",
-                "Die Hose ist ein bisschen teuer.    (Bu pantolon biraz pahalı.)",
-                "Ich bin heute sehr glücklich.       (Bugün çok mutluyum.)"
+                "Das Kleid ist sehr schön.",
+                "Ich bin heute sehr glücklich."
               ]
             },
             {
@@ -49892,7 +49464,7 @@
             },
             {
               "kind": "paragraph",
-              "text": "Bir sıfat isimden hemen önce geldiğinde (ismi nitelendirdiğinde) ek alır. Bu ekler artikele ve ismin cinsiyetine göre değişir; A1 seviyesinde şu iki kalıbı tanımak yeterlidir:"
+              "text": "İki en sık kalıp:"
             },
             {
               "kind": "paragraph",
@@ -49902,13 +49474,8 @@
               "kind": "code",
               "lines": [
                 "ein neues T-Shirt",
-                "",
-                "Ich kaufe ein neues T-Shirt.     (Ben yeni bir tişört alıyorum.)"
+                "Ich kaufe ein neues T-Shirt."
               ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "`das T-Shirt` nötr bir isimdir; belirsiz artikel `ein` nötrde zaten eksiz olduğu için, ek yükünü sıfat üstlenir ve `neu` → `neues` olur."
             },
             {
               "kind": "paragraph",
@@ -49918,30 +49485,28 @@
               "kind": "code",
               "lines": [
                 "schwarze Schuhe",
-                "",
-                "Ich möchte schwarze Schuhe.      (Ben siyah ayakkabı istiyorum.)"
+                "Ich möchte schwarze Schuhe."
               ]
             },
             {
               "kind": "paragraph",
-              "text": "`die Schuhe` çoğuldur ve çoğulda belirsiz artikel olmadığı için (Day 2'den hatırla), sıfat ismin yerini bir nevi doldurur ve `-e` eki alır."
+              "text": "`das T-Shirt` nötr olduğu için `neu`→`neues`; `die Schuhe` çoğul ve artikelsiz olduğu için `-e` alır."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** Bu iki kalıp dışındaki artikel/cinsiyet kombinasyonlarında ek farklı olabilir (`der/die/das` sonrası ayrı bir ektir) — 3. Gün yalnızca bu iki en sık görülen kalıbı öğretir. Kural karmaşık görünse de pratik ipucu basit: sıfat `sein`'den sonra mı (ek yok), yoksa isimden hemen önce mi (ek var)?"
+              "text": "💡 **Unutma:** Pratik ipucu: sıfat `sein`'den sonra mı (ek yok), isimden hemen önce mi (ek var)?"
             }
           ],
           "warnings": [
-            "`Das ist eine schwarze Schuhe.` gibi bir cümle YANLIŞTIR — `Schuhe` (ayakkabılar) çoğuldur, çoğulda `eine` gibi tekil bir belirsiz artikel asla kullanılmaz (Day 2 kuralı: çoğulda belirsiz artikel yoktur). Doğrusu artikelsiz: `Ich möchte schwarze Schuhe.`",
-            "**Yaklaşık okunuş:** `neues` → \"noyes\", `schwarze` → \"şvartse\"",
+            "`Das ist eine schwarze Schuhe.` YANLIŞTIR — çoğulda `eine` gibi belirsiz artikel kullanılmaz.",
             "---"
           ],
           "keyPoints": [
-            "`sein fiilinden sonra sıfat ek almaz` ama `ein neues T-Shirt` / `schwarze Schuhe` gibi isimden önceki sıfatların ek aldığını biliyorum."
+            "`sein fiilinden sonra sıfat ek almaz` ama `ein neues T-Shirt` / `schwarze Schuhe` ek aldığını biliyorum."
           ],
           "recallQuestions": [
             {
-              "question": "`ein neues T-Shirt` ve `schwarze Schuhe` sıfatları neden ek alır ama `Das Kleid ist schön.` cümlesindeki `schön` almaz? → isimden önce gelen sıfatlar ek alır, `sein`den sonra gelen (yüklem) sıfatlar ek almaz",
+              "question": "`ein neues T-Shirt` sıfatı neden ek alır ama `Das Kleid ist schön.` almaz? → isimden önceki sıfatlar ek alır, yüklem sıfatları almaz",
               "answer": "İsimden önceki sıfatlar ek alır, `sein`den sonraki (yüklem) sıfatlar ek almaz."
             }
           ],
@@ -49956,7 +49521,6 @@
             },
             {
               "german": "Das Kleid ist sehr schön.",
-              "turkish": "Bu elbise çok güzel.",
               "pronunciation": {
                 "german": "Das Kleid ist sehr schön.",
                 "turkishApproximation": "Das Klayt ist zea şön.",
@@ -49964,26 +49528,7 @@
               }
             },
             {
-              "german": "Mein Zimmer ist klein, aber schön.",
-              "turkish": "Odam küçük ama güzel.",
-              "pronunciation": {
-                "german": "Mein Zimmer ist klein, aber schön.",
-                "turkishApproximation": "Mayn Tsimma ist klayn, aba şön.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Die Hose ist ein bisschen teuer.",
-              "turkish": "Bu pantolon biraz pahalı.",
-              "pronunciation": {
-                "german": "Die Hose ist ein bisschen teuer.",
-                "turkishApproximation": "Dii Hose ist ayn bisşen toya.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
               "german": "Ich bin heute sehr glücklich.",
-              "turkish": "Bugün çok mutluyum.",
               "pronunciation": {
                 "german": "Ich bin heute sehr glücklich.",
                 "turkishApproximation": "İh bin hoyte zea glücklih.",
@@ -49999,7 +49544,6 @@
             },
             {
               "german": "Ich kaufe ein neues T-Shirt.",
-              "turkish": "Ben yeni bir tişört alıyorum.",
               "pronunciation": {
                 "german": "Ich kaufe ein neues T-Shirt.",
                 "turkishApproximation": "İh kaufe ayn noyes T-shirt.",
@@ -50016,7 +49560,6 @@
             },
             {
               "german": "Ich möchte schwarze Schuhe.",
-              "turkish": "Ben siyah ayakkabı istiyorum.",
               "pronunciation": {
                 "german": "Ich möchte schwarze Schuhe.",
                 "turkishApproximation": "İh möhte şvartse Şue.",
@@ -50038,63 +49581,24 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "2. Günden `mein/meine` ve `dein/deine`'yi biliyorsun. 3. Gün bu aileye iki yeni üye ekler."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**unser / unsere — bizim**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`unser / unsere` aynen `mein/meine` kalıbına uyar: eril/nötrde eksiz, dişil ve çoğulda `-e` ekli:"
+              "text": "`unser / unsere` (bizim) ve `ihr / ihre` (onun-kadın/onların), `mein/dein` ile aynı `-e` kuralına uyar — eril/nötrde eksiz, dişil/çoğulda `-e`:"
             },
             {
               "kind": "code",
               "lines": [
-                "Unsere Wohnung hat drei Zimmer.   (Evimizde üç oda var.)",
-                "Wir haben einen Balkon.           (Evimizde bir balkon var.)"
+                "Unsere Wohnung hat drei Zimmer.",
+                "Meine Schwester räumt ihr Bett auf.   (das Bett nötr → ihr eksiz)"
               ]
             },
             {
               "kind": "paragraph",
-              "text": "**ihr / ihre — onun (kadın) / onların**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`ihr / ihre` = onun (kadın bir kişiye ait) ya da onların — aynı `-e` kuralına uyar:"
+              "text": "Dativ çoğulda iyelik `-en` alır: `meinen, deinen` (aynı şekilde `unseren, ihren`):"
             },
             {
               "kind": "code",
               "lines": [
-                "Meine Schwester lernt in ihrem Zimmer.   (Kardeşim odasında ders çalışıyor.)",
-                "Meine Schwester räumt ihr Bett auf.      (Kardeşim yatağını topluyor.)"
+                "mit meinen Freunden"
               ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "`das Zimmer` ve `das Bett` nötr olduğu için `ihr/ihrem` eksiz kalır."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**İyelik + Dativ çoğul**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bir önceki bölümde gördüğün gibi, iyelik ekleri Dativ çoğulda `-en` alır: `meinen, deinen`, aynı şekilde `unseren, ihren`:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "mein  → meinen Freunden    (Dativ çoğul, mit ile)"
-              ]
-            },
-            {
-              "kind": "callout",
-              "text": "💡 **Unutma:** Şimdiye kadar öğrendiğin iyelik zinciri şöyle genişledi: `mein/meine` (benim), `dein/deine` (senin), `unser/unsere` (bizim), `ihr/ihre` (onun-kadın/onların) — hepsi aynı `-e` kuralına uyar."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Yaklaşık okunuş:** `unser` → \"unza\", `unsere` → \"unzere\", `ihr` → \"iia\", `ihre` → \"iire\""
             },
             {
               "kind": "paragraph",
@@ -50109,36 +49613,16 @@
           "examples": [
             {
               "german": "Unsere Wohnung hat drei Zimmer.",
-              "turkish": "Evimizde üç oda var.",
               "pronunciation": {
                 "german": "Unsere Wohnung hat drei Zimmer.",
                 "turkishApproximation": "Unsere Voonunk hat dray Tsimma."
               }
             },
             {
-              "german": "Wir haben einen Balkon.",
-              "turkish": "Evimizde bir balkon var.",
+              "german": "mit meinen Freunden",
               "pronunciation": {
-                "german": "Wir haben einen Balkon.",
-                "turkishApproximation": "Viia haaben aynen Balkon."
-              }
-            },
-            {
-              "german": "Meine Schwester lernt in ihrem Zimmer.",
-              "turkish": "Kardeşim odasında ders çalışıyor.",
-              "pronunciation": {
-                "german": "Meine Schwester lernt in ihrem Zimmer.",
-                "turkishApproximation": "Mayne Şvesta lernt in iirem Tsimma.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Meine Schwester räumt ihr Bett auf.",
-              "turkish": "Kardeşim yatağını topluyor.",
-              "pronunciation": {
-                "german": "Meine Schwester räumt ihr Bett auf.",
-                "turkishApproximation": "Mayne Şvesta roymt iia Bett auf.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+                "german": "mit meinen Freunden",
+                "turkishApproximation": "mit maynen Froynden"
               }
             }
           ],
@@ -50157,98 +49641,37 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "80 cümlede geçen miktar ve çoğul kalıplarını burada topluyoruz."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Sayı + kap ismi + nesne**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bir miktar belirtirken (şişe, bardak gibi) kap ismi sayıya göre çoğul olur, ama içindeki madde (su, kahve gibi) tekil kalır:"
+              "text": "Sayı + kap ismi çoğul olur, madde tekil kalır:"
             },
             {
               "kind": "code",
               "lines": [
                 "zwei Flaschen Wasser",
-                "",
-                "Ich kaufe zwei Flaschen Wasser.    (İki şişe su alıyorum.)"
+                "Ich kaufe zwei Flaschen Wasser."
               ]
             },
             {
               "kind": "paragraph",
-              "text": "`eine Flasche Wasser` (bir şişe su) → `zwei Flaschen Wasser` (iki şişe su): `Flasche` çoğul olur (`-n` eki), `Wasser` her zaman tekil kalır (su sayılamaz bir maddedir)."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Sayı + Zimmer gibi değişmeyen çoğullar**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bazı isimler çoğulda hiç değişmez:"
+              "text": "Bazı isimler çoğulda değişmez:"
             },
             {
               "kind": "code",
               "lines": [
                 "drei Zimmer",
-                "",
-                "Unsere Wohnung hat drei Zimmer.    (Evimizde üç oda var.)"
+                "Unsere Wohnung hat drei Zimmer."
               ]
             },
             {
               "kind": "paragraph",
-              "text": "`das Zimmer` → `die Zimmer` (çoğulu aynı yazılır, sadece artikel `die` olur)."
+              "text": "**Genel ifadelerde** (belirli değil, kategoriden bahsederken) çoğul isim artikelsiz kullanılır: `Meine Schwester mag Tiere.` Ama belirli bir şeyden bahsederken artikel alır: `Meine Mutter gießt die Blumen.`"
             },
             {
               "kind": "paragraph",
-              "text": "**Genel ifadelerde çoğul isim artikelsiz**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Genel ifadelerde bir şeyin türünden/kategorisinden bahsederken (belirli bir örneğinden değil) çoğul isim artikelsiz kullanılır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Meine Schwester mag Tiere.        (Kardeşim hayvanları çok seviyor. — belirli hayvanlar değil, genel olarak)",
-                "Ich lese gern Bücher.             (Kitap okumayı severim. — belirli kitaplar değil)",
-                "Ich esse gern Äpfel."
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "Aynı isim belirli bir şeyden bahsederken artikel alır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Meine Mutter gießt die Blumen.    (Annem çiçekleri suluyor. — az önce bahsedilen, belirli çiçekler)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Umlaut ile çoğul (tekrar)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "5. Gün müfredatında göreceğin bir çoğul deseni burada da karşına çıkıyor: bazı isimler çoğulda hem `-er` alır hem içindeki sesli harf Umlaut olur:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "das Buch → die Bücher",
-                "",
-                "Auf dem Tisch gibt es Bücher.     (Masanın üzerinde kitaplar var.)",
-                "Ich lese gern Bücher."
-              ]
+              "text": "Umlaut ile çoğul (tekrar): `das Buch → die **Bücher**`."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** Sayı/miktar isminden hemen sonraki nesne çoğul oluyorsa (`zwei Flaschen`), asıl madde tekil kalır (`Wasser`). Ama sayı doğrudan bir eşya sayıyorsa (`drei Zimmer`), o eşya da çoğula döner."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Yaklaşık okunuş:** `Flaschen` → \"flaşen\", `Zimmer` → \"tsima\", `Bücher` → \"büüha\""
+              "text": "💡 **Unutma:** `zwei Flaschen` (kap çoğul, madde tekil) ile `drei Zimmer` (değişmeyen çoğul) farklıdır."
             },
             {
               "kind": "paragraph",
@@ -50257,7 +49680,7 @@
           ],
           "warnings": [],
           "keyPoints": [
-            "`zwei Flaschen` (kap çoğul, madde tekil) ile `drei Zimmer` (değişmeyen çoğul) arasındaki farkı biliyorum; `Genel ifadelerde` çoğul ismin artikelsiz kullanıldığını biliyorum."
+            "`zwei Flaschen` ile `drei Zimmer` farkını, `Genel ifadelerde` çoğulun artikelsiz olduğunu biliyorum."
           ],
           "recallQuestions": [],
           "examples": [
@@ -50271,7 +49694,6 @@
             },
             {
               "german": "Ich kaufe zwei Flaschen Wasser.",
-              "turkish": "İki şişe su alıyorum.",
               "pronunciation": {
                 "german": "Ich kaufe zwei Flaschen Wasser.",
                 "turkishApproximation": "İh kaufe tsvay Flaşen Vasa.",
@@ -50287,61 +49709,9 @@
             },
             {
               "german": "Unsere Wohnung hat drei Zimmer.",
-              "turkish": "Evimizde üç oda var.",
               "pronunciation": {
                 "german": "Unsere Wohnung hat drei Zimmer.",
                 "turkishApproximation": "Unsere Voonunk hat dray Tsimma."
-              }
-            },
-            {
-              "german": "Meine Schwester mag Tiere.        (Kardeşim hayvanları çok seviyor.",
-              "turkish": "belirli hayvanlar değil, genel olarak)",
-              "pronunciation": {
-                "german": "Meine Schwester mag Tiere.        (Kardeşim hayvanları çok seviyor.",
-                "turkishApproximation": "Mayne Şvesta mak Tiire. (kardeşim hayfanları çok zefiyor.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich lese gern Bücher.             (Kitap okumayı severim.",
-              "turkish": "belirli kitaplar değil)",
-              "pronunciation": {
-                "german": "Ich lese gern Bücher.             (Kitap okumayı severim.",
-                "turkishApproximation": "İh lese gern Büha. (kitap okumayı zeferim.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich esse gern Äpfel.",
-              "pronunciation": {
-                "german": "Ich esse gern Äpfel.",
-                "turkishApproximation": "İh ese gern Epfel.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Meine Mutter gießt die Blumen.    (Annem çiçekleri suluyor.",
-              "turkish": "az önce bahsedilen, belirli çiçekler)",
-              "pronunciation": {
-                "german": "Meine Mutter gießt die Blumen.    (Annem çiçekleri suluyor.",
-                "turkishApproximation": "Mayne Mutta giist dii Blumen. (annem çiçekleri zuluyor."
-              }
-            },
-            {
-              "german": "Auf dem Tisch gibt es Bücher.",
-              "turkish": "Masanın üzerinde kitaplar var.",
-              "pronunciation": {
-                "german": "Auf dem Tisch gibt es Bücher.",
-                "turkishApproximation": "Auf dem Tiş gibt es Büha.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich lese gern Bücher.",
-              "pronunciation": {
-                "german": "Ich lese gern Bücher.",
-                "turkishApproximation": "İh lese gern Büha.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             }
           ],
@@ -50360,102 +49730,76 @@
           ],
           "blocks": [
             {
-              "kind": "paragraph",
-              "text": "80 cümlenin çoğu bir saat, gün bölümü ya da mevsim taşır — bu kalıpları burada topluyoruz."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**um + saat**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Kesin bir saat söylerken `um` kullanılır:"
+              "kind": "code",
+              "lines": [
+                "um 7 Uhr           (kesin saat)",
+                "am Morgen          (an+dem — günün bölümü)",
+                "im Winter          (in+dem — mevsim)",
+                "Dann                (sonra, cümle başına gelebilir)"
+              ]
             },
             {
               "kind": "code",
               "lines": [
-                "um 7 Uhr",
-                "",
-                "Ich stehe um 7 Uhr auf.           (Saat yedide kalkıyorum.)",
-                "Ich gehe um 8 Uhr zur Schule.     (Saat sekizde okula gidiyorum.)"
+                "Ich stehe um 7 Uhr auf.",
+                "Ich frühstücke am Morgen.",
+                "Im Winter ist das Wetter kalt.",
+                "Dann lese ich ein Buch."
               ]
             },
             {
               "kind": "paragraph",
-              "text": "**am Morgen / am Abend / am Wochenende**"
+              "text": "`morgen küçük harfle` yazılır ve \"yarın\" demektir (zarf); `der Morgen` büyük harfli ve \"sabah\" demektir (isim): `Morgen treffe ich meine Freunde.`"
+            },
+            {
+              "kind": "callout",
+              "text": "💡 **Unutma:** Almancada gelecek için ayrı çekim yoktur — **Präsens + zaman ifadesi** yeterlidir (`Morgen treffe ich ...`)."
             },
             {
               "kind": "paragraph",
-              "text": "Günün bir bölümünü ya da hafta sonunu belirtirken `am` (`an + dem`) kullanılır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "am Morgen",
-                "",
-                "Ich frühstücke am Morgen.               (Sabah kahvaltı yapıyorum.)",
-                "Wir gehen am Abend ins Kino.            (Akşam sinemaya gidiyoruz.)",
-                "Ich treffe meinen Freund am Wochenende. (Hafta sonu arkadaşımı görüyorum.)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**im Winter / im Sommer**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Mevsim belirtirken `im` (`in + dem`) kullanılır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "im Winter",
-                "",
-                "Im Winter ist das Wetter kalt.    (Kışın hava soğuk oluyor.)",
-                "Im Sommer gehe ich ans Meer.      (Yazın denize gidiyorum.)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Dann / danach — sonra**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`Dann` (sonra) günlük anlatılarda cümleleri birbirine bağlamak için çok kullanılır ve her zaman cümlenin başına gelebilir:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Dann dusche ich mich.",
-                "Dann lese ich ein Buch.",
-                "Dann schlafe ich."
-              ]
+              "text": "---"
             }
           ],
-          "warnings": [
-            "Bu ikisi yazılışça neredeyse aynıdır ama tamamen farklı anlamlara gelir:",
-            "morgen küçük harfle yazılır ve \"yarın\" demektir (zarf) der Morgen büyük harfle yazılır ve \"sabah\" demektir (isim)",
-            "Morgen treffe ich meine Freunde.   (Yarın arkadaşlarımla buluşacağım.) Ich frühstücke am Morgen.          (Sabah kahvaltı yapıyorum.)",
-            "💡 **Unutma:** Almancada gelecek zaman için genelde ayrı bir fiil çekimi kurulmaz — **Präsens (şimdiki/geniş zaman) + zaman ifadesi** (`morgen`, `nächste Woche` gibi) yeterlidir. `Morgen treffe ich meine Freunde.` cümlesi \"yarın buluşacağım\" anlamına gelir, fiil hâlâ şimdiki zamandadır (`treffe`).",
-            "`morgen` (yarın) cümle başında büyük harfle yazılır ama bu YALNIZCA cümle başı kuralından kaynaklanır (her Almanca cümle büyük harfle başlar) — kelimenin kendisi sıfat/zarf olduğu için normalde küçük harflidir. `der Morgen` ise her zaman büyük harflidir çünkü bir isimdir.",
-            "**Yaklaşık okunuş:** `um` → \"um\", `am` → \"am\", `im` → \"im\", `Dann` → \"dan\", `morgen` → \"morgen\"",
-            "---"
-          ],
+          "warnings": [],
           "keyPoints": [
-            "`um 7 Uhr`, `am Morgen`, `im Winter` zaman kalıplarını doğru kullanıyorum; `morgen küçük harfle` (yarın) ile `der Morgen` (sabah) arasındaki farkı biliyorum."
+            "`um 7 Uhr`, `am Morgen`, `im Winter` zaman kalıplarını kullanıyorum; `morgen küçük harfle` ile `der Morgen` farkını biliyorum."
           ],
           "recallQuestions": [],
           "examples": [
             {
               "german": "um 7 Uhr",
+              "turkish": "kesin saat",
               "pronunciation": {
                 "german": "um 7 Uhr",
                 "turkishApproximation": "um 7 Uur"
               }
             },
             {
+              "german": "am Morgen          (an+dem",
+              "turkish": "günün bölümü)",
+              "pronunciation": {
+                "german": "am Morgen          (an+dem",
+                "turkishApproximation": "am Morgen (an+dem"
+              }
+            },
+            {
+              "german": "im Winter          (in+dem",
+              "turkish": "mevsim)",
+              "pronunciation": {
+                "german": "im Winter          (in+dem",
+                "turkishApproximation": "im Vinta (in+dem"
+              }
+            },
+            {
+              "german": "Dann",
+              "turkish": "sonra, cümle başına gelebilir",
+              "pronunciation": {
+                "german": "Dann",
+                "turkishApproximation": "Dann"
+              }
+            },
+            {
               "german": "Ich stehe um 7 Uhr auf.",
-              "turkish": "Saat yedide kalkıyorum.",
               "pronunciation": {
                 "german": "Ich stehe um 7 Uhr auf.",
                 "turkishApproximation": "İh ştee um 7 Uur auf.",
@@ -50463,24 +49807,7 @@
               }
             },
             {
-              "german": "Ich gehe um 8 Uhr zur Schule.",
-              "turkish": "Saat sekizde okula gidiyorum.",
-              "pronunciation": {
-                "german": "Ich gehe um 8 Uhr zur Schule.",
-                "turkishApproximation": "İh geee um 8 Uur tsur Şuule.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "am Morgen",
-              "pronunciation": {
-                "german": "am Morgen",
-                "turkishApproximation": "am Morgen"
-              }
-            },
-            {
               "german": "Ich frühstücke am Morgen.",
-              "turkish": "Sabah kahvaltı yapıyorum.",
               "pronunciation": {
                 "german": "Ich frühstücke am Morgen.",
                 "turkishApproximation": "İh früüstücke am Morgen.",
@@ -50488,53 +49815,10 @@
               }
             },
             {
-              "german": "Wir gehen am Abend ins Kino.",
-              "turkish": "Akşam sinemaya gidiyoruz.",
-              "pronunciation": {
-                "german": "Wir gehen am Abend ins Kino.",
-                "turkishApproximation": "Viia geen am Abent ins Kino.",
-                "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
-              }
-            },
-            {
-              "german": "Ich treffe meinen Freund am Wochenende.",
-              "turkish": "Hafta sonu arkadaşımı görüyorum.",
-              "pronunciation": {
-                "german": "Ich treffe meinen Freund am Wochenende.",
-                "turkishApproximation": "İh treffe maynen Froynt am Vohenende.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "im Winter",
-              "pronunciation": {
-                "german": "im Winter",
-                "turkishApproximation": "im Vinta"
-              }
-            },
-            {
               "german": "Im Winter ist das Wetter kalt.",
-              "turkish": "Kışın hava soğuk oluyor.",
               "pronunciation": {
                 "german": "Im Winter ist das Wetter kalt.",
                 "turkishApproximation": "İm Vinta ist das Vetta kalt."
-              }
-            },
-            {
-              "german": "Im Sommer gehe ich ans Meer.",
-              "turkish": "Yazın denize gidiyorum.",
-              "pronunciation": {
-                "german": "Im Sommer gehe ich ans Meer.",
-                "turkishApproximation": "İm Zomma geee ih ans Mea.",
-                "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
-              }
-            },
-            {
-              "german": "Dann dusche ich mich.",
-              "pronunciation": {
-                "german": "Dann dusche ich mich.",
-                "turkishApproximation": "Dann duşe ih mih.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             },
             {
@@ -50542,14 +49826,6 @@
               "pronunciation": {
                 "german": "Dann lese ich ein Buch.",
                 "turkishApproximation": "Dann lese ih ayn Buuh.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Dann schlafe ich.",
-              "pronunciation": {
-                "german": "Dann schlafe ich.",
-                "turkishApproximation": "Dann şlafe ih.",
                 "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             }
@@ -50568,15 +49844,7 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Şimdiye kadar öğrendiğin tüm kalıpları doğru sırada bir cümlede birleştirmenin kuralını öğreniyorsun."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Temel kural: fiil ikinci sırada**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Almanca ana cümlede fiil her zaman ikinci sırada durur — cümle neyle başlarsa başlasın:"
+              "text": "**Fiil her zaman ikinci sırada** durur, cümle neyle başlarsa başlasın:"
             },
             {
               "kind": "code",
@@ -50587,89 +49855,39 @@
             },
             {
               "kind": "paragraph",
-              "text": "Her iki cümle de aynı anlamı taşır; fark sadece neyin vurgulandığıdır. Ama fiil (`gehe`) her ikisinde de **ikinci** kelime/öbektir."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Zaman ifadesi başta → fiil hemen arkasından gelir**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bir cümle zaman ifadesiyle (`Heute`, `Dann`, `Nach dem Film` gibi) başlarsa, özne fiilden SONRAYA kayar — fiil yine ikinci sırada kalmak zorunda olduğu için:"
+              "text": "**Zaman ifadesi cümle başına** geldiğinde (`Heute`, `Dann`, `Nach dem Film`) özne fiilden sonraya kayar:"
             },
             {
               "kind": "code",
               "lines": [
                 "Heute bin ich sehr glücklich.",
-                "Am Abend gehe ich nach Hause.",
-                "Dann lese ich ein Buch.",
-                "Nach dem Film gehe ich nach Hause.",
-                "Morgen treffe ich meine Freunde."
+                "Nach dem Film gehe ich nach Hause."
               ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "Bu cümlelerin hepsinde ilk öğe zaman ifadesi, ikinci öğe fiil, üçüncü öğe özne (`ich`) olur — `Özne + Fiil` değil, `Zaman + Fiil + Özne` sırası."
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** Yeni başlayanların en sık yaptığı hata, zaman ifadesinden sonra da özneyi fiilden önce yazmaktır (`Heute ich bin ...` YANLIŞ). Kural basit: fiil HER ZAMAN ikinci sırada, özne neredeyse gerekiyorsa üçüncü sıraya kayar."
+              "text": "💡 **Unutma:** Sık hata: `Heute ich bin ...` YANLIŞ — fiil her zaman ikinci, özne gerekiyorsa üçüncü sırada."
             },
             {
               "kind": "paragraph",
-              "text": "**nach dem Film — hem \"sonra\" hem sabit kalıp**"
+              "text": "`nach` iki farklı kullanımda karşına çıkar: `nach dem Film` (sonra, zaman) ve `nach Hause` (eve, sabit kalıp) — aynı cümlede bir arada durabilirler."
             },
             {
               "kind": "paragraph",
-              "text": "`nach` kelimesi iki farklı şekilde karşına çıkar:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "nach dem Film      (filmden sonra — zaman anlamında \"nach\" + Dativ)",
-                "nach Hause         (eve — yön anlamında sabit kalıp)"
-              ]
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Nach dem Film gehe ich nach Hause.   (Filmden sonra eve gidiyorum.)"
-              ]
+              "text": "`möchte` cümlesinde asıl fiil **mastar halinde cümlenin en sonuna gider**: `Ich möchte ein Brot kaufen.`"
             },
             {
               "kind": "paragraph",
-              "text": "Aynı cümlede iki farklı `nach` kullanımı yan yana durabilir: biri \"sonra\" (zaman), diğeri \"eve\" (yön, sabit kalıp)."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**möchte + ... + fiil (mastar) sonda**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "`möchte` ikinci sırada kalır ama beraberindeki asıl fiil mastar halinde cümlenin en sonuna gider — Almancada modal fiillerin genel kuralıdır:"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Ich möchte ein Brot kaufen."
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "`möchte` (ikinci sırada) — `ein Brot` (ortada) — `kaufen` (mastar, en sonda)."
+              "text": "---"
             }
           ],
-          "warnings": [
-            "Ayrılabilen fiil öneki (`auf`, `zurück`) ile modal fiilden sonraki mastar (`kaufen`) benzer bir yere, cümle sonuna gider — ama farklı sebeplerle. Önek ayrılabilen fiilin bir parçasıdır; mastar ise `möchte` gibi bir yardımcı fiille birlikte kullanılan ayrı bir fiildir.",
-            "**Yaklaşık okunuş:** `Nach dem Film` → \"nah dem film\"",
-            "---"
-          ],
+          "warnings": [],
           "keyPoints": [
             "`fiil her zaman ikinci sırada` kuralını ve `Zaman ifadesi cümle başına` geldiğinde öznenin nereye kaydığını biliyorum."
           ],
           "recallQuestions": [
             {
-              "question": "Zaman ifadesi cümlenin başına geldiğinde (`Dann`, `Nach dem Film`) özne nereye gider? → fiilden sonraya, çünkü fiil her zaman ikinci sırada kalmalıdır",
+              "question": "Zaman ifadesi başa geldiğinde özne nereye gider? → fiilden sonraya",
               "answer": "Fiilden sonraya kayar — fiil her zaman ikinci sırada kalmalıdır."
             }
           ],
@@ -50699,70 +49917,11 @@
               }
             },
             {
-              "german": "Am Abend gehe ich nach Hause.",
-              "pronunciation": {
-                "german": "Am Abend gehe ich nach Hause.",
-                "turkishApproximation": "Am Abent geee ih nah Hauze.",
-                "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
-              }
-            },
-            {
-              "german": "Dann lese ich ein Buch.",
-              "pronunciation": {
-                "german": "Dann lese ich ein Buch.",
-                "turkishApproximation": "Dann lese ih ayn Buuh.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
               "german": "Nach dem Film gehe ich nach Hause.",
               "pronunciation": {
                 "german": "Nach dem Film gehe ich nach Hause.",
                 "turkishApproximation": "Nah dem Film geee ih nah Hauze.",
                 "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
-              }
-            },
-            {
-              "german": "Morgen treffe ich meine Freunde.",
-              "pronunciation": {
-                "german": "Morgen treffe ich meine Freunde.",
-                "turkishApproximation": "Morgen treffe ih mayne Froynde.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "nach dem Film      (filmden sonra",
-              "turkish": "zaman anlamında \"nach\" + Dativ)",
-              "pronunciation": {
-                "german": "nach dem Film      (filmden sonra",
-                "turkishApproximation": "nah dem Film (filmden zonra",
-                "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
-              }
-            },
-            {
-              "german": "nach Hause         (eve",
-              "turkish": "yön anlamında sabit kalıp)",
-              "pronunciation": {
-                "german": "nach Hause         (eve",
-                "turkishApproximation": "nah Hauze (efe",
-                "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
-              }
-            },
-            {
-              "german": "Nach dem Film gehe ich nach Hause.",
-              "turkish": "Filmden sonra eve gidiyorum.",
-              "pronunciation": {
-                "german": "Nach dem Film gehe ich nach Hause.",
-                "turkishApproximation": "Nah dem Film geee ih nah Hauze.",
-                "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
-              }
-            },
-            {
-              "german": "Ich möchte ein Brot kaufen.",
-              "pronunciation": {
-                "german": "Ich möchte ein Brot kaufen.",
-                "turkishApproximation": "İh möhte ayn Brot kaufen.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
               }
             }
           ],
@@ -50784,115 +49943,39 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Bu bölüm, yeni gramer kuralı gerektirmeyen ama 80 cümlenin çoğunda geçen kelime gruplarını toplar."
+              "text": "Yeni gramer kuralı gerektirmeyen ama 80 cümlede sık geçen kelime grupları:"
             },
             {
               "kind": "paragraph",
-              "text": "**Hava durumu**"
+              "text": "**Hava:** `Das Wetter ist` + sıfat (ek almaz): `Das Wetter ist heute sehr schön.`"
             },
             {
               "kind": "paragraph",
-              "text": "Das Wetter ist + sıfat kalıbı hava durumunu anlatmanın standart yoludur (sıfat `sein`'den sonra geldiği için ek almaz):"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Das Wetter ist heute sehr schön.",
-                "Das Wetter ist ein bisschen warm.",
-                "Im Winter ist das Wetter kalt."
-              ]
+              "text": "**Hayvanlar:** `die Katze` (kedi), der Hund, das Tier (Pl. Tiere), das Lieblingstier — `Mein Lieblingstier ist die Katze.`"
             },
             {
               "kind": "paragraph",
-              "text": "**Hayvanlar**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "die Katze (kedi), der Hund (köpek), das Tier (hayvan, Pl. die Tiere), das Lieblingstier (en sevilen hayvan)",
-                "",
-                "Ich habe eine Katze.",
-                "Mein Hund spielt im Garten.",
-                "Mein Lieblingstier ist die Katze."
-              ]
+              "text": "**Hobiler:** schwimmen, `gern Fußball` (spielen), lesen, Fotos machen, Fahrrad fahren."
             },
             {
               "kind": "paragraph",
-              "text": "**Hobiler ve boş zaman**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "schwimmen (yüzmek), Fußball spielen, lesen (okumak), fotografieren / Fotos machen, Fahrrad fahren",
-                "",
-                "Ich spiele gern Fußball.",
-                "Meine Schwester fährt Fahrrad.",
-                "Mein Freund macht Fotos."
-              ]
+              "text": "**Alışveriş:** `kaufen`, das T-Shirt, die Schuhe, die Hose, das Einkaufszentrum."
             },
             {
               "kind": "paragraph",
-              "text": "**Alışveriş**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "kaufen (satın almak), das T-Shirt, die Schuhe (Pl.), die Hose, das Einkaufszentrum",
-                "",
-                "Ich kaufe ein neues T-Shirt.",
-                "Dann gehen wir ins Einkaufszentrum."
-              ]
+              "text": "**Ev:** `die Wohnung` (ev/daire), das Zimmer, der Balkon, der Garten, das Wohnzimmer, die Küche."
             },
             {
               "kind": "paragraph",
-              "text": "**Ev kelimeleri**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "die Wohnung (ev/daire), das Zimmer (oda), der Balkon, der Garten, das Wohnzimmer, die Küche",
-                "",
-                "Meine Wohnung ist nah bei der Schule.",
-                "Mein Vater schaut im Wohnzimmer Fernsehen.",
-                "Meine Mutter kocht in der Küche."
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Günlük rutin fiilleri**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "frühstücken (kahvaltı yapmak), putzen (temizlemek), gießen (sulamak), hören (duymak/dinlemek), enden (bitmek — kendiliğinden), beginnen (başlamak)",
-                "",
-                "Ich frühstücke am Morgen.",
-                "Ich putze mein Zimmer.",
-                "Meine Mutter gießt die Blumen.",
-                "Meine Mutter hört Musik.",
-                "Die Schule endet um 3 Uhr.",
-                "Der Unterricht beginnt um 9 Uhr."
-              ]
+              "text": "**Günlük rutin:** `frühstücken`, putzen, gießen, hören, enden (kendiliğinden bitmek), beginnen — `Ich frühstücke am Morgen.` / `Die Schule endet um 3 Uhr.`"
             },
             {
               "kind": "callout",
-              "text": "💡 **Unutma:** `enden` kendiliğinden bitmeyi anlatır (`Die Schule endet.` — okul kendi kendine biter), `beenden` ise birinin bir şeyi bitirmesini anlatır ve nesne ister (`Ich beende die Schule.`). Bu yüzden \"okul saat 3'te bitiyor\" derken `endet` doğrudur, `beendet` değil."
+              "text": "💡 **Unutma:** `enden` kendiliğinden biter (`Die Schule endet.`), `beenden` birinin bir şeyi bitirmesidir ve nesne ister."
             },
             {
               "kind": "paragraph",
-              "text": "**Es geht mir gut — iyiyim**"
-            },
-            {
-              "kind": "code",
-              "lines": [
-                "Es geht mir gut = iyiyim",
-                "",
-                "Ich bin ein bisschen müde, aber es geht mir gut.   (Biraz yorgunum ama iyiyim.)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Yaklaşık okunuş:** `die Katze` → \"dii katse\", `kaufen` → \"kaufen\", `die Wohnung` → \"dii voonung\", `frühstücken` → \"früüştüken\""
+              "text": "**Es geht mir gut** = iyiyim: `Ich bin ein bisschen müde, aber es geht mir gut.`"
             },
             {
               "kind": "paragraph",
@@ -50902,211 +49985,7 @@
           "warnings": [],
           "keyPoints": [],
           "recallQuestions": [],
-          "examples": [
-            {
-              "german": "Das Wetter ist heute sehr schön.",
-              "pronunciation": {
-                "german": "Das Wetter ist heute sehr schön.",
-                "turkishApproximation": "Das Vetta ist hoyte zea şön.",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Das Wetter ist ein bisschen warm.",
-              "pronunciation": {
-                "german": "Das Wetter ist ein bisschen warm.",
-                "turkishApproximation": "Das Vetta ist ayn bisşen varm.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Im Winter ist das Wetter kalt.",
-              "pronunciation": {
-                "german": "Im Winter ist das Wetter kalt.",
-                "turkishApproximation": "İm Vinta ist das Vetta kalt."
-              }
-            },
-            {
-              "german": "die Katze",
-              "turkish": "kedi), der Hund (köpek), das Tier (hayvan, Pl. die Tiere), das Lieblingstier (en sevilen hayvan",
-              "pronunciation": {
-                "german": "die Katze",
-                "turkishApproximation": "dii Kattse"
-              }
-            },
-            {
-              "german": "Ich habe eine Katze.",
-              "pronunciation": {
-                "german": "Ich habe eine Katze.",
-                "turkishApproximation": "İh haabe ayne Kattse.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Mein Hund spielt im Garten.",
-              "pronunciation": {
-                "german": "Mein Hund spielt im Garten.",
-                "turkishApproximation": "Mayn Hunt şpiilt im Garten."
-              }
-            },
-            {
-              "german": "Mein Lieblingstier ist die Katze.",
-              "pronunciation": {
-                "german": "Mein Lieblingstier ist die Katze.",
-                "turkishApproximation": "Mayn Liiblingstiir ist dii Kattse."
-              }
-            },
-            {
-              "german": "schwimmen (yüzmek), Fußball spielen, lesen (okumak), fotografieren / Fotos machen, Fahrrad fahren",
-              "pronunciation": {
-                "german": "schwimmen (yüzmek), Fußball spielen, lesen (okumak), fotografieren / Fotos machen, Fahrrad fahren",
-                "turkishApproximation": "şvimmen (yütsmek), Fusball şpiilen, lesen (okumak), fotografiiren / Fotos mahen, Faarrat faaren",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich spiele gern Fußball.",
-              "pronunciation": {
-                "german": "Ich spiele gern Fußball.",
-                "turkishApproximation": "İh şpiile gern Fusball.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Meine Schwester fährt Fahrrad.",
-              "pronunciation": {
-                "german": "Meine Schwester fährt Fahrrad.",
-                "turkishApproximation": "Mayne Şvesta feert Faarrat.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Mein Freund macht Fotos.",
-              "pronunciation": {
-                "german": "Mein Freund macht Fotos.",
-                "turkishApproximation": "Mayn Froynt maht Fotos.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "kaufen (satın almak), das T-Shirt, die Schuhe (Pl.), die Hose, das Einkaufszentrum",
-              "pronunciation": {
-                "german": "kaufen (satın almak), das T-Shirt, die Schuhe (Pl.), die Hose, das Einkaufszentrum",
-                "turkishApproximation": "kaufen (satın almak), das T-shirt, dii Şue (pl.), dii Hose, das Aynkaufstsentrum",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich kaufe ein neues T-Shirt.",
-              "pronunciation": {
-                "german": "Ich kaufe ein neues T-Shirt.",
-                "turkishApproximation": "İh kaufe ayn noyes T-shirt.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Dann gehen wir ins Einkaufszentrum.",
-              "pronunciation": {
-                "german": "Dann gehen wir ins Einkaufszentrum.",
-                "turkishApproximation": "Dann geen viia ins Aynkaufstsentrum.",
-                "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
-              }
-            },
-            {
-              "german": "die Wohnung (ev/daire), das Zimmer (oda), der Balkon, der Garten, das Wohnzimmer, die Küche",
-              "pronunciation": {
-                "german": "die Wohnung (ev/daire), das Zimmer (oda), der Balkon, der Garten, das Wohnzimmer, die Küche",
-                "turkishApproximation": "dii Voonunk (ef/daire), das Tsimma (oda), dea Balkon, dea Garten, das Voontsimma, dii Kühe",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Meine Wohnung ist nah bei der Schule.",
-              "pronunciation": {
-                "german": "Meine Wohnung ist nah bei der Schule.",
-                "turkishApproximation": "Mayne Voonunk ist naa bay dea Şuule.",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Mein Vater schaut im Wohnzimmer Fernsehen.",
-              "pronunciation": {
-                "german": "Mein Vater schaut im Wohnzimmer Fernsehen.",
-                "turkishApproximation": "Mayn Faata şaut im Voontsimma Fernseen.",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Meine Mutter kocht in der Küche.",
-              "pronunciation": {
-                "german": "Meine Mutter kocht in der Küche.",
-                "turkishApproximation": "Mayne Mutta koht in dea Kühe.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "frühstücken (kahvaltı yapmak), putzen (temizlemek), gießen (sulamak), hören (duymak/dinlemek), enden (bitmek",
-              "turkish": "kendiliğinden), beginnen (başlamak)",
-              "pronunciation": {
-                "german": "frühstücken (kahvaltı yapmak), putzen (temizlemek), gießen (sulamak), hören (duymak/dinlemek), enden (bitmek",
-                "turkishApproximation": "früüstücken (kaafaltı yapmak), puttsen (temitslemek), giisen (sulamak), hören (duymak/dinlemek), enden (bitmek"
-              }
-            },
-            {
-              "german": "Ich frühstücke am Morgen.",
-              "pronunciation": {
-                "german": "Ich frühstücke am Morgen.",
-                "turkishApproximation": "İh früüstücke am Morgen.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Ich putze mein Zimmer.",
-              "pronunciation": {
-                "german": "Ich putze mein Zimmer.",
-                "turkishApproximation": "İh puttse mayn Tsimma.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            },
-            {
-              "german": "Meine Mutter gießt die Blumen.",
-              "pronunciation": {
-                "german": "Meine Mutter gießt die Blumen.",
-                "turkishApproximation": "Mayne Mutta giist dii Blumen."
-              }
-            },
-            {
-              "german": "Meine Mutter hört Musik.",
-              "pronunciation": {
-                "german": "Meine Mutter hört Musik.",
-                "turkishApproximation": "Mayne Mutta hört Musik."
-              }
-            },
-            {
-              "german": "Die Schule endet um 3 Uhr.",
-              "pronunciation": {
-                "german": "Die Schule endet um 3 Uhr.",
-                "turkishApproximation": "Dii Şuule endet um 3 Uur."
-              }
-            },
-            {
-              "german": "Der Unterricht beginnt um 9 Uhr.",
-              "pronunciation": {
-                "german": "Der Unterricht beginnt um 9 Uhr.",
-                "turkishApproximation": "Dea Unterriht beginnt um 9 Uur.",
-                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
-              }
-            },
-            {
-              "german": "Ich bin ein bisschen müde, aber es geht mir gut.",
-              "turkish": "Biraz yorgunum ama iyiyim.",
-              "pronunciation": {
-                "german": "Ich bin ein bisschen müde, aber es geht mir gut.",
-                "turkishApproximation": "İh bin ayn bisşen müüde, aba es geet mir guut.",
-                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
-              }
-            }
-          ],
+          "examples": [],
           "pronunciation": []
         },
         {
@@ -51117,175 +49996,39 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "Aşağıdaki 8 cümle, 80 cümlenin öğrettiği 8 farklı yapıyı temsil eder. Bunları tam anlarsan, kalan 72 cümlenin çoğu aynı kalıpların varyasyonudur."
+              "text": "80 cümlenin öğrettiği 8 farklı yapı. Bunları anlarsan, kalanı aynı kalıpların varyasyonudur."
             },
             {
               "kind": "paragraph",
-              "text": "**1 — Saat Belirtme (um + Uhr, ayrılabilen fiil)**"
+              "text": "**1 — Saat + Ayrılabilen Fiil:** `Ich stehe um 7 Uhr auf.` (Saat yedide kalkıyorum.) `stehe ... auf` = aufstehen'in ich çekimi, önek sona gider. ⚠️ `Ich aufstehe` YANLIŞ."
             },
             {
               "kind": "paragraph",
-              "text": "**Türkçe:** Saat yedide kalkıyorum."
+              "text": "**2 — Günün Bölümü + V2:** `Wir gehen am Abend ins Kino.` (Akşam sinemaya gidiyoruz.) `am Abend` = an+dem; `ins Kino` = in+das, yön (Akkusativ)."
             },
             {
               "kind": "paragraph",
-              "text": "**Almanca:** `Ich stehe um 7 Uhr auf.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`ich` = ben; `aufstehen` = kalkmak (ayrılabilen fiil)",
-                "`stehe ... auf` = `aufstehen` fiilinin `ich` çekimi, önek (`auf`) sona gider",
-                "`um` = kesin saatlerde kullanılan edat; `7 Uhr` = saat 7"
-              ]
-            },
-            {
-              "kind": "callout",
-              "text": "⚠️ `Ich aufstehe um 7 Uhr.` YAZMA — önek asla fiille birlikte durmaz."
+              "text": "**3 — Konum vs Yön:** `Wir machen einen Spaziergang im Park.` / `Ich gehe mit meinen Freunden in den Park.` Aynı kelime, aynı edat (`in`), farklı hâl → farklı anlam (Dativ=konum, Akkusativ=yön)."
             },
             {
               "kind": "paragraph",
-              "text": "**2 — Günün Bir Bölümü (am Abend + V2)**"
+              "text": "**4 — Ayrılabilen Fiil:** `Meine Schwester räumt ihr Bett auf.` (Kardeşim yatağını topluyor.) `ihr Bett` = onun (kız kardeşimin) yatağı, das Bett nötr → eksiz."
             },
             {
               "kind": "paragraph",
-              "text": "**Türkçe:** Akşam sinemaya gidiyoruz."
+              "text": "**5 — İyelik + Dativ Çoğul:** `Ich gehe mit meinen Freunden in den Park.` `mit` Dativ ister; `meine Freunde` → `meinen Freunden` — iki değişiklik birden (iyelik `-en`, isim `-n`). ⚠️ `mit meinen Freunde` yaygın hatadır."
             },
             {
               "kind": "paragraph",
-              "text": "**Almanca:** `Wir gehen am Abend ins Kino.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`am Abend` = `an + dem Abend`, akşam vakti",
-                "`gehen` ikinci sırada (`Wir` birinci, `gehen` ikinci)",
-                "`ins Kino` = `in + das Kino`, yöne gitme (Akkusativ)"
-              ]
+              "text": "**6 — Sevme/İsteme:** `Ich möchte schwarze Schuhe.` / `Meine Schwester mag Tiere.` / `Ich schwimme gern im Meer.` möchte=istemek, mag=isim sevmek, gern=fiilden sonra."
             },
             {
               "kind": "paragraph",
-              "text": "**3 — Konum vs Yön (im Park ↔ in den Park)**"
+              "text": "**7 — es gibt:** `Auf dem Balkon gibt es Blumen.` Her zaman tekil, Akkusativ ister; genel çoğul artikelsiz."
             },
             {
               "kind": "paragraph",
-              "text": "**Türkçe:** Parkta yürüyüş yapıyoruz. / Arkadaşlarımla parka gidiyorum."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Wir machen einen Spaziergang im Park.` / `Ich gehe mit meinen Freunden in den Park.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`im Park` = parkın İÇİNDE bir şey yapıyorsun (Dativ, konum)",
-                "`in den Park` = parkA doğru gidiyorsun (Akkusativ, yön) — `der Park` eril olduğu için `den`",
-                "Aynı kelime (`Park`), aynı edat (`in`), ama farklı hâl → farklı anlam"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**4 — Ayrılabilen Fiil (aufräumen)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Türkçe:** Kardeşim yatağını topluyor."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Meine Schwester räumt ihr Bett auf.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`aufräumen` = toplamak/düzenlemek",
-                "`räumt ... auf` = çekimli fiil ikinci sırada, önek sonda",
-                "`ihr Bett` = onun (kız kardeşimin) yatağı — `ihr` iyelik eki, `das Bett` nötr olduğu için eksiz"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**5 — İyelik + Dativ Çoğul (mit meinen Freunden)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Türkçe:** Arkadaşlarımla parka gidiyorum."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Ich gehe mit meinen Freunden in den Park.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`mit` her zaman Dativ ister",
-                "`meine Freunde` (Nominativ/Akkusativ çoğul) → `meinen Freunden` (Dativ çoğul): iyelik `-en` alır, isim `-n` alır",
-                "İki değişiklik birden — bu yüzden bu kalıp özellikle zor görünür"
-              ]
-            },
-            {
-              "kind": "callout",
-              "text": "⚠️ `mit meinen Freunde` (isimde `-n` unutulmuş) ya da `mit meinem Freunden` (iyelikte yanlış ek) yaygın hatalardır."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**6 — Sevme/İsteme (möchte, mag, gern)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Türkçe:** Ben siyah ayakkabı istiyorum. / Kardeşim hayvanları çok seviyor. / Denizde yüzmeyi seviyorum."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Ich möchte schwarze Schuhe.` / `Meine Schwester mag Tiere.` / `Ich schwimme gern im Meer.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`möchte` = kibarca istemek (nesne doğrudan gelir)",
-                "`mag` = bir ismi sevmek (nesne doğrudan gelir)",
-                "`gern` = bir fiili sevmek (fiilden SONRA gelir, `schwimme gern`)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**7 — es gibt (Var/Yok + Akkusativ)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Türkçe:** Balkonda çiçekler var."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Auf dem Balkon gibt es Blumen.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`es gibt` = var, her zaman tekil çekilir, Akkusativ ister",
-                "`Blumen` çoğul ve genel olduğu için artikelsiz",
-                "`auf dem Balkon` = balkonun üzerinde/üstünde (Dativ, konum)"
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "text": "**8 — Fronted Bağlaç + V2 (Nach dem Film ...)**"
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Türkçe:** Filmden sonra eve gidiyorum."
-            },
-            {
-              "kind": "paragraph",
-              "text": "**Almanca:** `Nach dem Film gehe ich nach Hause.`"
-            },
-            {
-              "kind": "list",
-              "items": [
-                "`Nach dem Film` = filmden sonra (zaman anlamında `nach` + Dativ), cümlenin başına gelmiş",
-                "`gehe` yine ikinci sırada, `ich` üçüncü sıraya kaymış",
-                "`nach Hause` = eve (yön, sabit kalıp) — aynı cümlede `nach`ın iki farklı kullanımı bir arada"
-              ]
+              "text": "**8 — Fronted Bağlaç + V2:** `Nach dem Film gehe ich nach Hause.` (Filmden sonra eve gidiyorum.) `gehe` yine ikinci sırada; aynı cümlede `nach`ın iki farklı kullanımı bir arada."
             },
             {
               "kind": "paragraph",
@@ -51306,13 +50049,13 @@
           "blocks": [
             {
               "kind": "paragraph",
-              "text": "**80 Cümlede Geçen Önemli Kalıplar — Hızlı Bakış Tablosu**"
+              "text": "**Hızlı Bakış — Önemli Kalıplar**"
             },
             {
               "kind": "table",
               "head": [
                 "Kalıp",
-                "Anlamı/İşlevi",
+                "Anlamı",
                 "Örnek"
               ],
               "rows": [
@@ -51322,29 +50065,14 @@
                   "Ich stehe jeden Tag früh auf."
                 ],
                 [
-                  "`am Morgen`",
-                  "sabah",
-                  "Ich frühstücke am Morgen."
-                ],
-                [
                   "`am Abend`",
                   "akşam",
                   "Wir gehen am Abend ins Kino."
                 ],
                 [
-                  "`um 7 Uhr`",
-                  "saat 7'de",
-                  "Ich stehe um 7 Uhr auf."
-                ],
-                [
-                  "`nach Hause`",
-                  "eve (yöne)",
-                  "Ich komme nach Hause zurück."
-                ],
-                [
-                  "`zu Hause`",
-                  "evde (konum)",
-                  "Ich höre zu Hause Musik."
+                  "`nach Hause` ↔ `zu Hause`",
+                  "eve ↔ evde",
+                  "Ich komme nach Hause. / Ich höre zu Hause Musik."
                 ],
                 [
                   "`zur Schule` / `zur Arbeit`",
@@ -51352,19 +50080,9 @@
                   "Mein Vater geht zur Arbeit."
                 ],
                 [
-                  "`im Park`",
-                  "parkta (konum)",
-                  "Wir machen einen Spaziergang im Park."
-                ],
-                [
-                  "`in den Park`",
-                  "parka (yön)",
-                  "Ich gehe in den Park."
-                ],
-                [
-                  "`ins Kino`",
-                  "sinemaya (yön)",
-                  "Wir gehen ins Kino."
+                  "`im Park` ↔ `in den Park`",
+                  "parkta ↔ parka",
+                  "Wir sind im Park. / Ich gehe in den Park."
                 ],
                 [
                   "`mit meinen Freunden`",
@@ -51377,30 +50095,15 @@
                   "Es gibt Blumen."
                 ],
                 [
-                  "`ein bisschen`",
-                  "biraz",
-                  "Das Wetter ist ein bisschen warm."
-                ],
-                [
-                  "`sehr schön`",
-                  "çok güzel",
-                  "Das Kleid ist sehr schön."
-                ],
-                [
-                  "`gern` (fiil + gern)",
-                  "fiili sevmek",
-                  "Ich schwimme gern."
-                ],
-                [
-                  "`möchte`",
-                  "istiyorum",
-                  "Ich möchte ein Brot."
+                  "`gern` / `möchte`",
+                  "sevmek / istemek",
+                  "Ich schwimme gern. / Ich möchte ein Brot."
                 ]
               ]
             },
             {
               "kind": "paragraph",
-              "text": "Aşağıda 80 cümlenin tamamının doğru (canonical) Almancası bulunur. Kendi denemen varsa ve farklıysa, ⚠️ notunu oku — hangi kural yüzünden değiştiğini yukarıdaki bölümlerde bulabilirsin."
+              "text": "Kendi denemen farklıysa ⚠️ notunu oku — kuralı yukarıdaki bölümlerde bulursun."
             },
             {
               "kind": "paragraph",

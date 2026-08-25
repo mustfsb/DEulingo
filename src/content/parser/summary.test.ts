@@ -88,11 +88,8 @@ describe('ozet ayristirma', () => {
 
   it('okuma suresi tahmini uretir', () => {
     for (const day of bundle.summaries) {
-      // Özel Ders 3. Gün bilinçli olarak kapsamlı: 80 cümlelik üretim odaklı
-      // gün, kısa günlerin 30 dakikalık sınırının üzerine çıkabilir (§8-9).
-      const isComprehensiveDay3 = day.day === 3 && (day as { track?: string }).track === 'private';
       expect(day.estimatedReadingMinutes).toBeGreaterThanOrEqual(3);
-      expect(day.estimatedReadingMinutes).toBeLessThan(isComprehensiveDay3 ? 60 : 30);
+      expect(day.estimatedReadingMinutes).toBeLessThan(30);
     }
   });
 });
