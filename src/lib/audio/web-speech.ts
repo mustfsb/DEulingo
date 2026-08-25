@@ -7,12 +7,14 @@ const RATE_BY_SPEED: Record<SpeechSpeed, number> = {
   fast: 1.35,
 };
 
-/** Web Speech fallback'te her Piper profili için ayırt edici perde. */
+/** Web Speech fallback'te her Piper profili için ayırt edici perde.
+ *  Tek Alman sesi olan tarayıcılarda (Chrome/Goggle Deutsch) bile
+ *  erkek/kadın farkı net duyulsun diye aralık bilerek açıktır. */
 const PITCH_BY_VOICE: Record<GermanVoiceId, number> = {
-  thorsten: 1,
-  'thorsten-soft': 0.88,
-  kerstin: 1.16,
-  eva: 1.04,
+  thorsten: 0.88,
+  'thorsten-soft': 0.72,
+  kerstin: 1.45,
+  eva: 1.22,
 };
 
 const VOICE_GENDER: Record<GermanVoiceId, 'male' | 'female'> = {
@@ -121,12 +123,42 @@ export function isWebSpeechAvailable(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 }
 
-export function speakWithWebSpeech(
+async function ensureVoicesLoaded(timeoutMs = 700): Promise<void> {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  if (window.speechSynthesis.getVoices().length > 0) return;
+  await new Promise<void>((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    const handler = () => {
+      clearTimeout(timer);
+      finish();
+    };
+    try {
+      window.speechSynthesis.addEventListener('voiceschanged', handler, { once: true } as AddEventListenerOptions);
+    } catch {
+      // eski tarayıcı fallback
+      (window.speechSynthesis as unknown as { onvoiceschanged?: () => void }).onvoiceschanged = handler;
+      setTimeout(() => {
+        (window.speechSynthesis as unknown as { onvoiceschanged?: () => void }).onvoiceschanged = null as unknown as undefined;
+      }, timeoutMs);
+    }
+  });
+}
+
+export async function speakWithWebSpeech(
   target: GermanAudioTarget,
   speed: SpeechSpeed,
   signal?: AbortSignal,
   voiceId: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
 ): Promise<void> {
+  // Vercel/prod'da ses listesi geç dolabilir → kısa süre bekle
+  await ensureVoicesLoaded();
+
   return new Promise((resolve, reject) => {
     if (!isWebSpeechAvailable()) {
       reject(new Error('Tarayıcı telaffuzu desteklenmiyor.'));
@@ -144,6 +176,11 @@ export function speakWithWebSpeech(
 
     const voice = pickGermanVoice(voiceId);
     if (voice) utterance.voice = voice;
+
+    // Debug: Vercel'de ses değişmiyor şikayeti için teşhis logu
+    try {
+      console.debug(`[tts-fallback] voiceId=${voiceId} pitch=${utterance.pitch} picked=${voice?.name ?? 'null'} lang=${voice?.lang ?? utterance.lang} rate=${utterance.rate}`);
+    } catch { /* ignore */ }
 
     let settled = false;
     const cleanup = () => {
