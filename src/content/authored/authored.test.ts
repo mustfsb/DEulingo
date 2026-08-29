@@ -14,6 +14,7 @@ import { VAULT_TAGS } from './vault-tags.ts';
 import { approximate, isCurated, transliterateWord } from './pronunciation.ts';
 import { evaluateWordBank } from '../../lib/word-bank.ts';
 import { buildSessionPlan, challengeReadiness } from '../../lib/session.ts';
+import { evaluateExercise } from '../../lib/validation.ts';
 import { createEmptyProgress } from '../../lib/storage.ts';
 import { daysForTrack, exercisesForDay, exercisesBeforeDay } from '../../lib/content.ts';
 import {
@@ -798,5 +799,17 @@ describe('Özel Ders — 5. Gün', () => {
     const pool = exercisesForDay(5, 'private');
     const readiness = challengeReadiness(pool);
     expect(readiness.ready).toBe(true);
+  });
+
+  it('ß içeren cevaplarda ASCII klavye yazımı (dreissig, Strasse) tam doğru sayılır (§klavye toleransı)', () => {
+    // Regresyon: `noTypoTolerance` bu iki soruda yanlışlıkla `ß` yazamayan
+    // kullanıcıyı sonsuz "yanlış → tekrar" döngüsüne sokuyordu; doğrusu
+    // `keyboardTolerance` ile ASCII (ss) yazımını da tam doğru saymaktır.
+    const dreissig = privateDay5.find((exercise) => exercise.id === 'p5-son-dreissig-fill')!;
+    const strasse = privateDay5.find((exercise) => exercise.id === 'p5-kb-strasse-fill')!;
+    expect(dreissig.validation?.noTypoTolerance).toBeFalsy();
+    expect(strasse.validation?.noTypoTolerance).toBeFalsy();
+    expect(evaluateExercise(dreissig, 'dreissig').status).toBe('correct');
+    expect(evaluateExercise(strasse, 'Strasse').status).toBe('correct');
   });
 });

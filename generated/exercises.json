@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T11:01:50.737Z",
+  "generatedAt": "2026-08-29T11:23:18.918Z",
   "schemaVersion": 2,
   "contentVersion": "2.13uofbu",
   "sourceFiles": [
@@ -43029,7 +43029,7 @@
       "prompt": "30 → ___",
       "answer": "dreißig",
       "validation": {
-        "noTypoTolerance": true
+        "keyboardTolerance": true
       },
       "familyId": "p5-son-dreissig",
       "pronunciation": [
@@ -44543,7 +44543,7 @@
       "prompt": "die ___ = cadde / sokak",
       "answer": "Straße",
       "validation": {
-        "noTypoTolerance": true,
+        "keyboardTolerance": true,
         "caseSensitive": true
       },
       "familyId": "p5-kb-strasse",

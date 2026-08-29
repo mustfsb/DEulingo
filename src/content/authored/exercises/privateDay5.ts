@@ -289,7 +289,7 @@ export const PRIVATE_DAY5_EXERCISES: AuthoredExercise[] = [
     instruction: 'Almanca yaz (ß ile):',
     prompt: '30 → ___',
     answer: 'dreißig',
-    validation: { noTypoTolerance: true },
+    validation: { keyboardTolerance: true },
     pronounce: ['dreißig'],
   },
   {
@@ -669,7 +669,7 @@ export const PRIVATE_DAY5_EXERCISES: AuthoredExercise[] = [
     instruction: 'Boşluğu doldur (cadde/sokak alanı):',
     prompt: 'die ___ = cadde / sokak',
     answer: 'Straße',
-    validation: { noTypoTolerance: true },
+    validation: { keyboardTolerance: true },
     pronounce: ['die Straße'],
   },
   {
