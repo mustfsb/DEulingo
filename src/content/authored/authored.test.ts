@@ -13,7 +13,7 @@ import { CONCEPTS, SUMMARY_TOPICS } from './concepts.ts';
 import { VAULT_TAGS } from './vault-tags.ts';
 import { approximate, isCurated, transliterateWord } from './pronunciation.ts';
 import { evaluateWordBank } from '../../lib/word-bank.ts';
-import { buildSessionPlan } from '../../lib/session.ts';
+import { buildSessionPlan, challengeReadiness } from '../../lib/session.ts';
 import { createEmptyProgress } from '../../lib/storage.ts';
 import { daysForTrack, exercisesForDay, exercisesBeforeDay } from '../../lib/content.ts';
 import {
@@ -539,7 +539,7 @@ describe('Özel Ders — 2. Gün', () => {
 
   it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
   });
 
   it('bu derste öğretilmeyen Akkusativ biçimleri (einen/keinen/meinen/deinen) hiçbir alanda geçmez', () => {
@@ -646,7 +646,7 @@ describe('Özel Ders — 3. Gün', () => {
 
   it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
   });
 
   it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
@@ -675,5 +675,128 @@ describe('Özel Ders — 3. Gün', () => {
       const topics = new Set(plan.primaryQueue.map((item) => poolById.get(item.exerciseId)?.topicId));
       expect(topics.size, mode).toBeGreaterThanOrEqual(4);
     }
+  });
+});
+
+describe('Özel Ders — 5. Gün', () => {
+  const privateDay5 = bundle.exercises.filter((exercise) => exercise.day === 5 && exercise.track === 'private');
+  const normalDay5 = bundle.exercises.filter((exercise) => exercise.day === 5 && (exercise.track ?? 'normal') === 'normal');
+
+  it('en az 70 benzersiz alıştırma içerir (80-100 hedefine yakın)', () => {
+    const ids = new Set(privateDay5.map((exercise) => exercise.id));
+    expect(ids.size).toBe(privateDay5.length);
+    expect(privateDay5.length).toBeGreaterThanOrEqual(70);
+  });
+
+  it('zorluk dağılımı ~%30/%50/%20 aralığındadır (yalnızca private 5. Gün)', () => {
+    const share = (difficulty: string) =>
+      privateDay5.filter((exercise) => exercise.difficulty === difficulty).length / privateDay5.length;
+    expect(share('easy')).toBeGreaterThan(0.2);
+    expect(share('easy')).toBeLessThan(0.4);
+    expect(share('medium')).toBeGreaterThan(0.4);
+    expect(share('medium')).toBeLessThan(0.6);
+    expect(share('hard')).toBeGreaterThan(0.12);
+    expect(share('hard')).toBeLessThan(0.3);
+  });
+
+  it('her 5. Gün private kavramının en az bir alıştırması vardır (özet kapsamı %100)', () => {
+    const day5Concepts = CONCEPTS.filter((c) => c.day === 5 && c.track === 'private');
+    const covered = new Set(privateDay5.flatMap((exercise) => exercise.conceptIds));
+    const uncovered = day5Concepts.filter((c) => !covered.has(c.id));
+    expect(uncovered.map((c) => c.id)).toEqual([]);
+  });
+
+  it('Normal 5. Gün ile track/gün numarası aynı olsa da izlekler ayrıdır (isolation)', () => {
+    expect(privateDay5.length).toBeGreaterThan(0);
+    expect(normalDay5.length).toBeGreaterThan(0);
+    const privateIds = new Set(privateDay5.map((e) => e.id));
+    const normalIds = new Set(normalDay5.map((e) => e.id));
+    expect([...privateIds].some((id) => normalIds.has(id))).toBe(false);
+    for (const exercise of privateDay5) {
+      for (const conceptId of exercise.conceptIds) {
+        expect(conceptId.startsWith('private.'), `${exercise.id} → ${conceptId}`).toBe(true);
+      }
+    }
+    for (const exercise of normalDay5) {
+      for (const conceptId of exercise.conceptIds) {
+        expect(conceptId.startsWith('private.'), `${exercise.id} → ${conceptId}`).toBe(false);
+      }
+    }
+  });
+
+  it('en az on farklı alıştırma tipi kullanır (üretim ve dinleme dahil)', () => {
+    const types = new Set(privateDay5.map((exercise) => exercise.type));
+    expect(types.size).toBeGreaterThanOrEqual(10);
+    expect(privateDay5.some((exercise) => exercise.type === 'listen-choice')).toBe(true);
+    expect(privateDay5.some((exercise) => exercise.type === 'dictation')).toBe(true);
+    expect(privateDay5.some((exercise) => exercise.type === 'word-bank-translation')).toBe(true);
+  });
+
+  it('numara alıştırmaları ve dinleme/dikte güçlü şekilde temsil edilir', () => {
+    const numberConcepts = new Set([
+      'private.day5.sayilar.onlu-sayilar', 'private.day5.sayilar.onluklar', 'private.day5.sayilar.bilesik',
+      'private.day5.sayilar.yuzler', 'private.day5.sayilar.yuzler-bilesik', 'private.day5.sayilar.bin',
+    ]);
+    const numberExercises = privateDay5.filter((exercise) => exercise.conceptIds.some((id) => numberConcepts.has(id)));
+    expect(numberExercises.length).toBeGreaterThanOrEqual(25);
+    const listening = privateDay5.filter((exercise) => ['listen-choice', 'dictation'].includes(exercise.type));
+    expect(listening.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('54 ve 205 için kanonik (kaynaktaki el yazısı hatasından düzeltilmiş) Almanca kullanılır', () => {
+    const haystack = (exercise: (typeof privateDay5)[number]) =>
+      [exercise.prompt, exercise.answer, exercise.explanation].filter(Boolean).join(' ');
+    expect(privateDay5.some((exercise) => haystack(exercise).includes('vierundfünfzig'))).toBe(true);
+    expect(privateDay5.some((exercise) => haystack(exercise).includes('zweihundertfünf') && !haystack(exercise).includes('zweihundertfünfundzwanzig'))).toBe(true);
+    // 45 (fünfundvierzig) yalnızca "bu yanlıştır" bağlamında (hata avı) geçebilir, kanonik cevap olarak asla.
+    const wrongAsAnswer = privateDay5.some(
+      (exercise) => exercise.type !== 'error-correction' && exercise.answer === 'fünfundvierzig',
+    );
+    expect(wrongAsAnswer).toBe(false);
+  });
+
+  it('Türkçe → Almanca üretim güçlü şekilde temsil edilir', () => {
+    const productionSkills = new Set(['production', 'correction']);
+    const active = privateDay5.filter((exercise) => productionSkills.has(exercise.skill));
+    expect(active.length / privateDay5.length).toBeGreaterThan(0.25);
+  });
+
+  it('Özel Ders yol haritasında 1., 2., 3. ve 5. Gün sırayla listelenir (4. Gün icat edilmez)', () => {
+    const privateDays = daysForTrack('private');
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
+  });
+
+  it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
+    const pool = exercisesForDay(5, 'private');
+    const previous = exercisesBeforeDay(5, 'private');
+    for (const mode of ['normal', 'full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed++) {
+        const plan = buildSessionPlan({
+          pool,
+          previous,
+          progress: createEmptyProgress(),
+          mode,
+          seed: `test-seed-p5-${mode}-${seed}`,
+        });
+        const ids = plan.primaryQueue.map((item) => item.exerciseId);
+        expect(new Set(ids).size, `${mode}/${seed}`).toBe(ids.length);
+      }
+    }
+  });
+
+  it('Normal ve Tam Çalışma oturumları tek bir konuya sıkışmaz (en az 4 farklı topicId)', () => {
+    const pool = exercisesForDay(5, 'private');
+    const poolById = new Map(pool.map((exercise) => [exercise.id, exercise]));
+    for (const mode of ['normal', 'full'] as const) {
+      const plan = buildSessionPlan({ pool, progress: createEmptyProgress(), mode, seed: `topic-diversity-p5-${mode}` });
+      const topics = new Set(plan.primaryQueue.map((item) => poolById.get(item.exerciseId)?.topicId));
+      expect(topics.size, mode).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('Zor Sorular oturumu anlamlı büyüklükte kurulabilir', () => {
+    const pool = exercisesForDay(5, 'private');
+    const readiness = challengeReadiness(pool);
+    expect(readiness.ready).toBe(true);
   });
 });

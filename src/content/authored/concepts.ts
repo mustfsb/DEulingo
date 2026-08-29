@@ -336,6 +336,84 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: '80 Cümlenin Doğru Almancası',
     matchTitles: ['80 Cümlenin Doğru Almancası'],
   },
+  // Private track — 5. Gün
+  {
+    id: 'private.day5.hedef',
+    day: 5,
+    track: 'private',
+    title: 'Bu Dersin Hedefi',
+    matchTitles: ['Bu Dersin Hedefi'],
+  },
+  {
+    id: 'private.day5.leben',
+    day: 5,
+    track: 'private',
+    title: 'leben — Yaşamak',
+    matchTitles: ['leben — Yaşamak', 'leben'],
+  },
+  {
+    id: 'private.day5.sayilar-onluklar',
+    day: 5,
+    track: 'private',
+    title: 'Sayılar 10–100',
+    matchTitles: ['Sayılar 10–100'],
+  },
+  {
+    id: 'private.day5.sayilar-yuzler',
+    day: 5,
+    track: 'private',
+    title: 'Yüzler ve Bin',
+    matchTitles: ['Yüzler ve Bin'],
+  },
+  {
+    id: 'private.day5.kisisel-bilgiler',
+    day: 5,
+    track: 'private',
+    title: 'Kişisel Bilgiler ve Form Alanları',
+    matchTitles: ['Kişisel Bilgiler ve Form Alanları'],
+  },
+  {
+    id: 'private.day5.dogum-yeri',
+    day: 5,
+    track: 'private',
+    title: 'Memleket, Doğum Yeri ve İkamet',
+    matchTitles: ['Memleket, Doğum Yeri ve İkamet'],
+  },
+  {
+    id: 'private.day5.medeni-hal',
+    day: 5,
+    track: 'private',
+    title: 'Familienstand — ledig / verheiratet',
+    matchTitles: ['Familienstand — ledig / verheiratet', 'Familienstand'],
+  },
+  {
+    id: 'private.day5.kendini-tanitma',
+    day: 5,
+    track: 'private',
+    title: 'Kendini Daha Ayrıntılı Tanıtma',
+    matchTitles: ['Kendini Daha Ayrıntılı Tanıtma'],
+  },
+  {
+    id: 'private.day5.baglaclar',
+    day: 5,
+    track: 'private',
+    title: 'und / aber — Bağlaçlar',
+    matchTitles: ['und / aber — Bağlaçlar', 'und / aber'],
+  },
+  {
+    id: 'private.day5.kelimeler',
+    day: 5,
+    track: 'private',
+    title: 'Yeni Faydalı Kelimeler',
+    matchTitles: ['Yeni Faydalı Kelimeler'],
+  },
+  {
+    id: 'private.day5.yiyecek',
+    day: 5,
+    track: 'private',
+    title: 'Yiyecek ve Mutfak Kelimeleri',
+    matchTitles: ['Yiyecek ve Mutfak Kelimeleri'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -412,6 +490,17 @@ const P3_MK = 'private.day3.miktar-cogul';
 const P3_ZI = 'private.day3.zaman';
 const P3_CD = 'private.day3.cumle-dizilisi';
 const P3_GH = 'private.day3.gunluk-hayat';
+const P5_HED = 'private.day5.hedef';
+const P5_LEB = 'private.day5.leben';
+const P5_SON = 'private.day5.sayilar-onluklar';
+const P5_SYU = 'private.day5.sayilar-yuzler';
+const P5_KB = 'private.day5.kisisel-bilgiler';
+const P5_DY = 'private.day5.dogum-yeri';
+const P5_MH = 'private.day5.medeni-hal';
+const P5_KT = 'private.day5.kendini-tanitma';
+const P5_BAG = 'private.day5.baglaclar';
+const P5_KEL = 'private.day5.kelimeler';
+const P5_YEM = 'private.day5.yiyecek';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -723,6 +812,48 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'private.day3.ev-kelime', topicId: P3_GH, label: 'Ev kelimeleri: die Wohnung, das Zimmer, der Balkon, der Garten', anchor: 'die Wohnung' },
     { id: 'private.day3.gunluk-rutin', topicId: P3_GH, label: 'Günlük rutin fiilleri: frühstücken, putzen, gießen, hören', anchor: 'frühstücken' },
     { id: 'private.day3.es-geht-mir', topicId: P3_GH, label: 'Es geht mir gut = iyiyim', anchor: 'Es geht mir gut' },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 5. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(5, 'private', [
+    { id: 'private.day5.hedef.giris', topicId: P5_HED, label: '5. Gün hedefi: form + sayılar', anchor: 'Alman formunu okuyup doldurabilmek' },
+
+    { id: 'private.day5.leben.anlam', topicId: P5_LEB, label: 'leben = yaşamak', anchor: 'leben = yaşamak' },
+    { id: 'private.day5.leben.cekim', topicId: P5_LEB, label: 'leben çekimi: ich lebe, du lebst ...', anchor: 'ich lebe', prerequisites: ['private.day5.leben.anlam'] },
+    { id: 'private.day5.leben.wohnen-farki', topicId: P5_LEB, label: 'leben (genel) ↔ wohnen (somut ikamet) farkı', anchor: 'Ich wohne in Berlin', prerequisites: ['private.day1.wohnort.in', 'private.day1.herkunft.aus', 'private.day5.leben.cekim'] },
+
+    { id: 'private.day5.sayilar.onlu-sayilar', topicId: P5_SON, label: '10–19 arası sayılar', anchor: 'dreizehn' },
+    { id: 'private.day5.sayilar.onluklar', topicId: P5_SON, label: '20, 30 (dreißig)... 100', anchor: 'dreißig', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
+    { id: 'private.day5.sayilar.bilesik', topicId: P5_SON, label: 'Birler + und + Onlar (vierundfünfzig)', anchor: 'vierundfünfzig', prerequisites: ['private.day5.sayilar.onluklar'] },
+
+    { id: 'private.day5.sayilar.yuzler', topicId: P5_SYU, label: '100, 200 (hundert, zweihundert)', anchor: 'zweihundert', prerequisites: ['private.day5.sayilar.onluklar'] },
+    { id: 'private.day5.sayilar.yuzler-bilesik', topicId: P5_SYU, label: '205 = zweihundertfünf (und yok)', anchor: 'zweihundertfünf', prerequisites: ['private.day5.sayilar.yuzler', 'private.day5.sayilar.bilesik'] },
+    { id: 'private.day5.sayilar.bin', topicId: P5_SYU, label: '1000 = tausend', anchor: 'tausend', prerequisites: ['private.day5.sayilar.yuzler'] },
+
+    { id: 'private.day5.form.alanlar', topicId: P5_KB, label: 'Form alanları: Familienname, Vorname, Heimatland, Geburtsort, Straße, Wohnort, Telefonnummer, Familienstand', anchor: 'der Familienname', prerequisites: ['private.day1.formular.felder'] },
+    { id: 'private.day5.form.kinder', topicId: P5_KB, label: 'Kinder alanı (1. Gün hatırlatması)', anchor: 'Ich habe keine Kinder', prerequisites: ['private.day1.formular.kinder'] },
+
+    { id: 'private.day5.dogum.soru-cevap', topicId: P5_DY, label: 'Wo bist du geboren? / Wo sind Sie geboren? / Ich bin in ... geboren.', anchor: 'Wo bist du geboren?', prerequisites: ['private.day1.wohnort.wo-wohnst'] },
+    { id: 'private.day5.dogum.aciklik', topicId: P5_DY, label: 'kommen aus / geboren sein / wohnen-leben ayrımı', anchor: 'kommen aus = nereli olduğun', prerequisites: ['private.day1.herkunft.woher', 'private.day1.wohnort.wo-wohnst', 'private.day5.dogum.soru-cevap', 'private.day5.leben.wohnen-farki'] },
+
+    { id: 'private.day5.medeni-hal.ledig-verheiratet', topicId: P5_MH, label: 'ledig (bekar) / verheiratet (evli)', anchor: 'ledig = bekar', prerequisites: ['private.day1.formular.familienstand'] },
+
+    { id: 'private.day5.tanitma.model', topicId: P5_KT, label: 'Genişletilmiş kendini tanıtma modeli', anchor: 'Ich bin ... Jahre alt', prerequisites: ['private.day1.vorstellung.wie-heisst-du', 'private.day1.beruf.antwort-bin', 'private.day5.dogum.soru-cevap', 'private.day5.leben.wohnen-farki'] },
+    { id: 'private.day5.tanitma.ornekler', topicId: P5_KT, label: 'Örnek tanıtımlar (Mustafa, Nazar)', anchor: 'Ich heiße Nazar', prerequisites: ['private.day5.tanitma.model'] },
+
+    { id: 'private.day5.baglac.und', topicId: P5_BAG, label: 'und = ve (ekleme)', anchor: 'und = ve' },
+    { id: 'private.day5.baglac.aber', topicId: P5_BAG, label: 'aber = ama (zıtlık)', anchor: 'aber = ama' },
+
+    { id: 'private.day5.kelime.leider', topicId: P5_KEL, label: 'leider = maalesef, ne yazık ki', anchor: 'leider' },
+    { id: 'private.day5.kelime.mehr', topicId: P5_KEL, label: 'mehr = daha fazla', anchor: 'mehr' },
+    { id: 'private.day5.kelime.geschwister', topicId: P5_KEL, label: 'die Geschwister = kardeşler', anchor: 'Geschwister' },
+    { id: 'private.day5.kelime.seit', topicId: P5_KEL, label: 'seit = -den beri', anchor: 'seit', prerequisites: ['private.day3.mit-dativ'] },
+    { id: 'private.day5.kelime.flughafen', topicId: P5_KEL, label: 'der Flughafen = havaalanı', anchor: 'Flughafen' },
+    { id: 'private.day5.kelime.moment', topicId: P5_KEL, label: 'der Moment / Moment! = an, bir dakika', anchor: 'Moment' },
+
+    { id: 'private.day5.yiyecek.kelimeler', topicId: P5_YEM, label: 'das Ei, das Mehl, der Pfannkuchen, der Kuchen, das Brötchen, die Birne, der Saft', anchor: 'das Ei' },
   ]),
 ];
 
