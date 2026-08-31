@@ -414,6 +414,28 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: 'Yiyecek ve Mutfak Kelimeleri',
     matchTitles: ['Yiyecek ve Mutfak Kelimeleri'],
   },
+  // Private track — 6. Gün
+  {
+    id: 'private.day6.hedef',
+    day: 6,
+    track: 'private',
+    title: 'Bu Günün Hedefi',
+    matchTitles: ['Bu Günün Hedefi'],
+  },
+  {
+    id: 'private.day6.iyelik-tablo',
+    day: 6,
+    track: 'private',
+    title: 'İyelik Zamirleri — Tam Tablo',
+    matchTitles: ['İyelik Zamirleri — Tam Tablo', 'İyelik Zamirleri'],
+  },
+  {
+    id: 'private.day6.cumle-kurma',
+    day: 6,
+    track: 'private',
+    title: 'Kişi Zamiri + İyelik Zamiri ile Cümle Kurma',
+    matchTitles: ['Kişi Zamiri + İyelik Zamiri ile Cümle Kurma'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -501,6 +523,9 @@ const P5_KT = 'private.day5.kendini-tanitma';
 const P5_BAG = 'private.day5.baglaclar';
 const P5_KEL = 'private.day5.kelimeler';
 const P5_YEM = 'private.day5.yiyecek';
+const P6_HED = 'private.day6.hedef';
+const P6_IYE = 'private.day6.iyelik-tablo';
+const P6_CUM = 'private.day6.cumle-kurma';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -854,6 +879,18 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'private.day5.kelime.moment', topicId: P5_KEL, label: 'der Moment / Moment! = an, bir dakika', anchor: 'Moment' },
 
     { id: 'private.day5.yiyecek.kelimeler', topicId: P5_YEM, label: 'das Ei, das Mehl, der Pfannkuchen, der Kuchen, das Brötchen, die Birne, der Saft', anchor: 'das Ei' },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 6. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(6, 'private', [
+    { id: 'private.day6.hedef.giris', topicId: P6_HED, label: '6. Gün hedefi: kişi ve iyelik zamirleriyle 50 cümle', anchor: '50 örnek cümle' },
+
+    { id: 'private.day6.iyelik.sein-onun', topicId: P6_IYE, label: 'sein / seine = onun (erkek/nötr sahip)', anchor: 'sein / seine', prerequisites: ['private.day2.artikel.mein-meine', 'private.day2.artikel.dein-deine'] },
+    { id: 'private.day6.iyelik.zincir', topicId: P6_IYE, label: 'iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr', anchor: 'İyelik zamiri zinciri', prerequisites: ['private.day6.iyelik.sein-onun', 'private.day3.iyelik.unser', 'private.day3.iyelik.ihr'] },
+
+    { id: 'private.day6.cumle.kalip', topicId: P6_CUM, label: 'Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim', anchor: 'Kişi zamiri + Fiil + iyelik zamiri + isim', prerequisites: ['private.day6.iyelik.zincir', 'private.day2.haben.tablo'] },
   ]),
 ];
 

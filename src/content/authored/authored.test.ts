@@ -540,7 +540,7 @@ describe('Özel Ders — 2. Gün', () => {
 
   it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
   });
 
   it('bu derste öğretilmeyen Akkusativ biçimleri (einen/keinen/meinen/deinen) hiçbir alanda geçmez', () => {
@@ -647,7 +647,7 @@ describe('Özel Ders — 3. Gün', () => {
 
   it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
   });
 
   it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
@@ -764,7 +764,7 @@ describe('Özel Ders — 5. Gün', () => {
 
   it('Özel Ders yol haritasında 1., 2., 3. ve 5. Gün sırayla listelenir (4. Gün icat edilmez)', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
   });
 
   it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {

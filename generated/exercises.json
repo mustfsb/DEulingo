@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-29T11:23:18.918Z",
+  "generatedAt": "2026-08-31T11:45:19.690Z",
   "schemaVersion": 2,
-  "contentVersion": "2.13uofbu",
+  "contentVersion": "2.0pfhrnr",
   "sourceFiles": [
     "İlk 3 Hafta Alıştırma.md",
     "İlk 3 Hafta Özet.md",
@@ -1313,6 +1313,84 @@
         "private.day5.baglaclar",
         "private.day5.kelimeler",
         "private.day5.yiyecek"
+      ]
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "topics": [
+        "Bu Günün Hedefi",
+        "Kişi Zamirleri",
+        "İyelik Zamirleri",
+        "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma"
+      ],
+      "exerciseIds": [
+        "p6-hed-giris-mc",
+        "p6-iye-sein-mc",
+        "p6-iye-sein-fill",
+        "p6-iye-tablo-match",
+        "p6-cum-mein-01",
+        "p6-cum-mein-02",
+        "p6-cum-mein-03",
+        "p6-cum-mein-04",
+        "p6-cum-mein-05",
+        "p6-cum-mein-06",
+        "p6-cum-mein-07",
+        "p6-cum-mein-08",
+        "p6-cum-mein-09",
+        "p6-cum-mein-10",
+        "p6-cum-dein-01",
+        "p6-cum-dein-02",
+        "p6-cum-dein-03",
+        "p6-cum-dein-04",
+        "p6-cum-dein-05",
+        "p6-cum-dein-06",
+        "p6-cum-dein-07",
+        "p6-cum-dein-08",
+        "p6-cum-dein-09",
+        "p6-cum-dein-10",
+        "p6-cum-sein-01",
+        "p6-cum-sein-02",
+        "p6-cum-sein-03",
+        "p6-cum-sein-04",
+        "p6-cum-sein-05",
+        "p6-cum-sein-06",
+        "p6-cum-es-07",
+        "p6-cum-ihr-08",
+        "p6-cum-ihr-09",
+        "p6-cum-ihr-10",
+        "p6-cum-unser-01",
+        "p6-cum-unser-02",
+        "p6-cum-unser-03",
+        "p6-cum-unser-04",
+        "p6-cum-unser-05",
+        "p6-cum-unser-06",
+        "p6-cum-unser-07",
+        "p6-cum-unser-08",
+        "p6-cum-unser-09",
+        "p6-cum-unser-10",
+        "p6-cum-ihrpl-01",
+        "p6-cum-ihrpl-02",
+        "p6-cum-ihrpl-03",
+        "p6-cum-ihrpl-04",
+        "p6-cum-ihrpl-05",
+        "p6-cum-ihrpl-06",
+        "p6-cum-ihrpl-07",
+        "p6-cum-ihrpl-08",
+        "p6-cum-ihrpl-09",
+        "p6-cum-ihrpl-10"
+      ],
+      "estimatedMinutes": 31,
+      "conceptIds": [
+        "private.day6.hedef.giris",
+        "private.day6.iyelik.sein-onun",
+        "private.day6.iyelik.zincir",
+        "private.day6.cumle.kalip"
+      ],
+      "summaryTopicIds": [
+        "private.day6.hedef",
+        "private.day6.iyelik-tablo",
+        "private.day6.cumle-kurma"
       ]
     }
   ],
@@ -48600,6 +48678,2553 @@
           }
         ]
       }
+    },
+    {
+      "id": "p6-hed-giris-mc",
+      "day": 6,
+      "track": "private",
+      "topic": "Bu Günün Hedefi",
+      "type": "multiple-choice",
+      "instruction": "6. Günün hedefi nedir?",
+      "difficulty": "easy",
+      "skill": "recognition",
+      "conceptIds": [
+        "private.day6.hedef.giris"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.hedef",
+      "estimatedSeconds": 15,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.hedef",
+        "itemKey": "p6-hed-giris-mc",
+        "naturalKey": "authored/p6-hed-giris-mc"
+      },
+      "prompt": "6. Gün ne üzerine kuruludur?",
+      "answer": "kişi ve iyelik zamirleriyle cümle kurma pratiği",
+      "options": [
+        "kişi ve iyelik zamirleriyle cümle kurma pratiği",
+        "Sadece sayılar",
+        "Sadece yeni fiil çekimleri",
+        "Sadece geçmiş zaman"
+      ],
+      "familyId": "p6-hed-giris"
+    },
+    {
+      "id": "p6-iye-sein-mc",
+      "day": 6,
+      "track": "private",
+      "topic": "İyelik Zamirleri — Tam Tablo",
+      "type": "multiple-choice",
+      "instruction": "\"sein\" iyelik zamiri ne demektir?",
+      "difficulty": "medium",
+      "skill": "recognition",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.iyelik-tablo",
+      "estimatedSeconds": 15,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.iyelik-tablo",
+        "itemKey": "p6-iye-sein-mc",
+        "naturalKey": "authored/p6-iye-sein-mc"
+      },
+      "prompt": "sein (iyelik zamiri)",
+      "answer": "onun (erkek/nötr)",
+      "options": [
+        "onun (erkek/nötr)",
+        "benim",
+        "bizim",
+        "senin"
+      ],
+      "familyId": "p6-iye-sein",
+      "pronunciation": [
+        {
+          "german": "sein",
+          "turkishApproximation": "zayn",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "targets": [
+          {
+            "text": "sein",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-iye-sein-fill",
+      "day": 6,
+      "track": "private",
+      "topic": "İyelik Zamirleri — Tam Tablo",
+      "type": "fill-blank",
+      "instruction": "Doğru iyelik zamirini yaz:",
+      "difficulty": "easy",
+      "skill": "recall",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.iyelik-tablo",
+      "estimatedSeconds": 20,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.iyelik-tablo",
+        "itemKey": "p6-iye-sein-fill",
+        "naturalKey": "authored/p6-iye-sein-fill"
+      },
+      "prompt": "Er hat ein Auto. Das ist ___ Auto.",
+      "answer": "sein",
+      "familyId": "p6-iye-sein",
+      "pronunciation": [
+        {
+          "german": "Das ist sein Auto.",
+          "turkishApproximation": "Das ist zayn Auto.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "targets": [
+          {
+            "text": "Das ist sein Auto.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-iye-tablo-match",
+      "day": 6,
+      "track": "private",
+      "topic": "İyelik Zamirleri — Tam Tablo",
+      "type": "matching",
+      "instruction": "Kişi zamirini doğru iyelik zamiriyle eşleştir.",
+      "difficulty": "medium",
+      "skill": "recognition",
+      "conceptIds": [
+        "private.day6.iyelik.zincir"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.iyelik-tablo",
+      "estimatedSeconds": 40,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.iyelik-tablo",
+        "itemKey": "p6-iye-tablo-match",
+        "naturalKey": "authored/p6-iye-tablo-match"
+      },
+      "pairs": [
+        {
+          "left": "ich",
+          "right": "mein"
+        },
+        {
+          "left": "du",
+          "right": "dein"
+        },
+        {
+          "left": "er",
+          "right": "sein"
+        },
+        {
+          "left": "wir",
+          "right": "unser"
+        },
+        {
+          "left": "sie (onlar)",
+          "right": "ihr"
+        }
+      ],
+      "familyId": "p6-iye-tablo"
+    },
+    {
+      "id": "p6-cum-mein-01",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-01",
+        "naturalKey": "authored/p6-cum-mein-01"
+      },
+      "prompt": "Bu benim kitabım. → ______",
+      "answer": "Das ist mein Buch.",
+      "familyId": "p6-cum-mein-01",
+      "pronunciation": [
+        {
+          "german": "Das ist mein Buch.",
+          "turkishApproximation": "Das ist mayn Buuh.",
+          "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist mein Buch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist mein Buch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-02",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-02",
+        "naturalKey": "authored/p6-cum-mein-02"
+      },
+      "prompt": "Benim arabam burada. → ______",
+      "answer": "Mein Auto ist hier.",
+      "familyId": "p6-cum-mein-02",
+      "pronunciation": [
+        {
+          "german": "Mein Auto ist hier.",
+          "turkishApproximation": "Mayn Auto ist hiir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Mein Auto ist hier.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Mein Auto ist hier.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-03",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-03",
+        "naturalKey": "authored/p6-cum-mein-03"
+      },
+      "prompt": "Benim çantam nerede? → ______",
+      "answer": "Wo ist meine Tasche?",
+      "familyId": "p6-cum-mein-03",
+      "pronunciation": [
+        {
+          "german": "Wo ist meine Tasche?",
+          "turkishApproximation": "Vo ist mayne Taşe?",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wo ist meine Tasche?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wo ist meine Tasche?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-04",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-04",
+        "naturalKey": "authored/p6-cum-mein-04"
+      },
+      "prompt": "Kitabımı seviyorum. → ______",
+      "answer": "Ich mag mein Buch.",
+      "familyId": "p6-cum-mein-04",
+      "pronunciation": [
+        {
+          "german": "Ich mag mein Buch.",
+          "turkishApproximation": "İh mak mayn Buuh.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ich mag mein Buch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ich mag mein Buch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-05",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-05",
+        "naturalKey": "authored/p6-cum-mein-05"
+      },
+      "prompt": "Ailemi seviyorum. → ______",
+      "answer": "Ich mag meine Familie.",
+      "familyId": "p6-cum-mein-05",
+      "pronunciation": [
+        {
+          "german": "Ich mag meine Familie.",
+          "turkishApproximation": "İh mak mayne Familii.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ich mag meine Familie.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ich mag meine Familie.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-06",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-06",
+        "naturalKey": "authored/p6-cum-mein-06"
+      },
+      "prompt": "Benim kedim çok güzel. → ______",
+      "answer": "Meine Katze ist sehr schön.",
+      "familyId": "p6-cum-mein-06",
+      "pronunciation": [
+        {
+          "german": "Meine Katze ist sehr schön.",
+          "turkishApproximation": "Mayne Kattse ist zea şön.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Meine Katze ist sehr schön.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Meine Katze ist sehr schön.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-07",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-07",
+        "naturalKey": "authored/p6-cum-mein-07"
+      },
+      "prompt": "Babam Berlin'de yaşıyor. → ______",
+      "answer": "Mein Vater wohnt in Berlin.",
+      "familyId": "p6-cum-mein-07",
+      "pronunciation": [
+        {
+          "german": "Mein Vater wohnt in Berlin.",
+          "turkishApproximation": "Mayn Faata voont in Berliin.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Mein Vater wohnt in Berlin.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Mein Vater wohnt in Berlin.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-08",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-08",
+        "naturalKey": "authored/p6-cum-mein-08"
+      },
+      "prompt": "Kız kardeşimin adı Ayşe. → ______",
+      "answer": "Meine Schwester heißt Ayşe.",
+      "familyId": "p6-cum-mein-08",
+      "pronunciation": [
+        {
+          "german": "Meine Schwester heißt Ayşe.",
+          "turkishApproximation": "Mayne Şvesta hayst Ayşe.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Meine Schwester heißt Ayşe.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Meine Schwester heißt Ayşe.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-09",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-09",
+        "naturalKey": "authored/p6-cum-mein-09"
+      },
+      "prompt": "Bu benim telefon numaram. → ______",
+      "answer": "Das ist meine Telefonnummer.",
+      "familyId": "p6-cum-mein-09",
+      "pronunciation": [
+        {
+          "german": "Das ist meine Telefonnummer.",
+          "turkishApproximation": "Das ist mayne Telefonnumma."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist meine Telefonnummer.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist meine Telefonnummer.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-mein-10",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.mein-meine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-mein-10",
+        "naturalKey": "authored/p6-cum-mein-10"
+      },
+      "prompt": "Benim evim küçük. → ______",
+      "answer": "Meine Wohnung ist klein.",
+      "familyId": "p6-cum-mein-10",
+      "pronunciation": [
+        {
+          "german": "Meine Wohnung ist klein.",
+          "turkishApproximation": "Mayne Voonunk ist klayn."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Meine Wohnung ist klein.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Meine Wohnung ist klein.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-01",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-01",
+        "naturalKey": "authored/p6-cum-dein-01"
+      },
+      "prompt": "Bu senin kitabın mı? → ______",
+      "answer": "Ist das dein Buch?",
+      "familyId": "p6-cum-dein-01",
+      "pronunciation": [
+        {
+          "german": "Ist das dein Buch?",
+          "turkishApproximation": "İst das dayn Buuh?",
+          "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ist das dein Buch?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ist das dein Buch?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-02",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-02",
+        "naturalKey": "authored/p6-cum-dein-02"
+      },
+      "prompt": "Senin araban nerede? → ______",
+      "answer": "Wo ist dein Auto?",
+      "familyId": "p6-cum-dein-02",
+      "pronunciation": [
+        {
+          "german": "Wo ist dein Auto?",
+          "turkishApproximation": "Vo ist dayn Auto?"
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wo ist dein Auto?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wo ist dein Auto?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-03",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-03",
+        "naturalKey": "authored/p6-cum-dein-03"
+      },
+      "prompt": "Senin çantan çok güzel. → ______",
+      "answer": "Deine Tasche ist sehr schön.",
+      "familyId": "p6-cum-dein-03",
+      "pronunciation": [
+        {
+          "german": "Deine Tasche ist sehr schön.",
+          "turkishApproximation": "Dayne Taşe ist zea şön.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Deine Tasche ist sehr schön.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Deine Tasche ist sehr schön.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-04",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-04",
+        "naturalKey": "authored/p6-cum-dein-04"
+      },
+      "prompt": "Kedini seviyor musun? → ______",
+      "answer": "Magst du deine Katze?",
+      "familyId": "p6-cum-dein-04",
+      "pronunciation": [
+        {
+          "german": "Magst du deine Katze?",
+          "turkishApproximation": "Magst du dayne Kattse?"
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Magst du deine Katze?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Magst du deine Katze?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-05",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-05",
+        "naturalKey": "authored/p6-cum-dein-05"
+      },
+      "prompt": "Baban nerede yaşıyor? → ______",
+      "answer": "Wo wohnt dein Vater?",
+      "familyId": "p6-cum-dein-05",
+      "pronunciation": [
+        {
+          "german": "Wo wohnt dein Vater?",
+          "turkishApproximation": "Vo voont dayn Faata?",
+          "note": "Sesliden sonraki `h` okunmaz, sadece önündeki sesliyi uzatır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wo wohnt dein Vater?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wo wohnt dein Vater?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-06",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-06",
+        "naturalKey": "authored/p6-cum-dein-06"
+      },
+      "prompt": "Kardeşinin adı ne? → ______",
+      "answer": "Wie heißt dein Bruder?",
+      "familyId": "p6-cum-dein-06",
+      "pronunciation": [
+        {
+          "german": "Wie heißt dein Bruder?",
+          "turkishApproximation": "Vii hayst dayn Bruda?",
+          "note": "`ie` uzun bir \"i\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wie heißt dein Bruder?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wie heißt dein Bruder?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-07",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-07",
+        "naturalKey": "authored/p6-cum-dein-07"
+      },
+      "prompt": "Senin evin büyük mü? → ______",
+      "answer": "Ist deine Wohnung groß?",
+      "familyId": "p6-cum-dein-07",
+      "pronunciation": [
+        {
+          "german": "Ist deine Wohnung groß?",
+          "turkishApproximation": "İst dayne Voonunk gros?"
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ist deine Wohnung groß?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ist deine Wohnung groß?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-08",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-08",
+        "naturalKey": "authored/p6-cum-dein-08"
+      },
+      "prompt": "Bu senin telefon numaran mı? → ______",
+      "answer": "Ist das deine Telefonnummer?",
+      "familyId": "p6-cum-dein-08",
+      "pronunciation": [
+        {
+          "german": "Ist das deine Telefonnummer?",
+          "turkishApproximation": "İst das dayne Telefonnumma?"
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ist das deine Telefonnummer?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ist das deine Telefonnummer?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-09",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-09",
+        "naturalKey": "authored/p6-cum-dein-09"
+      },
+      "prompt": "Senin arkadaşın nereli? → ______",
+      "answer": "Woher kommt dein Freund?",
+      "familyId": "p6-cum-dein-09",
+      "pronunciation": [
+        {
+          "german": "Woher kommt dein Freund?",
+          "turkishApproximation": "Voa komt dayn Froynt?"
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Woher kommt dein Freund?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Woher kommt dein Freund?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-dein-10",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day2.artikel.dein-deine",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-dein-10",
+        "naturalKey": "authored/p6-cum-dein-10"
+      },
+      "prompt": "Senin adresin ne? → ______",
+      "answer": "Wie ist deine Adresse?",
+      "familyId": "p6-cum-dein-10",
+      "pronunciation": [
+        {
+          "german": "Wie ist deine Adresse?",
+          "turkishApproximation": "Vii ist dayne Adrese?",
+          "note": "`ie` uzun bir \"i\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wie ist deine Adresse?",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wie ist deine Adresse?",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-01",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-01",
+        "naturalKey": "authored/p6-cum-sein-01"
+      },
+      "prompt": "Bu onun (erkek) kitabı. → ______",
+      "answer": "Das ist sein Buch.",
+      "familyId": "p6-cum-sein-01",
+      "pronunciation": [
+        {
+          "german": "Das ist sein Buch.",
+          "turkishApproximation": "Das ist zayn Buuh.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist sein Buch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist sein Buch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-02",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-02",
+        "naturalKey": "authored/p6-cum-sein-02"
+      },
+      "prompt": "Onun (erkek) arabası kırmızı. → ______",
+      "answer": "Sein Auto ist rot.",
+      "familyId": "p6-cum-sein-02",
+      "pronunciation": [
+        {
+          "german": "Sein Auto ist rot.",
+          "turkishApproximation": "Zayn Auto ist rot.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Sein Auto ist rot.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Sein Auto ist rot.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-03",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-03",
+        "naturalKey": "authored/p6-cum-sein-03"
+      },
+      "prompt": "O (erkek) kedisini seviyor. → ______",
+      "answer": "Er mag seine Katze.",
+      "familyId": "p6-cum-sein-03",
+      "pronunciation": [
+        {
+          "german": "Er mag seine Katze.",
+          "turkishApproximation": "Eea mak zayne Kattse.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Er mag seine Katze.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Er mag seine Katze.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-04",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-04",
+        "naturalKey": "authored/p6-cum-sein-04"
+      },
+      "prompt": "Onun (erkek) babası öğretmen. → ______",
+      "answer": "Sein Vater ist Lehrer.",
+      "familyId": "p6-cum-sein-04",
+      "pronunciation": [
+        {
+          "german": "Sein Vater ist Lehrer.",
+          "turkishApproximation": "Zayn Faata ist Leera.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Sein Vater ist Lehrer.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Sein Vater ist Lehrer.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-05",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-05",
+        "naturalKey": "authored/p6-cum-sein-05"
+      },
+      "prompt": "Onun (erkek) kız kardeşi Almanya'dan geliyor. → ______",
+      "answer": "Seine Schwester kommt aus Deutschland.",
+      "familyId": "p6-cum-sein-05",
+      "pronunciation": [
+        {
+          "german": "Seine Schwester kommt aus Deutschland.",
+          "turkishApproximation": "Zayne Şvesta komt aus Doyçlant.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Seine Schwester kommt aus Deutschland.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Seine Schwester kommt aus Deutschland.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-sein-06",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-sein-06",
+        "naturalKey": "authored/p6-cum-sein-06"
+      },
+      "prompt": "Bu onun (erkek) telefon numarası. → ______",
+      "answer": "Das ist seine Telefonnummer.",
+      "familyId": "p6-cum-sein-06",
+      "pronunciation": [
+        {
+          "german": "Das ist seine Telefonnummer.",
+          "turkishApproximation": "Das ist zayne Telefonnumma."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist seine Telefonnummer.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist seine Telefonnummer.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-es-07",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir: (bebek hakkında)",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day6.iyelik.sein-onun",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-es-07",
+        "naturalKey": "authored/p6-cum-es-07"
+      },
+      "prompt": "Onun adı Tom. → ______",
+      "answer": "Es heißt Tom.",
+      "familyId": "p6-cum-es-07",
+      "pronunciation": [
+        {
+          "german": "Es heißt Tom.",
+          "turkishApproximation": "Es hayst Tom."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Es heißt Tom.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Es heißt Tom.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihr-08",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihr-08",
+        "naturalKey": "authored/p6-cum-ihr-08"
+      },
+      "prompt": "Bu onun (kadın) çantası. → ______",
+      "answer": "Das ist ihre Tasche.",
+      "familyId": "p6-cum-ihr-08",
+      "pronunciation": [
+        {
+          "german": "Das ist ihre Tasche.",
+          "turkishApproximation": "Das ist iire Taşe.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist ihre Tasche.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist ihre Tasche.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihr-09",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihr-09",
+        "naturalKey": "authored/p6-cum-ihr-09"
+      },
+      "prompt": "Onun (kadın) evi küçük. → ______",
+      "answer": "Ihre Wohnung ist klein.",
+      "familyId": "p6-cum-ihr-09",
+      "pronunciation": [
+        {
+          "german": "Ihre Wohnung ist klein.",
+          "turkishApproximation": "İire Voonunk ist klayn."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ihre Wohnung ist klein.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ihre Wohnung ist klein.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihr-10",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihr-10",
+        "naturalKey": "authored/p6-cum-ihr-10"
+      },
+      "prompt": "O (kadın) ailesini seviyor. → ______",
+      "answer": "Sie mag ihre Familie.",
+      "familyId": "p6-cum-ihr-10",
+      "pronunciation": [
+        {
+          "german": "Sie mag ihre Familie.",
+          "turkishApproximation": "Zii mak iire Familii.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Sie mag ihre Familie.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Sie mag ihre Familie.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-01",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-01",
+        "naturalKey": "authored/p6-cum-unser-01"
+      },
+      "prompt": "Bu bizim evimiz. → ______",
+      "answer": "Das ist unsere Wohnung.",
+      "familyId": "p6-cum-unser-01",
+      "pronunciation": [
+        {
+          "german": "Das ist unsere Wohnung.",
+          "turkishApproximation": "Das ist unsere Voonunk."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist unsere Wohnung.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist unsere Wohnung.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-02",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-02",
+        "naturalKey": "authored/p6-cum-unser-02"
+      },
+      "prompt": "Bizim arabamız burada. → ______",
+      "answer": "Unser Auto ist hier.",
+      "familyId": "p6-cum-unser-02",
+      "pronunciation": [
+        {
+          "german": "Unser Auto ist hier.",
+          "turkishApproximation": "Unsa Auto ist hiir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Unser Auto ist hier.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Unser Auto ist hier.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-03",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-03",
+        "naturalKey": "authored/p6-cum-unser-03"
+      },
+      "prompt": "Ailemizi seviyoruz. → ______",
+      "answer": "Wir mögen unsere Familie.",
+      "familyId": "p6-cum-unser-03",
+      "pronunciation": [
+        {
+          "german": "Wir mögen unsere Familie.",
+          "turkishApproximation": "Viia mögen unsere Familii."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wir mögen unsere Familie.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wir mögen unsere Familie.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-04",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-04",
+        "naturalKey": "authored/p6-cum-unser-04"
+      },
+      "prompt": "Bizim öğretmenimiz Almanca konuşuyor. → ______",
+      "answer": "Unser Lehrer spricht Deutsch.",
+      "familyId": "p6-cum-unser-04",
+      "pronunciation": [
+        {
+          "german": "Unser Lehrer spricht Deutsch.",
+          "turkishApproximation": "Unsa Leera şpriht Doyç.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Unser Lehrer spricht Deutsch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Unser Lehrer spricht Deutsch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-05",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-05",
+        "naturalKey": "authored/p6-cum-unser-05"
+      },
+      "prompt": "Bu bizim kedimiz. → ______",
+      "answer": "Das ist unsere Katze.",
+      "familyId": "p6-cum-unser-05",
+      "pronunciation": [
+        {
+          "german": "Das ist unsere Katze.",
+          "turkishApproximation": "Das ist unsere Kattse."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist unsere Katze.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist unsere Katze.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-06",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-06",
+        "naturalKey": "authored/p6-cum-unser-06"
+      },
+      "prompt": "Bizim kitabımız masada. → ______",
+      "answer": "Unser Buch ist auf dem Tisch.",
+      "familyId": "p6-cum-unser-06",
+      "pronunciation": [
+        {
+          "german": "Unser Buch ist auf dem Tisch.",
+          "turkishApproximation": "Unsa Buuh ist auf dem Tiş.",
+          "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Unser Buch ist auf dem Tisch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Unser Buch ist auf dem Tisch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-07",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-07",
+        "naturalKey": "authored/p6-cum-unser-07"
+      },
+      "prompt": "Kedimizi seviyoruz. → ______",
+      "answer": "Wir mögen unsere Katze.",
+      "familyId": "p6-cum-unser-07",
+      "pronunciation": [
+        {
+          "german": "Wir mögen unsere Katze.",
+          "turkishApproximation": "Viia mögen unsere Kattse."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Wir mögen unsere Katze.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Wir mögen unsere Katze.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-08",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-08",
+        "naturalKey": "authored/p6-cum-unser-08"
+      },
+      "prompt": "Bu bizim adresimiz. → ______",
+      "answer": "Das ist unsere Adresse.",
+      "familyId": "p6-cum-unser-08",
+      "pronunciation": [
+        {
+          "german": "Das ist unsere Adresse.",
+          "turkishApproximation": "Das ist unsere Adrese."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist unsere Adresse.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist unsere Adresse.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-09",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-09",
+        "naturalKey": "authored/p6-cum-unser-09"
+      },
+      "prompt": "Bizim köpeğimiz çok tatlı. → ______",
+      "answer": "Unser Hund ist sehr süß.",
+      "familyId": "p6-cum-unser-09",
+      "pronunciation": [
+        {
+          "german": "Unser Hund ist sehr süß.",
+          "turkishApproximation": "Unsa Hunt ist zea züs.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Unser Hund ist sehr süß.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Unser Hund ist sehr süß.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-unser-10",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.unser",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-unser-10",
+        "naturalKey": "authored/p6-cum-unser-10"
+      },
+      "prompt": "Bu bizim telefon numaramız değil. → ______",
+      "answer": "Das ist nicht unsere Telefonnummer.",
+      "familyId": "p6-cum-unser-10",
+      "pronunciation": [
+        {
+          "german": "Das ist nicht unsere Telefonnummer.",
+          "turkishApproximation": "Das ist niht unsere Telefonnumma.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist nicht unsere Telefonnummer.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist nicht unsere Telefonnummer.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-01",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-01",
+        "naturalKey": "authored/p6-cum-ihrpl-01"
+      },
+      "prompt": "Bu onların evi. → ______",
+      "answer": "Das ist ihre Wohnung.",
+      "familyId": "p6-cum-ihrpl-01",
+      "pronunciation": [
+        {
+          "german": "Das ist ihre Wohnung.",
+          "turkishApproximation": "Das ist iire Voonunk."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist ihre Wohnung.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist ihre Wohnung.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-02",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-02",
+        "naturalKey": "authored/p6-cum-ihrpl-02"
+      },
+      "prompt": "Onların arabası kırmızı. → ______",
+      "answer": "Ihr Auto ist rot.",
+      "familyId": "p6-cum-ihrpl-02",
+      "pronunciation": [
+        {
+          "german": "Ihr Auto ist rot.",
+          "turkishApproximation": "İia Auto ist rot."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ihr Auto ist rot.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ihr Auto ist rot.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-03",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-03",
+        "naturalKey": "authored/p6-cum-ihrpl-03"
+      },
+      "prompt": "Onlar ailelerini seviyor. → ______",
+      "answer": "Sie mögen ihre Familie.",
+      "familyId": "p6-cum-ihrpl-03",
+      "pronunciation": [
+        {
+          "german": "Sie mögen ihre Familie.",
+          "turkishApproximation": "Zii mögen iire Familii.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Sie mögen ihre Familie.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Sie mögen ihre Familie.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-04",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-04",
+        "naturalKey": "authored/p6-cum-ihrpl-04"
+      },
+      "prompt": "Onların öğretmeni Almanca konuşuyor. → ______",
+      "answer": "Ihr Lehrer spricht Deutsch.",
+      "familyId": "p6-cum-ihrpl-04",
+      "pronunciation": [
+        {
+          "german": "Ihr Lehrer spricht Deutsch.",
+          "turkishApproximation": "İia Leera şpriht Doyç.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ihr Lehrer spricht Deutsch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ihr Lehrer spricht Deutsch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-05",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-05",
+        "naturalKey": "authored/p6-cum-ihrpl-05"
+      },
+      "prompt": "Bu onların kedisi. → ______",
+      "answer": "Das ist ihre Katze.",
+      "familyId": "p6-cum-ihrpl-05",
+      "pronunciation": [
+        {
+          "german": "Das ist ihre Katze.",
+          "turkishApproximation": "Das ist iire Kattse."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist ihre Katze.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist ihre Katze.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-06",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-06",
+        "naturalKey": "authored/p6-cum-ihrpl-06"
+      },
+      "prompt": "Onların kitabı masada. → ______",
+      "answer": "Ihr Buch ist auf dem Tisch.",
+      "familyId": "p6-cum-ihrpl-06",
+      "pronunciation": [
+        {
+          "german": "Ihr Buch ist auf dem Tisch.",
+          "turkishApproximation": "İia Buuh ist auf dem Tiş.",
+          "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ihr Buch ist auf dem Tisch.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ihr Buch ist auf dem Tisch.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-07",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "medium",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-07",
+        "naturalKey": "authored/p6-cum-ihrpl-07"
+      },
+      "prompt": "Onlar evlerini seviyor. → ______",
+      "answer": "Sie mögen ihre Wohnung.",
+      "familyId": "p6-cum-ihrpl-07",
+      "pronunciation": [
+        {
+          "german": "Sie mögen ihre Wohnung.",
+          "turkishApproximation": "Zii mögen iire Voonunk.",
+          "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Sie mögen ihre Wohnung.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Sie mögen ihre Wohnung.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-08",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-08",
+        "naturalKey": "authored/p6-cum-ihrpl-08"
+      },
+      "prompt": "Bu onların adresi. → ______",
+      "answer": "Das ist ihre Adresse.",
+      "familyId": "p6-cum-ihrpl-08",
+      "pronunciation": [
+        {
+          "german": "Das ist ihre Adresse.",
+          "turkishApproximation": "Das ist iire Adrese."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist ihre Adresse.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist ihre Adresse.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-09",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "easy",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-09",
+        "naturalKey": "authored/p6-cum-ihrpl-09"
+      },
+      "prompt": "Onların çocuğu çok tatlı. → ______",
+      "answer": "Ihr Kind ist sehr süß.",
+      "familyId": "p6-cum-ihrpl-09",
+      "pronunciation": [
+        {
+          "german": "Ihr Kind ist sehr süß.",
+          "turkishApproximation": "İia Kint ist zea züs.",
+          "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Ihr Kind ist sehr süß.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Ihr Kind ist sehr süß.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "p6-cum-ihrpl-10",
+      "day": 6,
+      "track": "private",
+      "topic": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+      "type": "free-text",
+      "instruction": "Türkçeden Almancaya çevir:",
+      "difficulty": "hard",
+      "skill": "production",
+      "conceptIds": [
+        "private.day3.iyelik.ihr",
+        "private.day6.cumle.kalip"
+      ],
+      "origin": "authored",
+      "topicId": "private.day6.cumle-kurma",
+      "estimatedSeconds": 35,
+      "source": {
+        "file": "authored",
+        "day": 6,
+        "section": "private.day6.cumle-kurma",
+        "itemKey": "p6-cum-ihrpl-10",
+        "naturalKey": "authored/p6-cum-ihrpl-10"
+      },
+      "prompt": "Bu onların telefon numarası değil. → ______",
+      "answer": "Das ist nicht ihre Telefonnummer.",
+      "familyId": "p6-cum-ihrpl-10",
+      "pronunciation": [
+        {
+          "german": "Das ist nicht ihre Telefonnummer.",
+          "turkishApproximation": "Das ist niht iire Telefonnumma.",
+          "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+        }
+      ],
+      "audio": {
+        "canonicalAnswer": {
+          "text": "Das ist nicht ihre Telefonnummer.",
+          "language": "de-DE",
+          "role": "canonical-answer"
+        },
+        "targets": [
+          {
+            "text": "Das ist nicht ihre Telefonnummer.",
+            "language": "de-DE",
+            "role": "vocabulary"
+          }
+        ]
+      }
     }
   ],
   "concepts": [
@@ -50579,6 +53204,47 @@
       "track": "private",
       "topicId": "private.day5.yiyecek",
       "label": "das Ei, das Mehl, der Pfannkuchen, der Kuchen, das Brötchen, die Birne, der Saft"
+    },
+    {
+      "id": "private.day6.hedef.giris",
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.hedef",
+      "label": "6. Gün hedefi: kişi ve iyelik zamirleriyle 50 cümle"
+    },
+    {
+      "id": "private.day6.iyelik.sein-onun",
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.iyelik-tablo",
+      "label": "sein / seine = onun (erkek/nötr sahip)",
+      "prerequisites": [
+        "private.day2.artikel.mein-meine",
+        "private.day2.artikel.dein-deine"
+      ]
+    },
+    {
+      "id": "private.day6.iyelik.zincir",
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.iyelik-tablo",
+      "label": "iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr",
+      "prerequisites": [
+        "private.day6.iyelik.sein-onun",
+        "private.day3.iyelik.unser",
+        "private.day3.iyelik.ihr"
+      ]
+    },
+    {
+      "id": "private.day6.cumle.kalip",
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.cumle-kurma",
+      "label": "Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim",
+      "prerequisites": [
+        "private.day6.iyelik.zincir",
+        "private.day2.haben.tablo"
+      ]
     }
   ],
   "summaries": [
@@ -58473,6 +61139,304 @@
           "pronunciation": []
         }
       ]
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "title": "6. Gün",
+      "estimatedReadingMinutes": 5,
+      "topics": [
+        {
+          "id": "private.day6.hedef",
+          "title": "Bu Günün Hedefi",
+          "track": "private",
+          "conceptIds": [
+            "private.day6.hedef.giris"
+          ],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "text": "Bugün yeni bir dilbilgisi konusu yok — bugüne kadar öğrendiğin **kişi zamirlerini** (`ich, du, er, sie, es, wir, sie`) ve **iyelik zamirlerini** (`mein, dein, sein, ihr, unser`) bir araya getirip cümle kurma pratiği yapıyoruz. Tek yeni bilgi: `sein` iyelik zamiri (**onun** — erkek/nötr sahip için). Amaç, bu zamirlerle 50 örnek cümle kurabilmek ve doğru zamiri doğru kişiyle eşleştirebilmek."
+            },
+            {
+              "kind": "paragraph",
+              "text": "---"
+            }
+          ],
+          "warnings": [],
+          "keyPoints": [
+            "Kişi zamirlerini (ich, du, er, sie, es, wir, sie) Türkçe karşılıklarıyla söyleyebiliyorum."
+          ],
+          "recallQuestions": [
+            {
+              "question": "\"Onların evi\" Almancaya nasıl çevrilir? → `ihre Wohnung`",
+              "answer": "`ihre Wohnung`."
+            }
+          ],
+          "examples": [],
+          "pronunciation": []
+        },
+        {
+          "id": "private.day6.iyelik-tablo",
+          "title": "İyelik Zamirleri — Tam Tablo",
+          "track": "private",
+          "conceptIds": [
+            "private.day6.iyelik.sein-onun",
+            "private.day6.iyelik.zincir"
+          ],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "text": "İyelik zamiri, \"kimin\" olduğunu gösterir — Türkçedeki `-im/-in/-imiz` gibi eklerin karşılığıdır."
+            },
+            {
+              "kind": "table",
+              "head": [
+                "Kişi zamiri",
+                "İyelik zamiri",
+                "Türkçe"
+              ],
+              "rows": [
+                [
+                  "ich",
+                  "mein",
+                  "benim"
+                ],
+                [
+                  "du",
+                  "dein",
+                  "senin"
+                ],
+                [
+                  "er",
+                  "sein",
+                  "onun (erkek)"
+                ],
+                [
+                  "es",
+                  "sein",
+                  "onun (nötr)"
+                ],
+                [
+                  "sie (o)",
+                  "ihr",
+                  "onun (kadın)"
+                ],
+                [
+                  "wir",
+                  "unser",
+                  "bizim"
+                ],
+                [
+                  "sie (onlar)",
+                  "ihr",
+                  "onların"
+                ]
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": "`mein` ve `dein` 2. Gün'de, `unser` ve `ihr` (kadın/onlar) 3. Gün'de görüldü. Bugünün tek yeni parçası:"
+            },
+            {
+              "kind": "paragraph",
+              "text": "**`sein / seine`** = **onun** (erkek ya da nötr bir sahip için — `er` ya da `es` özneli cümlelerde kullanılır)."
+            },
+            {
+              "kind": "code",
+              "lines": [
+                "Das ist sein Buch.       → Bu onun (erkek) kitabı.",
+                "Sein Auto ist rot.       → Onun (erkek) arabası kırmızı.",
+                "Es heißt Tom.            → (Onun/bebeğin) adı Tom."
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": "`sein` iyelik zamiri, `sein` fiiliyle (`ich bin, du bist...`) aynı yazılır ama tamamen farklı bir görevdedir — biri \"olmak\" fiili, diğeri \"onun\" iyelik zamiridir. Cümledeki yerine bakarak ayırt edersin: fiil ikinci sırada durur, iyelik zamiri bir ismin hemen önünde durur."
+            },
+            {
+              "kind": "paragraph",
+              "text": "**İyelik zamiri zinciri**"
+            },
+            {
+              "kind": "paragraph",
+              "text": "Hepsini sırayla ezberlemek için: **İyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr.** (ben → sen → o-erkek → o-kadın → biz → onlar)"
+            },
+            {
+              "kind": "callout",
+              "text": "💡 **Unutma:** Nesne `das` ya da `die` bir isimse (`das Buch`, `die Tasche`, `die Katze` gibi) iyelik zamirinin yalın hâli değişmez; nesne `der` bir isimse (`der Hund`, `der Vater`) onu doğrudan cümlenin öznesi ya da `sein`den sonra kullanmak en güvenlisidir."
+            },
+            {
+              "kind": "paragraph",
+              "text": "---"
+            }
+          ],
+          "warnings": [],
+          "keyPoints": [
+            "`mein, dein, sein, ihr, unser` iyelik zamirlerini doğru kişiyle eşleştirebiliyorum.",
+            "`sein`in hem \"olmak\" fiili hem de \"onun\" iyelik zamiri olarak iki farklı görevi olduğunu biliyorum."
+          ],
+          "recallQuestions": [
+            {
+              "question": "`sein` iyelik zamiri ne demektir ve hangi öznelerle kullanılır? → \"onun\" (erkek/nötr) — `er` ve `es` özneleriyle",
+              "answer": "\"onun\" (erkek/nötr) — `er` ve `es` özneleriyle kullanılır."
+            },
+            {
+              "question": "\"Bizim kedimiz\" Almancaya nasıl çevrilir? → `unsere Katze`",
+              "answer": "`unsere Katze`."
+            }
+          ],
+          "examples": [],
+          "pronunciation": [
+            {
+              "german": "ich",
+              "turkishApproximation": "ih",
+              "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+            },
+            {
+              "german": "du",
+              "turkishApproximation": "du"
+            },
+            {
+              "german": "er",
+              "turkishApproximation": "eea",
+              "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+            },
+            {
+              "german": "es",
+              "turkishApproximation": "es"
+            },
+            {
+              "german": "wir",
+              "turkishApproximation": "viia"
+            }
+          ]
+        },
+        {
+          "id": "private.day6.cumle-kurma",
+          "title": "Kişi Zamiri + İyelik Zamiri ile Cümle Kurma",
+          "track": "private",
+          "conceptIds": [
+            "private.day6.cumle.kalip"
+          ],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "text": "Bugünkü cümlelerin çoğu tek bir kalıbı takip eder:"
+            },
+            {
+              "kind": "paragraph",
+              "text": "**Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim.**"
+            },
+            {
+              "kind": "code",
+              "lines": [
+                "Ich    habe  mein   Buch.       (Kitabım var. / Kitabımı okuyorum.)",
+                "Du     hast  dein   Auto.       (Araban var.)",
+                "Er     mag   seine  Katze.      (O kedisini seviyor.)",
+                "Wir    mögen unsere Familie.    (Ailemizi seviyoruz.)",
+                "Sie    mögen ihre   Wohnung.    (Onlar evlerini seviyorlar.)"
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": "Bazı cümlelerde fiil yerine `sein` (ist/sind) ile kurulan basit bir tanıtım kalıbı da kullanılır:"
+            },
+            {
+              "kind": "code",
+              "lines": [
+                "Das ist mein Buch.       (Bu benim kitabım.)",
+                "Das ist unsere Katze.    (Bu bizim kedimiz.)"
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": "Her iki kalıpta da iyelik zamiri, hangi kişi zamirinin (özne) sahip olduğuna göre seçilir — cümleyi kurmadan önce \"kim sahip?\" sorusunu sor."
+            },
+            {
+              "kind": "paragraph",
+              "text": "---"
+            }
+          ],
+          "warnings": [],
+          "keyPoints": [
+            "Kişi zamiri + Fiil + iyelik zamiri + isim kalıbıyla kendi cümlelerimi kurabiliyorum."
+          ],
+          "recallQuestions": [
+            {
+              "question": "`sein` iyelik zamiri ile `sein` fiili nasıl ayırt edilir? → fiil cümlede ikinci sırada durur, iyelik zamiri bir ismin hemen önünde durur",
+              "answer": "Fiil cümlede ikinci sırada durur; iyelik zamiri bir ismin hemen önünde durur."
+            },
+            {
+              "question": "Kişi zamiri + Fiil + iyelik zamiri + isim kalıbında cümleyi kurmadan önce hangi soruyu sormalısın? → \"kim sahip?\"",
+              "answer": "\"Kim sahip?\" sorusunu sormalısın — iyelik zamirini bu cevaba göre seçersin."
+            }
+          ],
+          "examples": [
+            {
+              "german": "Ich    habe  mein   Buch.",
+              "turkish": "Kitabım var. / Kitabımı okuyorum.",
+              "pronunciation": {
+                "german": "Ich    habe  mein   Buch.",
+                "turkishApproximation": "İh haabe mayn Buuh.",
+                "note": "`ch` sesi Türkçedeki tam bir \"h\" değildir; dili damağa yaklaştırıp yanaklardan çıkarılır."
+              }
+            },
+            {
+              "german": "Du     hast  dein   Auto.",
+              "turkish": "Araban var.",
+              "pronunciation": {
+                "german": "Du     hast  dein   Auto.",
+                "turkishApproximation": "Du hast dayn Auto."
+              }
+            },
+            {
+              "german": "Er     mag   seine  Katze.",
+              "turkish": "O kedisini seviyor.",
+              "pronunciation": {
+                "german": "Er     mag   seine  Katze.",
+                "turkishApproximation": "Eea mak zayne Kattse.",
+                "note": "Kelime sonundaki `-er` hafif bir \"a\" gibi okunur."
+              }
+            },
+            {
+              "german": "Wir    mögen unsere Familie.",
+              "turkish": "Ailemizi seviyoruz.",
+              "pronunciation": {
+                "german": "Wir    mögen unsere Familie.",
+                "turkishApproximation": "Viia mögen unsere Familii."
+              }
+            },
+            {
+              "german": "Sie    mögen ihre   Wohnung.",
+              "turkish": "Onlar evlerini seviyorlar.",
+              "pronunciation": {
+                "german": "Sie    mögen ihre   Wohnung.",
+                "turkishApproximation": "Zii mögen iire Voonunk.",
+                "note": "Kelime başında sesliden önce gelen `s` \"z\" gibi okunur."
+              }
+            },
+            {
+              "german": "Das ist mein Buch.",
+              "turkish": "Bu benim kitabım.",
+              "pronunciation": {
+                "german": "Das ist mein Buch.",
+                "turkishApproximation": "Das ist mayn Buuh.",
+                "note": "`ch` burada boğazdan gelen kaba bir \"h\" sesidir."
+              }
+            },
+            {
+              "german": "Das ist unsere Katze.",
+              "turkish": "Bu bizim kedimiz.",
+              "pronunciation": {
+                "german": "Das ist unsere Katze.",
+                "turkishApproximation": "Das ist unsere Kattse."
+              }
+            }
+          ],
+          "pronunciation": []
+        }
+      ]
     }
   ],
   "warnings": [],
@@ -60421,9 +63385,9 @@
       "conceptId": "private.day2.artikel.mein-meine",
       "label": "mein / meine",
       "exercises": {
-        "easy": 0,
-        "medium": 2,
-        "hard": 0
+        "easy": 5,
+        "medium": 5,
+        "hard": 2
       },
       "summaryCovered": true
     },
@@ -60434,9 +63398,9 @@
       "conceptId": "private.day2.artikel.dein-deine",
       "label": "dein / deine",
       "exercises": {
-        "easy": 0,
-        "medium": 2,
-        "hard": 0
+        "easy": 1,
+        "medium": 6,
+        "hard": 5
       },
       "summaryCovered": true
     },
@@ -61136,9 +64100,9 @@
       "conceptId": "private.day3.iyelik.unser",
       "label": "unser / unsere = bizim",
       "exercises": {
-        "easy": 2,
-        "medium": 2,
-        "hard": 0
+        "easy": 7,
+        "medium": 5,
+        "hard": 2
       },
       "summaryCovered": true
     },
@@ -61149,9 +64113,9 @@
       "conceptId": "private.day3.iyelik.ihr",
       "label": "ihr / ihre = onun (kadın) / onların",
       "exercises": {
-        "easy": 1,
-        "medium": 2,
-        "hard": 1
+        "easy": 8,
+        "medium": 6,
+        "hard": 3
       },
       "summaryCovered": true
     },
@@ -61750,6 +64714,58 @@
         "easy": 6,
         "medium": 4,
         "hard": 1
+      },
+      "summaryCovered": true
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.hedef",
+      "conceptId": "private.day6.hedef.giris",
+      "label": "6. Gün hedefi: kişi ve iyelik zamirleriyle 50 cümle",
+      "exercises": {
+        "easy": 1,
+        "medium": 0,
+        "hard": 0
+      },
+      "summaryCovered": true
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.iyelik-tablo",
+      "conceptId": "private.day6.iyelik.sein-onun",
+      "label": "sein / seine = onun (erkek/nötr sahip)",
+      "exercises": {
+        "easy": 5,
+        "medium": 3,
+        "hard": 1
+      },
+      "summaryCovered": true
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.iyelik-tablo",
+      "conceptId": "private.day6.iyelik.zincir",
+      "label": "iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr",
+      "exercises": {
+        "easy": 0,
+        "medium": 1,
+        "hard": 0
+      },
+      "summaryCovered": true
+    },
+    {
+      "day": 6,
+      "track": "private",
+      "topicId": "private.day6.cumle-kurma",
+      "conceptId": "private.day6.cumle.kalip",
+      "label": "Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim",
+      "exercises": {
+        "easy": 22,
+        "medium": 16,
+        "hard": 12
       },
       "summaryCovered": true
     }

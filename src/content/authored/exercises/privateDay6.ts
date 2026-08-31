@@ -1,0 +1,558 @@
+/**
+ * Özel Ders — 6. Gün — yazılmış alıştırma havuzu.
+ *
+ * Bu gün yeni bir dilbilgisi konusu açmaz: 1–5. Günlerde öğrenilen kişi
+ * zamirlerini (ich, du, er, sie, es, wir, sie) ve iyelik zamirlerini
+ * (mein, dein, unser, ihr) tek bir üretim pratiğinde birleştirir. Tek yeni
+ * bilgi `sein / seine` (= onun, erkek/nötr sahip) iyelik zamiridir.
+ *
+ * Ağırlık, öğrencinin "senin / benim / bizim / onun / onların" gibi iyelik
+ * kavramlarıyla kendi cümlelerini kurabilmesi üzerindedir; bu yüzden havuzun
+ * çekirdeği (50 alıştırma) Türkçeden Almancaya çeviri (free-text) türündedir
+ * — tıpkı 3. Gün'ün "80 cümle" pratiğinde kurulan kalıp gibi.
+ *
+ * Tüm kavramlar concepts.ts içindeki private.day6.* kavramlarına (ya da
+ * meşru önceki gün ön koşullarına) bağlıdır; özet kapsamı Özel Ders Özet.md
+ * üzerinden doğrulanır.
+ */
+
+import type { AuthoredExercise } from '../types.ts';
+
+const HED = 'private.day6.hedef';
+const IYE = 'private.day6.iyelik-tablo';
+const CUM = 'private.day6.cumle-kurma';
+
+const MEIN = 'private.day2.artikel.mein-meine';
+const DEIN = 'private.day2.artikel.dein-deine';
+const SEIN = 'private.day6.iyelik.sein-onun';
+const UNSER = 'private.day3.iyelik.unser';
+const IHR = 'private.day3.iyelik.ihr';
+const KALIP = 'private.day6.cumle.kalip';
+
+export const PRIVATE_DAY6_EXERCISES: AuthoredExercise[] = [
+  /* ================================================================
+   * Bugünün Hedefi (1)
+   * ================================================================ */
+  {
+    id: 'p6-hed-giris-mc',
+    day: 6, track: 'private', topicId: HED,
+    type: 'multiple-choice', difficulty: 'easy', skill: 'recognition',
+    conceptIds: ['private.day6.hedef.giris'],
+    familyId: 'p6-hed-giris',
+    instruction: '6. Günün hedefi nedir?',
+    prompt: '6. Gün ne üzerine kuruludur?',
+    answer: 'kişi ve iyelik zamirleriyle cümle kurma pratiği',
+    options: [
+      'kişi ve iyelik zamirleriyle cümle kurma pratiği',
+      'Sadece yeni fiil çekimleri',
+      'Sadece sayılar',
+      'Sadece geçmiş zaman',
+    ],
+  },
+
+  /* ================================================================
+   * İyelik Zamirleri — Tam Tablo (3)
+   * ================================================================ */
+  {
+    id: 'p6-iye-sein-mc',
+    day: 6, track: 'private', topicId: IYE,
+    type: 'multiple-choice', difficulty: 'medium', skill: 'recognition',
+    conceptIds: [SEIN],
+    familyId: 'p6-iye-sein',
+    instruction: '"sein" iyelik zamiri ne demektir?',
+    prompt: 'sein (iyelik zamiri)',
+    answer: 'onun (erkek/nötr)',
+    options: ['onun (erkek/nötr)', 'benim', 'senin', 'bizim'],
+    pronounce: ['sein'],
+  },
+  {
+    id: 'p6-iye-sein-fill',
+    day: 6, track: 'private', topicId: IYE,
+    type: 'fill-blank', difficulty: 'easy', skill: 'recall',
+    conceptIds: [SEIN],
+    familyId: 'p6-iye-sein',
+    instruction: 'Doğru iyelik zamirini yaz:',
+    prompt: 'Er hat ein Auto. Das ist ___ Auto.',
+    answer: 'sein',
+    pronounce: ['Das ist sein Auto.'],
+  },
+  {
+    id: 'p6-iye-tablo-match',
+    day: 6, track: 'private', topicId: IYE,
+    type: 'matching', difficulty: 'medium', skill: 'recognition',
+    conceptIds: ['private.day6.iyelik.zincir'],
+    familyId: 'p6-iye-tablo',
+    instruction: 'Kişi zamirini doğru iyelik zamiriyle eşleştir.',
+    pairs: [
+      { left: 'ich', right: 'mein' },
+      { left: 'du', right: 'dein' },
+      { left: 'er', right: 'sein' },
+      { left: 'wir', right: 'unser' },
+      { left: 'sie (onlar)', right: 'ihr' },
+    ],
+  },
+
+  /* ================================================================
+   * Kişi Zamiri + İyelik Zamiri ile Cümle Kurma (50)
+   * ================================================================ */
+
+  // --- ich / mein (benim) — 10 --------------------------------------
+  {
+    id: 'p6-cum-mein-01', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-01',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu benim kitabım. → ______',
+    answer: 'Das ist mein Buch.',
+    pronounce: ['Das ist mein Buch.'],
+  },
+  {
+    id: 'p6-cum-mein-02', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-02',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Benim arabam burada. → ______',
+    answer: 'Mein Auto ist hier.',
+    pronounce: ['Mein Auto ist hier.'],
+  },
+  {
+    id: 'p6-cum-mein-03', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-03',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Benim çantam nerede? → ______',
+    answer: 'Wo ist meine Tasche?',
+    pronounce: ['Wo ist meine Tasche?'],
+  },
+  {
+    id: 'p6-cum-mein-04', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-04',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Kitabımı seviyorum. → ______',
+    answer: 'Ich mag mein Buch.',
+    pronounce: ['Ich mag mein Buch.'],
+  },
+  {
+    id: 'p6-cum-mein-05', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-05',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Ailemi seviyorum. → ______',
+    answer: 'Ich mag meine Familie.',
+    pronounce: ['Ich mag meine Familie.'],
+  },
+  {
+    id: 'p6-cum-mein-06', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-06',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Benim kedim çok güzel. → ______',
+    answer: 'Meine Katze ist sehr schön.',
+    pronounce: ['Meine Katze ist sehr schön.'],
+  },
+  {
+    id: 'p6-cum-mein-07', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-07',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Babam Berlin\'de yaşıyor. → ______',
+    answer: 'Mein Vater wohnt in Berlin.',
+    pronounce: ['Mein Vater wohnt in Berlin.'],
+  },
+  {
+    id: 'p6-cum-mein-08', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-08',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Kız kardeşimin adı Ayşe. → ______',
+    answer: 'Meine Schwester heißt Ayşe.',
+    pronounce: ['Meine Schwester heißt Ayşe.'],
+  },
+  {
+    id: 'p6-cum-mein-09', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-09',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu benim telefon numaram. → ______',
+    answer: 'Das ist meine Telefonnummer.',
+    pronounce: ['Das ist meine Telefonnummer.'],
+  },
+  {
+    id: 'p6-cum-mein-10', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [MEIN, KALIP], familyId: 'p6-cum-mein-10',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Benim evim küçük. → ______',
+    answer: 'Meine Wohnung ist klein.',
+    pronounce: ['Meine Wohnung ist klein.'],
+  },
+
+  // --- du / dein (senin) — 10 -----------------------------------------
+  {
+    id: 'p6-cum-dein-01', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-01',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu senin kitabın mı? → ______',
+    answer: 'Ist das dein Buch?',
+    pronounce: ['Ist das dein Buch?'],
+  },
+  {
+    id: 'p6-cum-dein-02', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-02',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Senin araban nerede? → ______',
+    answer: 'Wo ist dein Auto?',
+    pronounce: ['Wo ist dein Auto?'],
+  },
+  {
+    id: 'p6-cum-dein-03', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-03',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Senin çantan çok güzel. → ______',
+    answer: 'Deine Tasche ist sehr schön.',
+    pronounce: ['Deine Tasche ist sehr schön.'],
+  },
+  {
+    id: 'p6-cum-dein-04', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-04',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Kedini seviyor musun? → ______',
+    answer: 'Magst du deine Katze?',
+    pronounce: ['Magst du deine Katze?'],
+  },
+  {
+    id: 'p6-cum-dein-05', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-05',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Baban nerede yaşıyor? → ______',
+    answer: 'Wo wohnt dein Vater?',
+    pronounce: ['Wo wohnt dein Vater?'],
+  },
+  {
+    id: 'p6-cum-dein-06', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-06',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Kardeşinin adı ne? → ______',
+    answer: 'Wie heißt dein Bruder?',
+    pronounce: ['Wie heißt dein Bruder?'],
+  },
+  {
+    id: 'p6-cum-dein-07', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-07',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Senin evin büyük mü? → ______',
+    answer: 'Ist deine Wohnung groß?',
+    pronounce: ['Ist deine Wohnung groß?'],
+  },
+  {
+    id: 'p6-cum-dein-08', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-08',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu senin telefon numaran mı? → ______',
+    answer: 'Ist das deine Telefonnummer?',
+    pronounce: ['Ist das deine Telefonnummer?'],
+  },
+  {
+    id: 'p6-cum-dein-09', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-09',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Senin arkadaşın nereli? → ______',
+    answer: 'Woher kommt dein Freund?',
+    pronounce: ['Woher kommt dein Freund?'],
+  },
+  {
+    id: 'p6-cum-dein-10', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [DEIN, KALIP], familyId: 'p6-cum-dein-10',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Senin adresin ne? → ______',
+    answer: 'Wie ist deine Adresse?',
+    pronounce: ['Wie ist deine Adresse?'],
+  },
+
+  // --- er / es / sie (o) — sein / ihr (onun) — 10 ----------------------
+  {
+    id: 'p6-cum-sein-01', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-01',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onun (erkek) kitabı. → ______',
+    answer: 'Das ist sein Buch.',
+    pronounce: ['Das ist sein Buch.'],
+  },
+  {
+    id: 'p6-cum-sein-02', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-02',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onun (erkek) arabası kırmızı. → ______',
+    answer: 'Sein Auto ist rot.',
+    pronounce: ['Sein Auto ist rot.'],
+  },
+  {
+    id: 'p6-cum-sein-03', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-03',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'O (erkek) kedisini seviyor. → ______',
+    answer: 'Er mag seine Katze.',
+    pronounce: ['Er mag seine Katze.'],
+  },
+  {
+    id: 'p6-cum-sein-04', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-04',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onun (erkek) babası öğretmen. → ______',
+    answer: 'Sein Vater ist Lehrer.',
+    pronounce: ['Sein Vater ist Lehrer.'],
+  },
+  {
+    id: 'p6-cum-sein-05', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-05',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onun (erkek) kız kardeşi Almanya\'dan geliyor. → ______',
+    answer: 'Seine Schwester kommt aus Deutschland.',
+    pronounce: ['Seine Schwester kommt aus Deutschland.'],
+  },
+  {
+    id: 'p6-cum-sein-06', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-sein-06',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onun (erkek) telefon numarası. → ______',
+    answer: 'Das ist seine Telefonnummer.',
+    pronounce: ['Das ist seine Telefonnummer.'],
+  },
+  {
+    id: 'p6-cum-es-07', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [SEIN, KALIP], familyId: 'p6-cum-es-07',
+    instruction: 'Türkçeden Almancaya çevir: (bebek hakkında)',
+    prompt: 'Onun adı Tom. → ______',
+    answer: 'Es heißt Tom.',
+    pronounce: ['Es heißt Tom.'],
+  },
+  {
+    id: 'p6-cum-ihr-08', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihr-08',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onun (kadın) çantası. → ______',
+    answer: 'Das ist ihre Tasche.',
+    pronounce: ['Das ist ihre Tasche.'],
+  },
+  {
+    id: 'p6-cum-ihr-09', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihr-09',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onun (kadın) evi küçük. → ______',
+    answer: 'Ihre Wohnung ist klein.',
+    pronounce: ['Ihre Wohnung ist klein.'],
+  },
+  {
+    id: 'p6-cum-ihr-10', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihr-10',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'O (kadın) ailesini seviyor. → ______',
+    answer: 'Sie mag ihre Familie.',
+    pronounce: ['Sie mag ihre Familie.'],
+  },
+
+  // --- wir / unser (bizim) — 10 ----------------------------------------
+  {
+    id: 'p6-cum-unser-01', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-01',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu bizim evimiz. → ______',
+    answer: 'Das ist unsere Wohnung.',
+    pronounce: ['Das ist unsere Wohnung.'],
+  },
+  {
+    id: 'p6-cum-unser-02', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-02',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bizim arabamız burada. → ______',
+    answer: 'Unser Auto ist hier.',
+    pronounce: ['Unser Auto ist hier.'],
+  },
+  {
+    id: 'p6-cum-unser-03', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-03',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Ailemizi seviyoruz. → ______',
+    answer: 'Wir mögen unsere Familie.',
+    pronounce: ['Wir mögen unsere Familie.'],
+  },
+  {
+    id: 'p6-cum-unser-04', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-04',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bizim öğretmenimiz Almanca konuşuyor. → ______',
+    answer: 'Unser Lehrer spricht Deutsch.',
+    pronounce: ['Unser Lehrer spricht Deutsch.'],
+  },
+  {
+    id: 'p6-cum-unser-05', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-05',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu bizim kedimiz. → ______',
+    answer: 'Das ist unsere Katze.',
+    pronounce: ['Das ist unsere Katze.'],
+  },
+  {
+    id: 'p6-cum-unser-06', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-06',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bizim kitabımız masada. → ______',
+    answer: 'Unser Buch ist auf dem Tisch.',
+    pronounce: ['Unser Buch ist auf dem Tisch.'],
+  },
+  {
+    id: 'p6-cum-unser-07', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-07',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Kedimizi seviyoruz. → ______',
+    answer: 'Wir mögen unsere Katze.',
+    pronounce: ['Wir mögen unsere Katze.'],
+  },
+  {
+    id: 'p6-cum-unser-08', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-08',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu bizim adresimiz. → ______',
+    answer: 'Das ist unsere Adresse.',
+    pronounce: ['Das ist unsere Adresse.'],
+  },
+  {
+    id: 'p6-cum-unser-09', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-09',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bizim köpeğimiz çok tatlı. → ______',
+    answer: 'Unser Hund ist sehr süß.',
+    pronounce: ['Unser Hund ist sehr süß.'],
+  },
+  {
+    id: 'p6-cum-unser-10', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [UNSER, KALIP], familyId: 'p6-cum-unser-10',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu bizim telefon numaramız değil. → ______',
+    answer: 'Das ist nicht unsere Telefonnummer.',
+    pronounce: ['Das ist nicht unsere Telefonnummer.'],
+  },
+
+  // --- sie (onlar) / ihr (onların) — 10 ---------------------------------
+  {
+    id: 'p6-cum-ihrpl-01', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-01',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onların evi. → ______',
+    answer: 'Das ist ihre Wohnung.',
+    pronounce: ['Das ist ihre Wohnung.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-02', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-02',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onların arabası kırmızı. → ______',
+    answer: 'Ihr Auto ist rot.',
+    pronounce: ['Ihr Auto ist rot.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-03', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-03',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onlar ailelerini seviyor. → ______',
+    answer: 'Sie mögen ihre Familie.',
+    pronounce: ['Sie mögen ihre Familie.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-04', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-04',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onların öğretmeni Almanca konuşuyor. → ______',
+    answer: 'Ihr Lehrer spricht Deutsch.',
+    pronounce: ['Ihr Lehrer spricht Deutsch.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-05', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-05',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onların kedisi. → ______',
+    answer: 'Das ist ihre Katze.',
+    pronounce: ['Das ist ihre Katze.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-06', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-06',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onların kitabı masada. → ______',
+    answer: 'Ihr Buch ist auf dem Tisch.',
+    pronounce: ['Ihr Buch ist auf dem Tisch.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-07', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'medium', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-07',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onlar evlerini seviyor. → ______',
+    answer: 'Sie mögen ihre Wohnung.',
+    pronounce: ['Sie mögen ihre Wohnung.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-08', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-08',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onların adresi. → ______',
+    answer: 'Das ist ihre Adresse.',
+    pronounce: ['Das ist ihre Adresse.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-09', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'easy', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-09',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Onların çocuğu çok tatlı. → ______',
+    answer: 'Ihr Kind ist sehr süß.',
+    pronounce: ['Ihr Kind ist sehr süß.'],
+  },
+  {
+    id: 'p6-cum-ihrpl-10', day: 6, track: 'private', topicId: CUM,
+    type: 'free-text', difficulty: 'hard', skill: 'production',
+    conceptIds: [IHR, KALIP], familyId: 'p6-cum-ihrpl-10',
+    instruction: 'Türkçeden Almancaya çevir:',
+    prompt: 'Bu onların telefon numarası değil. → ______',
+    answer: 'Das ist nicht ihre Telefonnummer.',
+    pronounce: ['Das ist nicht ihre Telefonnummer.'],
+  },
+];
