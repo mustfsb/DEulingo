@@ -18,6 +18,7 @@
     "generate:sfx": "tsx scripts/generate-sfx.ts",
     "test:tts": "tsx scripts/tts-integration-test.ts"
     ,"audit:sessions": "npm run sync && tsx scripts/audit-sessions.ts"
+    ,"audit:day7": "npm run sync && tsx scripts/day7-audit.ts"
   },
   "dependencies": {
     "react": "^19.1.1",

@@ -13,7 +13,8 @@ import { CONCEPTS, SUMMARY_TOPICS } from './concepts.ts';
 import { VAULT_TAGS } from './vault-tags.ts';
 import { approximate, isCurated, transliterateWord } from './pronunciation.ts';
 import { evaluateWordBank } from '../../lib/word-bank.ts';
-import { buildSessionPlan, challengeReadiness } from '../../lib/session.ts';
+import { buildSessionPlan, challengeReadiness, CHALLENGE_MAX_RECOGNITION_RATIO } from '../../lib/session.ts';
+import { shouldAutoplayPrompt } from '../../lib/audio/tts.ts';
 import { evaluateExercise } from '../../lib/validation.ts';
 import { createEmptyProgress } from '../../lib/storage.ts';
 import { daysForTrack, exercisesForDay, exercisesBeforeDay } from '../../lib/content.ts';
@@ -99,7 +100,7 @@ describe('kimlik kararliligi', () => {
   it('yazilmis ID\'ler anlamlidir, konuma bagli degildir', () => {
     for (const item of AUTHORED_EXERCISES) {
       // Gun onekli, kucuk harf slug. Private track p1-..., p2-... de geçerlidir.
-      expect(item.id, item.id).toMatch(/^(d[1-6]|p[1-6])-[a-z0-9-]+$/);
+      expect(item.id, item.id).toMatch(/^(d[1-6]|p[1-7])-[a-z0-9-]+$/);
       // Konumsal ID (`d2-1`, `d3-07`) olmamali: gun onekinden sonra
       // en az bir harfli anlam parcasi bulunmali.
       const segments = item.id.split('-').slice(1);
@@ -538,9 +539,9 @@ describe('Özel Ders — 2. Gün', () => {
     }
   });
 
-  it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
+  it('Özel Ders yol haritasında 1., 2., 3., 5., 6. ve 7. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6, 7]);
   });
 
   it('bu derste öğretilmeyen Akkusativ biçimleri (einen/keinen/meinen/deinen) hiçbir alanda geçmez', () => {
@@ -645,9 +646,9 @@ describe('Özel Ders — 3. Gün', () => {
     expect(active.length / privateDay3.length).toBeGreaterThan(0.25);
   });
 
-  it('Özel Ders yol haritasında 1., 2. ve 3. Gün sırayla listelenir', () => {
+  it('Özel Ders yol haritasında 1., 2., 3., 5., 6. ve 7. Gün sırayla listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6, 7]);
   });
 
   it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
@@ -762,9 +763,9 @@ describe('Özel Ders — 5. Gün', () => {
     expect(active.length / privateDay5.length).toBeGreaterThan(0.25);
   });
 
-  it('Özel Ders yol haritasında 1., 2., 3. ve 5. Gün sırayla listelenir (4. Gün icat edilmez)', () => {
+  it('Özel Ders yol haritasında 4. Gün icat edilmeden 1., 2., 3., 5., 6. ve 7. Gün listelenir', () => {
     const privateDays = daysForTrack('private');
-    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6]);
+    expect(privateDays.map((d) => d.day)).toEqual([1, 2, 3, 5, 6, 7]);
   });
 
   it('Normal Çalışma / Tam Çalışma / Zor Sorular oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
@@ -811,5 +812,291 @@ describe('Özel Ders — 5. Gün', () => {
     expect(strasse.validation?.noTypoTolerance).toBeFalsy();
     expect(evaluateExercise(dreissig, 'dreissig').status).toBe('correct');
     expect(evaluateExercise(strasse, 'Strasse').status).toBe('correct');
+  });
+});
+
+describe('Özel Ders — 7. Gün', () => {
+  const privateDay7 = bundle.exercises.filter((exercise) => exercise.day === 7 && exercise.track === 'private');
+  const normalDay7 = bundle.exercises.filter((exercise) => exercise.day === 7 && (exercise.track ?? 'normal') === 'normal');
+  const day7Concepts = CONCEPTS.filter((c) => c.day === 7 && c.track === 'private');
+  const day7Topics = SUMMARY_TOPICS.filter((topic) => topic.day === 7 && topic.track === 'private');
+  const pool = exercisesForDay(7, 'private');
+  const previous = exercisesBeforeDay(7, 'private');
+
+  it('en az 80 benzersiz alıştırma içerir (90–110 hedefinin üstünde)', () => {
+    expect(privateDay7.length).toBeGreaterThanOrEqual(80);
+    expect(new Set(privateDay7.map((exercise) => exercise.id)).size).toBe(privateDay7.length);
+  });
+
+  it('zorluk dağılımı ~%30/%45/%25 aralığındadır (yalnızca private 7. Gün)', () => {
+    const share = (difficulty: string) =>
+      privateDay7.filter((exercise) => exercise.difficulty === difficulty).length / privateDay7.length;
+    expect(share('easy')).toBeGreaterThan(0.25);
+    expect(share('easy')).toBeLessThan(0.35);
+    expect(share('medium')).toBeGreaterThan(0.4);
+    expect(share('medium')).toBeLessThan(0.5);
+    expect(share('hard')).toBeGreaterThan(0.2);
+    expect(share('hard')).toBeLessThan(0.3);
+  });
+
+  it('her 7. Gün private kavramının en az bir alıştırması vardır (kelime kapsamı %100)', () => {
+    const covered = new Set(privateDay7.flatMap((exercise) => exercise.conceptIds));
+    expect(day7Concepts.filter((c) => !covered.has(c.id)).map((c) => c.id)).toEqual([]);
+  });
+
+  it('her 7. Gün özet konusunun en az bir alıştırması vardır (özet kapsamı %100)', () => {
+    const covered = new Set(privateDay7.map((exercise) => exercise.topicId));
+    expect(day7Topics.filter((topic) => !covered.has(topic.id)).map((topic) => topic.id)).toEqual([]);
+  });
+
+  it('7. Gün özeti uygulamada 16 konu olarak görünür', () => {
+    const summary = bundle.summaries.find((entry) => entry.day === 7 && entry.track === 'private');
+    expect(summary).toBeDefined();
+    expect(summary!.topics.map((topic) => topic.id).sort()).toEqual(day7Topics.map((topic) => topic.id).sort());
+  });
+
+  it('Normal 7. Gün yoktur; izlek kimliği private olarak korunur (isolation)', () => {
+    expect(privateDay7.length).toBeGreaterThan(0);
+    expect(normalDay7).toHaveLength(0);
+    for (const exercise of privateDay7) expect(exercise.track).toBe('private');
+    // Önceki private günlerin havuzu 7. Gün eklenince değişmez.
+    const counts = Object.fromEntries(
+      bundle.days
+        .filter((day) => (day.track ?? 'normal') === 'private')
+        .map((day) => [day.day, day.exerciseIds.length]),
+    );
+    expect(counts[1]).toBeGreaterThanOrEqual(85);
+    expect(counts[2]).toBeGreaterThanOrEqual(98);
+    expect(counts[3]).toBeGreaterThanOrEqual(172);
+    expect(counts[5]).toBeGreaterThanOrEqual(118);
+    expect(counts[6]).toBeGreaterThanOrEqual(54);
+  });
+
+  it('7. Gün hiçbir alıştırması 7. Günden sonraki bir kavramı gerektirmez (A1 bilgi sınırı)', () => {
+    const index = new Map(CONCEPTS.map((concept) => [concept.id, concept]));
+    for (const exercise of privateDay7) {
+      for (const conceptId of exercise.conceptIds) {
+        const concept = index.get(conceptId);
+        expect(concept, `${exercise.id} → ${conceptId}`).toBeDefined();
+        expect(concept!.day, `${exercise.id} → ${conceptId}`).toBeLessThanOrEqual(7);
+        expect(concept!.track ?? 'normal').toBe('private');
+      }
+    }
+  });
+
+  it('öğretilmemiş dilbilgisi (karşılaştırma, genitif, yan cümle) cevap anahtarında geçmez', () => {
+    const forbidden = /\b(größer|kleiner|heller|dunkler|schöner|besser|als\s+mein|weil|dass|obwohl|welche[rs]?\s+ist|würde|hätte|wäre)\b/i;
+    for (const exercise of privateDay7) {
+      const surfaces = [
+        exercise.answer,
+        exercise.prompt,
+        exercise.sampleAnswer,
+        ...(exercise.acceptedAnswers ?? []),
+        ...(exercise.options ?? []),
+        ...(exercise.wordBank?.tokens.map((token) => token.text) ?? []),
+      ].filter((value): value is string => Boolean(value));
+      for (const surface of surfaces) {
+        expect(forbidden.test(surface), `${exercise.id}: ${surface}`).toBe(false);
+      }
+    }
+  });
+
+  it('ev ve mobilya kelimeleri artikelleriyle öğretilir', () => {
+    const withArticle = privateDay7.filter(
+      (exercise) =>
+        (exercise.topicId === 'private.day7.ev-odalar' || exercise.topicId === 'private.day7.mobilyalar') &&
+        [exercise.answer, exercise.prompt, ...(exercise.options ?? []), ...(exercise.pairs?.map((pair) => pair.left) ?? [])]
+          .filter((value): value is string => Boolean(value))
+          .some((value) => /\b(der|die|das)\s+[A-ZÄÖÜ]/.test(value)),
+    );
+    expect(withArticle.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('der → er / die → sie / das → es için özel alıştırmalar vardır', () => {
+    const zamir = privateDay7.filter((exercise) => exercise.topicId === 'private.day7.artikel-zamir');
+    expect(zamir.length).toBeGreaterThanOrEqual(6);
+    expect(zamir.some((exercise) => exercise.answer === 'Er')).toBe(true);
+    expect(zamir.some((exercise) => exercise.answer === 'Sie')).toBe(true);
+    expect(zamir.some((exercise) => exercise.answer === 'Es')).toBe(true);
+  });
+
+  it('en az dokuz farklı alıştırma tipi kullanır (üretim, dinleme ve dikte dahil)', () => {
+    const types = new Set(privateDay7.map((exercise) => exercise.type));
+    expect(types.size).toBeGreaterThanOrEqual(9);
+    expect(types.has('listen-choice')).toBe(true);
+    expect(types.has('dictation')).toBe(true);
+    expect(types.has('word-bank-translation')).toBe(true);
+    expect(types.has('error-correction')).toBe(true);
+    expect(types.has('spoken')).toBe(true);
+  });
+
+  it('Türkçe → Almanca üretim güçlü şekilde temsil edilir', () => {
+    const production = privateDay7.filter((exercise) => exercise.skill === 'production' || exercise.skill === 'correction');
+    expect(production.length / privateDay7.length).toBeGreaterThan(0.3);
+  });
+
+  it('evimin 13 bilgisinin tamamı Almanca içerikte temsil edilir', () => {
+    const surfaces = privateDay7
+      .flatMap((exercise) => [
+        exercise.answer,
+        exercise.sampleAnswer,
+        ...(exercise.acceptedAnswers ?? []),
+        ...(exercise.options ?? []),
+        ...(exercise.pronunciation?.map((item) => item.german) ?? []),
+      ])
+      .filter((value): value is string => Boolean(value))
+      .join(' | ');
+
+    const facts: Array<[string, RegExp]> = [
+      ['3 tuvalet', /Wir haben drei Toiletten\./],
+      ['benim odam var', /Ich habe ein Zimmer\./],
+      ['ablamın odası var', /Meine Schwester hat auch ein Zimmer\./],
+      ['ablamın odası açık renkli', /Ihr Zimmer ist hell\./],
+      ['benim odam gri', /Mein Zimmer ist grau/],
+      ['benim odam koyu', /Mein Zimmer ist dunkel/],
+      ['ablamın odası büyük', /Ihr Zimmer ist groß\./],
+      ['benim odam küçük', /Mein Zimmer ist klein\.|dunkel und klein/],
+      ['salon', /Wir haben ein Wohnzimmer\./],
+      ['büyük balkon', /Der Balkon ist groß\./],
+      ['mutfak', /Wir haben eine Küche\./],
+      ['mutfak açık renkli', /Unsere Küche ist hell\./],
+      ['kedinin odası', /Unsere Katze hat auch ein Zimmer\./],
+    ];
+    const missing = facts.filter(([, pattern]) => !pattern.test(surfaces)).map(([label]) => label);
+    expect(missing).toEqual([]);
+  });
+
+  it('ev anlatımı için kanonik A1 model cevabı vardır', () => {
+    const model = privateDay7.find((exercise) => exercise.id === 'p7-evim-free-tam-anlatim');
+    expect(model).toBeDefined();
+    expect(model!.openEnded).toBe(true);
+    expect(model!.answer).toContain('Wir haben eine Wohnung.');
+    expect(model!.answer).toContain('Unsere Katze hat auch ein Zimmer.');
+    // Öğrenciye gönderilen ipuçları cevabı sızdırmaz.
+    expect(model!.prompt).not.toMatch(/Wir haben/);
+  });
+
+  it('Normal / Tam / Hızlı / Zor oturumları 50 tohumda birincil ID tekrarı üretmez', () => {
+    for (const mode of ['normal', 'full', 'quick', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        const plan = buildSessionPlan({
+          pool,
+          previous,
+          progress: createEmptyProgress(),
+          mode,
+          seed: `p7:${mode}:${seed}`,
+        });
+        const ids = plan.primaryQueue.map((item) => item.exerciseId);
+        expect(new Set(ids).size, `${mode}#${seed}`).toBe(ids.length);
+        expect(plan.primaryQueue.every((item) => item.presentationReason === 'primary')).toBe(true);
+      }
+    }
+  });
+
+  it('oturum boyutları hedef bantlarda kalır (Normal 20–25, Tam 45–60, Hızlı 8–12, Zor 15–20)', () => {
+    const bands: Record<string, [number, number]> = {
+      normal: [20, 25],
+      full: [45, 60],
+      quick: [8, 12],
+      challenge: [15, 20],
+    };
+    for (const [mode, [low, high]] of Object.entries(bands)) {
+      const plan = buildSessionPlan({
+        pool,
+        previous,
+        progress: createEmptyProgress(),
+        mode: mode as 'normal' | 'full' | 'quick' | 'challenge',
+        seed: `p7-size:${mode}`,
+      });
+      expect(plan.primaryQueue.length, mode).toBeGreaterThanOrEqual(low);
+      expect(plan.primaryQueue.length, mode).toBeLessThanOrEqual(high);
+    }
+  });
+
+  it('Tam Çalışma ve Zor Sorular her tohumda ev anlatımı üretim göreviyle biter', () => {
+    for (const mode of ['full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        const ids = buildSessionPlan({
+          pool,
+          previous,
+          progress: createEmptyProgress(),
+          mode,
+          seed: `p7-close:${mode}:${seed}`,
+        }).primaryQueue.map((item) => item.exerciseId);
+        expect(ids[ids.length - 1], `${mode}#${seed}`).toBe('p7-evim-free-tam-anlatim');
+      }
+    }
+  });
+
+  it('Zor Sorular ağırlıklı olarak çoktan seçmeli değildir', () => {
+    const ids = buildSessionPlan({
+      pool,
+      previous,
+      progress: createEmptyProgress(),
+      mode: 'challenge',
+      seed: 'p7-challenge-mix',
+    }).primaryQueue.map((item) => item.exerciseId);
+    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
+    const chosen = ids.map((id) => byId.get(id)!).filter(Boolean);
+    const mc = chosen.filter((exercise) => exercise.type === 'multiple-choice').length;
+    expect(mc / chosen.length).toBeLessThanOrEqual(CHALLENGE_MAX_RECOGNITION_RATIO);
+    expect(challengeReadiness(pool).ready).toBe(true);
+  });
+
+  it('Normal ve Tam Çalışma tek bir konuya sıkışmaz (en az 5 farklı topicId)', () => {
+    const byId = new Map([...pool, ...previous].map((exercise) => [exercise.id, exercise]));
+    for (const mode of ['normal', 'full'] as const) {
+      for (let seed = 0; seed < 10; seed += 1) {
+        const ids = buildSessionPlan({
+          pool,
+          previous,
+          progress: createEmptyProgress(),
+          mode,
+          seed: `p7-topics:${mode}:${seed}`,
+        }).primaryQueue.map((item) => item.exerciseId);
+        const topics = new Set(ids.map((id) => byId.get(id)?.topicId));
+        expect(topics.size, `${mode}#${seed}`).toBeGreaterThanOrEqual(5);
+      }
+    }
+  });
+
+  it('Türkçe → Almanca sorularında Almanca hedef soru anında seslendirilmez', () => {
+    const turkishPrompts = privateDay7.filter(
+      (exercise) => exercise.prompt?.includes('→ ______') && exercise.type === 'free-text',
+    );
+    expect(turkishPrompts.length).toBeGreaterThan(10);
+    for (const exercise of turkishPrompts) {
+      expect(shouldAutoplayPrompt(exercise), exercise.id).toBe(false);
+      expect(exercise.audio?.prompt, exercise.id).toBeUndefined();
+    }
+  });
+
+  it('dinleme ve dikte soruları Piper hedefini içerik metadatasından alır', () => {
+    const listening = privateDay7.filter(
+      (exercise) => exercise.type === 'listen-choice' || exercise.type === 'dictation',
+    );
+    expect(listening.length).toBeGreaterThanOrEqual(6);
+    for (const exercise of listening) {
+      expect(exercise.audio?.prompt?.language, exercise.id).toBe('de-DE');
+      expect(exercise.audio?.prompt?.text, exercise.id).toBe(exercise.audioText);
+      expect(shouldAutoplayPrompt(exercise), exercise.id).toBe(true);
+    }
+  });
+
+  it('ß içeren cevaplarda ASCII klavye yazımı (gross) tam doğru sayılır', () => {
+    const gross = privateDay7.find((exercise) => exercise.id === 'p7-evim-balkon-gross-tr-de')!;
+    expect(evaluateExercise(gross, 'Der Balkon ist gross.').status).toBe('correct');
+  });
+
+  it('el yazısındaki hatalar kanonik Almancaya düzeltilmiştir', () => {
+    const surfaces = privateDay7
+      .flatMap((exercise) => [exercise.answer, exercise.prompt, ...(exercise.options ?? [])])
+      .filter((value): value is string => Boolean(value))
+      .join(' | ');
+    // Defterde `Ich komme nicht heute` yazıyordu; kanonik sıra `heute nicht`.
+    expect(surfaces).toContain('Ich komme heute nicht.');
+    // Defterdeki yanlış sıralama yalnızca hata avı sorusunun SORUSUNDA geçebilir.
+    const wrongOrder = privateDay7.filter((exercise) => exercise.answer?.includes('komme nicht heute'));
+    expect(wrongOrder).toEqual([]);
   });
 });

@@ -46,6 +46,53 @@ const MODE_CONFIG: Record<SessionMode, ModeConfig> = {
   set: { size: Number.MAX_SAFE_INTEGER, previousDayRatio: 0, mix: { easy: 0, medium: 0, hard: 0 } },
 };
 
+/**
+ * Gun/izlek bazli oturum boyu istisnalari.
+ *
+ * Varsayilan `MODE_CONFIG` boyutlari TUM gunler icin gecerlidir; burada
+ * yalnizca havuzu belirgin sekilde daha buyuk olan gunler icin daha genis
+ * bir oturum tanimlanir. Kayitli olmayan her gun/izlek varsayilanla calisir,
+ * bu yuzden onceki gunlerin davranisi degismez.
+ */
+export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, number>>> = {
+  // Özel Ders 7. Gün: 139 alistirmalik kelime agirlikli havuz.
+  'private:7': { normal: 22, full: 50, quick: 10, challenge: 16 },
+};
+
+function sizeKey(pool: Exercise[]): string | undefined {
+  const first = pool[0];
+  if (!first) return undefined;
+  return `${first.track ?? 'normal'}:${first.day}`;
+}
+
+function modeSize(mode: SessionMode, pool: Exercise[]): number {
+  const key = sizeKey(pool);
+  return (key ? SESSION_SIZE_OVERRIDES[key]?.[mode] : undefined) ?? MODE_CONFIG[mode].size;
+}
+
+/**
+ * Gunun kapanis uretim gorevleri.
+ *
+ * Bazi gunlerin pedagojik hedefi tek bir uretim gorevinde toplanir
+ * (Ozel Ders 7. Gun: "Evini Almanca anlat"). Bu gorev, sans eseri secilmeye
+ * birakilmaz: kayitli oldugu modda oturuma HER ZAMAN girer ve EN SONA konur.
+ * Kayitli olmayan gun/izlek/mod icin liste bostur, davranis degismez.
+ */
+export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, string[]>>> = {
+  'private:7': {
+    full: ['p7-evim-free-tam-anlatim'],
+    challenge: ['p7-evim-free-tam-anlatim'],
+  },
+};
+
+function closingTasks(mode: SessionMode, pool: Exercise[], candidates: Exercise[]): Exercise[] {
+  const key = sizeKey(pool);
+  const ids = key ? (SESSION_CLOSING_TASKS[key]?.[mode] ?? []) : [];
+  return ids
+    .map((id) => candidates.find((exercise) => exercise.id === id))
+    .filter((exercise): exercise is Exercise => Boolean(exercise));
+}
+
 /** Ayni aileden iki alistirma arasinda birakilacak en az mesafe. */
 export const FAMILY_GAP = 3;
 
@@ -295,7 +342,7 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
   const uniquePrevious = uniqueExercises(input.previous ?? []).filter(
     (exercise) => !candidates.some((candidate) => candidate.id === exercise.id),
   );
-  const requestedSize = input.size ?? config.size;
+  const requestedSize = input.size ?? modeSize(mode, pool);
   const capacity = Math.min(requestedSize, candidates.length + uniquePrevious.length);
   // 18 soruluk normal oturumda `round(.2)` dört tekrar (%22,2) yapar;
   // bu da güncel günün %80–85 hedefinin altına düşer. Aşağı yuvarlama,
@@ -310,8 +357,22 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
       ? selectChallenge(candidates, primaryCount, rank)
       : selectByMix(candidates, primaryCount, config.mix, rank);
   if (mode === 'full') selected = ensureTopicCoverage(selected, candidates, primaryCount, rank);
+
+  // Kapanis gorevi secime kalmaz: yoksa eklenir, varsa yerinde birakilir.
+  const closing = closingTasks(mode, pool, candidates);
+  const missingClosing = closing.filter((task) => !selected.some((item) => item.id === task.id));
+  if (missingClosing.length && primaryCount > 0) {
+    const keep = selected.filter((item) => !closing.some((task) => task.id === item.id));
+    const trimmed = keep.slice(0, Math.max(0, primaryCount - closing.length));
+    selected = [...trimmed, ...closing];
+  }
+
   const review = uniquePrevious.sort(rank).slice(0, actualReviewCount);
-  const ordered = spaceFamilies(arrange(selected, review, seed));
+  const closingIds = new Set(closing.map((task) => task.id));
+  const arranged = spaceFamilies(arrange(selected, review, seed));
+  const ordered = closingIds.size
+    ? [...arranged.filter((item) => !closingIds.has(item.id)), ...arranged.filter((item) => closingIds.has(item.id))]
+    : arranged;
   const usedExerciseIds = new Set<string>();
   const primaryQueue = ordered.flatMap((exercise): SessionPresentation[] => {
     if (usedExerciseIds.has(exercise.id)) return [];
@@ -503,6 +564,6 @@ export function estimateModeMinutes(pool: Exercise[], count: number): number {
 }
 
 /** Bir modun bu havuzda kac soru uretecegini onceden gosterir. */
-export function sessionSize(mode: SessionMode, poolSize: number): number {
-  return Math.min(MODE_CONFIG[mode].size, poolSize);
+export function sessionSize(mode: SessionMode, poolSize: number, pool: Exercise[] = []): number {
+  return Math.min(modeSize(mode, pool), poolSize);
 }

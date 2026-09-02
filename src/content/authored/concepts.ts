@@ -436,6 +436,119 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: 'Kişi Zamiri + İyelik Zamiri ile Cümle Kurma',
     matchTitles: ['Kişi Zamiri + İyelik Zamiri ile Cümle Kurma'],
   },
+  // Private track — 7. Gün
+  {
+    id: 'private.day7.hedef',
+    day: 7,
+    track: 'private',
+    title: 'Bugünün Hedefi',
+    matchTitles: ['Bugünün Hedefi — Evimi Anlatmak'],
+  },
+  {
+    id: 'private.day7.ev-odalar',
+    day: 7,
+    track: 'private',
+    title: 'Ev ve Odalar',
+    matchTitles: ['Ev ve Odalar'],
+  },
+  {
+    id: 'private.day7.mobilyalar',
+    day: 7,
+    track: 'private',
+    title: 'Mobilyalar ve Ev Eşyaları',
+    matchTitles: ['Mobilyalar ve Ev Eşyaları'],
+  },
+  {
+    id: 'private.day7.evi-tarif',
+    day: 7,
+    track: 'private',
+    title: 'Evi Tarif Etmek',
+    matchTitles: ['Evi Tarif Etmek — hell, dunkel, groß, klein', 'Evi Tarif Etmek'],
+  },
+  {
+    id: 'private.day7.artikel-zamir',
+    day: 7,
+    track: 'private',
+    title: 'Artikelden Kişi Zamirine',
+    matchTitles: ['Artikelden Kişi Zamirine — der, die, das', 'Artikelden Kişi Zamirine'],
+  },
+  {
+    id: 'private.day7.yeni-fiiller',
+    day: 7,
+    track: 'private',
+    title: 'Yeni Fiiller',
+    matchTitles: ['Yeni Fiiller — kennen, geben, anrufen, stellen', 'Yeni Fiiller'],
+  },
+  {
+    id: 'private.day7.gefallen',
+    day: 7,
+    track: 'private',
+    title: 'gefallen — Beğenmek',
+    matchTitles: ['gefallen — Beğenmek'],
+  },
+  {
+    id: 'private.day7.essen-trinken',
+    day: 7,
+    track: 'private',
+    title: 'Essen und Trinken — gern',
+    matchTitles: ['Essen und Trinken — gern / nicht gern'],
+  },
+  {
+    id: 'private.day7.alisveris-siklik',
+    day: 7,
+    track: 'private',
+    title: 'Alışveriş ve Sıklık',
+    matchTitles: ['Alışveriş ve Sıklık'],
+  },
+  {
+    id: 'private.day7.miktar',
+    day: 7,
+    track: 'private',
+    title: 'Miktar ve Paket Kelimeleri',
+    matchTitles: ['Miktar ve Paket Kelimeleri'],
+  },
+  {
+    id: 'private.day7.yeni-yiyecek',
+    day: 7,
+    track: 'private',
+    title: 'Yeni Yiyecek Kelimeleri',
+    matchTitles: ['Yeni Yiyecek Kelimeleri'],
+  },
+  {
+    id: 'private.day7.fiyat',
+    day: 7,
+    track: 'private',
+    title: 'Fiyat Sormak',
+    matchTitles: ['Fiyat Sormak'],
+  },
+  {
+    id: 'private.day7.brauchen',
+    day: 7,
+    track: 'private',
+    title: 'brauchen — İhtiyaç Duymak',
+    matchTitles: ['brauchen — İhtiyaç Duymak'],
+  },
+  {
+    id: 'private.day7.faydali-kelimeler',
+    day: 7,
+    track: 'private',
+    title: 'Günlük Hayattan Yeni Kelimeler',
+    matchTitles: ['Günlük Hayattan Yeni Kelimeler'],
+  },
+  {
+    id: 'private.day7.evimi-anlatiyorum',
+    day: 7,
+    track: 'private',
+    title: 'Evimi Anlatıyorum — Meine Wohnung',
+    matchTitles: ['Evimi Anlatıyorum — Meine Wohnung', 'Evimi Anlatıyorum'],
+  },
+  {
+    id: 'private.day7.kaliplar',
+    day: 7,
+    track: 'private',
+    title: 'Evimi Anlatmak İçin Cümle Kalıpları',
+    matchTitles: ['Evimi Anlatmak İçin Cümle Kalıpları'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -526,6 +639,22 @@ const P5_YEM = 'private.day5.yiyecek';
 const P6_HED = 'private.day6.hedef';
 const P6_IYE = 'private.day6.iyelik-tablo';
 const P6_CUM = 'private.day6.cumle-kurma';
+const P7_HED = 'private.day7.hedef';
+const P7_EV = 'private.day7.ev-odalar';
+const P7_MOB = 'private.day7.mobilyalar';
+const P7_TAR = 'private.day7.evi-tarif';
+const P7_ZAM = 'private.day7.artikel-zamir';
+const P7_FII = 'private.day7.yeni-fiiller';
+const P7_GEF = 'private.day7.gefallen';
+const P7_ESS = 'private.day7.essen-trinken';
+const P7_ALI = 'private.day7.alisveris-siklik';
+const P7_MIK = 'private.day7.miktar';
+const P7_YIY = 'private.day7.yeni-yiyecek';
+const P7_FIY = 'private.day7.fiyat';
+const P7_BRA = 'private.day7.brauchen';
+const P7_KEL = 'private.day7.faydali-kelimeler';
+const P7_EVIM = 'private.day7.evimi-anlatiyorum';
+const P7_KAL = 'private.day7.kaliplar';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -891,6 +1020,133 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'private.day6.iyelik.zincir', topicId: P6_IYE, label: 'iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr', anchor: 'İyelik zamiri zinciri', prerequisites: ['private.day6.iyelik.sein-onun', 'private.day3.iyelik.unser', 'private.day3.iyelik.ihr'] },
 
     { id: 'private.day6.cumle.kalip', topicId: P6_CUM, label: 'Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim', anchor: 'Kişi zamiri + Fiil + iyelik zamiri + isim', prerequisites: ['private.day6.iyelik.zincir', 'private.day2.haben.tablo'] },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 7. Gün                                                */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(7, 'private', [
+    { id: 'private.day7.hedef.giris', topicId: P7_HED, label: '7. Gün hedefi: kendi evini Almanca anlatmak', anchor: 'kendi evimi Almanca anlatmak' },
+    { id: 'private.day7.hedef.cekirdek', topicId: P7_HED, label: 'Günün çekirdek 26 kelimesi', anchor: 'günün çekirdeği bu 26 madde' },
+
+    { id: 'private.day7.ev.wohnung', topicId: P7_EV, label: 'die Wohnung = ev, daire', anchor: 'die Wohnung — ev, daire' },
+    { id: 'private.day7.ev.bad', topicId: P7_EV, label: 'das Bad = banyo', anchor: 'das Bad — banyo' },
+    { id: 'private.day7.ev.schlafzimmer', topicId: P7_EV, label: 'das Schlafzimmer = yatak odası', anchor: 'das Schlafzimmer — yatak odası' },
+    { id: 'private.day7.ev.flur', topicId: P7_EV, label: 'der Flur = koridor', anchor: 'der Flur — koridor' },
+    { id: 'private.day7.ev.kueche', topicId: P7_EV, label: 'die Küche = mutfak', anchor: 'die Küche — mutfak' },
+    { id: 'private.day7.ev.wohnzimmer', topicId: P7_EV, label: 'das Wohnzimmer = salon', anchor: 'das Wohnzimmer — salon' },
+    { id: 'private.day7.ev.toilette', topicId: P7_EV, label: 'die Toilette / die Toiletten = tuvalet(ler)', anchor: 'die Toilette — tuvalet' },
+
+    { id: 'private.day7.moebel.genel', topicId: P7_MOB, label: 'die Möbel = mobilyalar', anchor: 'die Möbel — mobilyalar' },
+    { id: 'private.day7.moebel.schrank', topicId: P7_MOB, label: 'der Schrank = dolap', anchor: 'der Schrank — dolap' },
+    { id: 'private.day7.moebel.bett', topicId: P7_MOB, label: 'das Bett = yatak', anchor: 'das Bett — yatak' },
+    { id: 'private.day7.moebel.sofa', topicId: P7_MOB, label: 'das Sofa = kanepe', anchor: 'das Sofa — kanepe' },
+    { id: 'private.day7.moebel.sessel', topicId: P7_MOB, label: 'der Sessel = koltuk', anchor: 'der Sessel — koltuk' },
+    { id: 'private.day7.moebel.fernseher', topicId: P7_MOB, label: 'der Fernseher = televizyon', anchor: 'der Fernseher — televizyon' },
+    { id: 'private.day7.moebel.teppich-regal', topicId: P7_MOB, label: 'der Teppich = halı, das Regal = raf', anchor: 'der Teppich — halı' },
+    { id: 'private.day7.moebel.herd-bad', topicId: P7_MOB, label: 'der Herd = ocak, die Badewanne = küvet, das Waschbecken = lavabo', anchor: 'der Herd — ocak' },
+    { id: 'private.day7.moebel.auf-dem-sessel', topicId: P7_MOB, label: 'auf dem Sessel = koltukta', anchor: 'auf dem Sessel — koltukta', prerequisites: ['private.day3.auf-dem'] },
+
+    { id: 'private.day7.tarif.hell', topicId: P7_TAR, label: 'hell = açık, ferah', anchor: 'hell = açık' },
+    { id: 'private.day7.tarif.dunkel', topicId: P7_TAR, label: 'dunkel = koyu', anchor: 'dunkel = koyu' },
+    { id: 'private.day7.tarif.breit', topicId: P7_TAR, label: 'breit = geniş', anchor: 'breit = geniş' },
+    { id: 'private.day7.tarif.schmal', topicId: P7_TAR, label: 'schmal = dar', anchor: 'schmal = dar' },
+    { id: 'private.day7.tarif.kuehl', topicId: P7_TAR, label: 'kühl = serin', anchor: 'kühl = serin' },
+    { id: 'private.day7.tarif.grau', topicId: P7_TAR, label: 'grau = gri', anchor: 'grau = gri' },
+    { id: 'private.day7.tarif.gross-klein', topicId: P7_TAR, label: 'karşıt çiftler: hell–dunkel, groß–klein, breit–schmal', anchor: 'groß — klein' },
+    { id: 'private.day7.tarif.sein-sifat', topicId: P7_TAR, label: 'sein + sıfat → ek almaz (tekrar)', anchor: 'hiçbir ek almaz', prerequisites: ['private.day3.sifat.yuklem'] },
+
+    { id: 'private.day7.zamir.der-er', topicId: P7_ZAM, label: 'der → er', anchor: 'der → er' },
+    { id: 'private.day7.zamir.das-es', topicId: P7_ZAM, label: 'das → es', anchor: 'das → es' },
+    { id: 'private.day7.zamir.die-sie', topicId: P7_ZAM, label: 'die → sie', anchor: 'die → sie' },
+    { id: 'private.day7.zamir.cumlede', topicId: P7_ZAM, label: 'cümlede zamire geçiş: Der Schrank ist groß. Er ist grau.', anchor: 'Er ist grau.', prerequisites: ['private.day7.zamir.der-er'] },
+
+    { id: 'private.day7.fiil.kennen', topicId: P7_FII, label: 'kennen = tanımak', anchor: 'kennen = tanımak' },
+    { id: 'private.day7.fiil.kennen-cekim', topicId: P7_FII, label: 'kennen çekimi: ich kenne, du kennst ...', anchor: 'du kennst', prerequisites: ['private.day7.fiil.kennen'] },
+    { id: 'private.day7.fiil.geben', topicId: P7_FII, label: 'geben = vermek', anchor: 'geben = vermek' },
+    { id: 'private.day7.fiil.geben-gibt', topicId: P7_FII, label: 'geben düzensiz: du gibst, er gibt (e → i)', anchor: 'du gibst', prerequisites: ['private.day7.fiil.geben'] },
+    { id: 'private.day7.fiil.es-gibt-fark', topicId: P7_FII, label: 'geben (vermek) ↔ es gibt (var) ayrımı', anchor: 'geben tek başına', prerequisites: ['private.day3.esgibt.temel', 'private.day7.fiil.geben'] },
+    { id: 'private.day7.fiil.anrufen', topicId: P7_FII, label: 'anrufen = telefonla aramak', anchor: 'anrufen = (telefonla) aramak' },
+    { id: 'private.day7.fiil.anrufen-ayrilabilen', topicId: P7_FII, label: 'anrufen ayrılabilen: Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['private.day3.ayrilabilen.kural', 'private.day7.fiil.anrufen'] },
+    { id: 'private.day7.fiil.stellen', topicId: P7_FII, label: 'stellen = koymak', anchor: 'stellen = koymak' },
+    { id: 'private.day7.fiil.nicht-yeri', topicId: P7_FII, label: 'nicht cümlenin sonuna gider: Ich komme heute nicht.', anchor: 'Ich komme heute nicht.', prerequisites: ['private.day2.olumsuzluk.nicht'] },
+
+    { id: 'private.day7.gefallen.anlam', topicId: P7_GEF, label: 'gefallen = beğenmek, hoşuna gitmek', anchor: 'gefallen = beğenmek, hoşuna gitmek' },
+    { id: 'private.day7.gefallen.kalip', topicId: P7_GEF, label: 'Das gefällt mir. (hazır kalıp)', anchor: 'Das gefällt mir.', prerequisites: ['private.day7.gefallen.anlam'] },
+
+    { id: 'private.day7.essen.frage', topicId: P7_ESS, label: 'Was isst du gern? / Was essen Sie gern?', anchor: 'Was isst du gern?', prerequisites: ['private.day3.gern.kullanim'] },
+    { id: 'private.day7.essen.antwort', topicId: P7_ESS, label: 'Ich esse gern ...', anchor: 'Ich esse gern Pommes.', prerequisites: ['private.day7.essen.frage'] },
+    { id: 'private.day7.essen.nicht-gern', topicId: P7_ESS, label: 'Ich esse ... nicht gern.', anchor: 'Nein, ich esse nicht gern Pizza.', prerequisites: ['private.day7.essen.antwort'] },
+    { id: 'private.day7.essen.lieblingsessen', topicId: P7_ESS, label: 'Was ist dein/Ihr Lieblingsessen?', anchor: 'Was ist dein Lieblingsessen?' },
+    { id: 'private.day7.trinken.frage', topicId: P7_ESS, label: 'Was trinkst du gern? → Ich trinke gern ...', anchor: 'Was trinkst du gern?' },
+    { id: 'private.day7.trinken.lieblingsgetraenk', topicId: P7_ESS, label: 'Was ist dein/Ihr Lieblingsgetränk?', anchor: 'Was ist dein Lieblingsgetränk?' },
+    { id: 'private.day7.essen.kelimeler', topicId: P7_ESS, label: 'das Essen, die Pommes, die Pizza, der Reis', anchor: 'die Pommes — patates kızartması' },
+    { id: 'private.day7.getraenke.kelimeler', topicId: P7_ESS, label: 'der Orangensaft, der Apfelsaft, die Milch, die Limonade', anchor: 'der Orangensaft — portakal suyu' },
+    { id: 'private.day7.essen.hunger-durst', topicId: P7_ESS, label: 'Ich habe Hunger. / Ich habe Durst.', anchor: 'Ich habe Hunger.', prerequisites: ['private.day2.haben.tablo'] },
+
+    { id: 'private.day7.kaufen.frage', topicId: P7_ALI, label: 'Was kaufst du oft? / Was kaufen Sie oft?', anchor: 'Was kaufst du oft?', prerequisites: ['private.day3.alisveris.kelime'] },
+    { id: 'private.day7.siklik.immer', topicId: P7_ALI, label: 'immer = her zaman', anchor: 'immer = her zaman' },
+    { id: 'private.day7.siklik.meistens', topicId: P7_ALI, label: 'meistens = çoğunlukla', anchor: 'meistens = çoğunlukla' },
+    { id: 'private.day7.siklik.oft', topicId: P7_ALI, label: 'oft = sık sık', anchor: 'oft = sık sık' },
+    { id: 'private.day7.siklik.manchmal', topicId: P7_ALI, label: 'manchmal = bazen', anchor: 'manchmal = bazen' },
+    { id: 'private.day7.siklik.nie', topicId: P7_ALI, label: 'nie = asla, hiç', anchor: 'nie = asla' },
+    { id: 'private.day7.siklik.cumlede', topicId: P7_ALI, label: 'sıklık kelimesi fiilden hemen sonra gelir', anchor: 'Ich kaufe immer Obst.', prerequisites: ['private.day7.siklik.immer'] },
+    { id: 'private.day7.kaufen.pro-woche', topicId: P7_ALI, label: 'Ich kaufe pro Woche zweimal.', anchor: 'Ich kaufe pro Woche zweimal.' },
+    { id: 'private.day7.alisveris.einkaufszettel', topicId: P7_ALI, label: 'der Einkaufszettel = alışveriş listesi', anchor: 'der Einkaufszettel — alışveriş listesi' },
+    { id: 'private.day7.alisveris.einkaufswagen', topicId: P7_ALI, label: 'der Einkaufswagen = alışveriş arabası', anchor: 'der Einkaufswagen — alışveriş arabası' },
+    { id: 'private.day7.alisveris.ifadeler', topicId: P7_ALI, label: 'Natürlich. / Sonst noch etwas?', anchor: 'Sonst noch etwas?' },
+
+    { id: 'private.day7.miktar.flasche', topicId: P7_MIK, label: 'eine Flasche ... = bir şişe', anchor: 'eine Flasche Wasser — bir şişe su', prerequisites: ['private.day3.miktar.sise'] },
+    { id: 'private.day7.miktar.packung', topicId: P7_MIK, label: 'eine Packung ... = bir paket', anchor: 'eine Packung Mehl — bir paket un' },
+    { id: 'private.day7.miktar.dose', topicId: P7_MIK, label: 'eine Dose ... = bir kutu (konserve)', anchor: 'eine Dose Tomaten — bir kutu domates' },
+    { id: 'private.day7.miktar.becher', topicId: P7_MIK, label: 'ein Becher ... = bir kutu (krema/yoğurt)', anchor: 'ein Becher Sahne — bir kutu krema' },
+    { id: 'private.day7.miktar.bund', topicId: P7_MIK, label: 'ein Bund ... = bir demet', anchor: 'ein Bund Frühlingszwiebeln' },
+    { id: 'private.day7.miktar.portion', topicId: P7_MIK, label: 'die Portion = porsiyon', anchor: 'eine Portion Gemüsesuppe' },
+    { id: 'private.day7.miktar.artikel', topicId: P7_MIK, label: 'ein/eine kabın artikeline göre seçilir', anchor: 'Kabın artikeli neyse', prerequisites: ['private.day2.artikel.ein-eine'] },
+
+    { id: 'private.day7.yiyecek.temel', topicId: P7_YIY, label: 'das Fleisch, der Wein, das Obst, das Gemüse', anchor: 'Fleisch = et' },
+    { id: 'private.day7.yiyecek.zwiebel', topicId: P7_YIY, label: 'die Zwiebel, die Frühlingszwiebeln, die Knoblauchzehe', anchor: 'die Zwiebel = soğan' },
+    { id: 'private.day7.yiyecek.gurke', topicId: P7_YIY, label: 'die Salatgurke, die sauren Gurken', anchor: 'die Salatgurke = salatalık' },
+    { id: 'private.day7.yiyecek.essig', topicId: P7_YIY, label: 'der Essig = sirke', anchor: 'der Essig — sirke' },
+    { id: 'private.day7.yiyecek.oel-pfeffer', topicId: P7_YIY, label: 'das Öl = yağ, der Pfeffer = kara biber', anchor: 'das Öl = yağ' },
+    { id: 'private.day7.yiyecek.haehnchen', topicId: P7_YIY, label: 'das Hähnchen = tavuk, die Gemüsesuppe = sebze çorbası', anchor: 'das Hähnchen = tavuk' },
+    { id: 'private.day7.yiyecek.sahne', topicId: P7_YIY, label: 'die Sahne = krema, die Tomaten = domatesler, der Käse = peynir', anchor: 'die Sahne = krema' },
+    { id: 'private.day7.yiyecek.nuesse', topicId: P7_YIY, label: 'die Nüsse, die Rosinen, der Staubzucker', anchor: 'die Nüsse = kuruyemiş' },
+
+    { id: 'private.day7.fiyat.kosten', topicId: P7_FIY, label: 'kosten = fiyatında olmak', anchor: 'kosten = fiyatında olmak' },
+    { id: 'private.day7.fiyat.was-kostet', topicId: P7_FIY, label: 'Was kostet das?', anchor: 'Was kostet das?', prerequisites: ['private.day7.fiyat.kosten'] },
+    { id: 'private.day7.fiyat.antwort', topicId: P7_FIY, label: 'Das kostet fünf Euro. / Das ist fünf Euro.', anchor: 'Das kostet fünf Euro.', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
+    { id: 'private.day7.fiyat.wie-viel', topicId: P7_FIY, label: 'Wie viel kostet ein Kilo ...?', anchor: 'Wie viel kostet ein Kilo Tomaten?' },
+    { id: 'private.day7.fiyat.teuer', topicId: P7_FIY, label: 'teuer = pahalı', anchor: 'teuer = pahalı' },
+
+    { id: 'private.day7.brauchen.frage', topicId: P7_BRA, label: 'Was brauchst du? / Was brauchen Sie?', anchor: 'Was brauchst du?' },
+    { id: 'private.day7.brauchen.antwort', topicId: P7_BRA, label: 'Ich brauche ...', anchor: 'Ich brauche den Apfel.', prerequisites: ['private.day7.brauchen.frage'] },
+    { id: 'private.day7.brauchen.kein', topicId: P7_BRA, label: 'Nein, ich brauche kein ...', anchor: 'Nein, ich brauche kein Mehl.', prerequisites: ['private.day2.artikel.kein-keine'] },
+
+    { id: 'private.day7.kelime.gluecklich', topicId: P7_KEL, label: 'glücklich = mutlu, der Traum = hayal', anchor: 'glücklich = mutlu' },
+    { id: 'private.day7.kelime.gast-leute', topicId: P7_KEL, label: 'der Gast / die Gäste, die Leute, in der Mensa', anchor: 'der Gast = misafir' },
+    { id: 'private.day7.kelime.fuer-dafuer', topicId: P7_KEL, label: 'für = için, dafür = bunun için', anchor: 'für = için' },
+    { id: 'private.day7.kelime.nur-etwas-viele', topicId: P7_KEL, label: 'nur = sadece, etwas = bir şey, viele = bir çok', anchor: 'nur = sadece' },
+    { id: 'private.day7.kelime.dazu-fertig-schmeckt', topicId: P7_KEL, label: 'dazu = ayrıca, fertig = hazır, schmeckt = tadı güzel', anchor: 'fertig = hazır' },
+    { id: 'private.day7.kelime.zusammen-dort', topicId: P7_KEL, label: 'zusammen = birlikte, dort = orada', anchor: 'zusammen = birlikte' },
+    { id: 'private.day7.kelime.auch', topicId: P7_KEL, label: 'auch = de, da, ayrıca', anchor: 'auch = de / da' },
+
+    { id: 'private.day7.evim.model', topicId: P7_EVIM, label: 'Evimi anlatan A1 model metni', anchor: 'Wir haben eine Wohnung.' },
+    { id: 'private.day7.evim.toiletten', topicId: P7_EVIM, label: 'Wir haben drei Toiletten.', anchor: 'Wir haben drei Toiletten.', prerequisites: ['private.day7.ev.toilette'] },
+    { id: 'private.day7.evim.mein-zimmer', topicId: P7_EVIM, label: 'Mein Zimmer ist grau / dunkel / klein.', anchor: 'Mein Zimmer ist grau.', prerequisites: ['private.day7.tarif.grau'] },
+    { id: 'private.day7.evim.schwester', topicId: P7_EVIM, label: 'Meine Schwester hat auch ein Zimmer.', anchor: 'Meine Schwester hat auch ein Zimmer.', prerequisites: ['private.day7.kelime.auch'] },
+    { id: 'private.day7.evim.ihr-zimmer', topicId: P7_EVIM, label: 'Ihr Zimmer ist hell / groß.', anchor: 'Ihr Zimmer ist hell.', prerequisites: ['private.day3.iyelik.ihr'] },
+    { id: 'private.day7.evim.wohnzimmer', topicId: P7_EVIM, label: 'Wir haben ein Wohnzimmer.', anchor: 'Wir haben ein Wohnzimmer.' },
+    { id: 'private.day7.evim.balkon', topicId: P7_EVIM, label: 'Wir haben einen Balkon. Der Balkon ist groß.', anchor: 'Wir haben einen Balkon.', prerequisites: ['private.day3.esgibt.akkusativ'] },
+    { id: 'private.day7.evim.kueche', topicId: P7_EVIM, label: 'Wir haben eine Küche. Unsere Küche ist hell.', anchor: 'Unsere Küche ist hell.', prerequisites: ['private.day3.iyelik.unser'] },
+    { id: 'private.day7.evim.katze', topicId: P7_EVIM, label: 'Unsere Katze hat auch ein Zimmer.', anchor: 'Unsere Katze hat auch ein Zimmer.', prerequisites: ['private.day3.hayvanlar.kelime'] },
+    { id: 'private.day7.evim.karsilastirma-yok', topicId: P7_EVIM, label: 'karşılaştırma yerine iki ayrı cümle', anchor: 'karşılaştırma eki' },
+
+    { id: 'private.day7.kalip.wir-haben', topicId: P7_KAL, label: 'Wir haben + isim', anchor: 'Wir haben + isim' },
+    { id: 'private.day7.kalip.ist-sifat', topicId: P7_KAL, label: '... ist + sıfat', anchor: 'ist + sıfat' },
+    { id: 'private.day7.kalip.hat-auch', topicId: P7_KAL, label: '... hat auch + isim', anchor: 'hat auch + isim' },
+    { id: 'private.day7.kalip.es-gibt', topicId: P7_KAL, label: 'Es gibt + isim', anchor: 'Es gibt + isim', prerequisites: ['private.day3.esgibt.temel'] },
+    { id: 'private.day7.kalip.sira', topicId: P7_KAL, label: 'evi anlatma sırası', anchor: 'kaç oda/tuvalet var' },
   ]),
 ];
 
