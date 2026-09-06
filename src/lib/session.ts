@@ -57,6 +57,8 @@ const MODE_CONFIG: Record<SessionMode, ModeConfig> = {
 export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, number>>> = {
   // Özel Ders 7. Gün: 139 alistirmalik kelime agirlikli havuz.
   'private:7': { normal: 22, full: 50, quick: 10, challenge: 16 },
+  // Özel Ders 10. Gün: 120 alistirmalik uretim agirlikli havuz.
+  'private:10': { normal: 22, full: 52, quick: 10, challenge: 18 },
 };
 
 function sizeKey(pool: Exercise[]): string | undefined {
@@ -82,6 +84,10 @@ export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, s
   'private:7': {
     full: ['p7-evim-free-tam-anlatim'],
     challenge: ['p7-evim-free-tam-anlatim'],
+  },
+  'private:10': {
+    full: ['p10-meintag-free-tam-anlatim'],
+    challenge: ['p10-meintag-free-tam-anlatim'],
   },
 };
 

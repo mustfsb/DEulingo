@@ -15,6 +15,7 @@ import { PRIVATE_DAY3_EXERCISES } from './exercises/privateDay3.ts';
 import { PRIVATE_DAY5_EXERCISES } from './exercises/privateDay5.ts';
 import { PRIVATE_DAY6_EXERCISES } from './exercises/privateDay6.ts';
 import { PRIVATE_DAY7_EXERCISES } from './exercises/privateDay7.ts';
+import { PRIVATE_DAY10_EXERCISES } from './exercises/privateDay10.ts';
 import { DAY_4_6_SOURCE_INVENTORY, DAY_4_6_SOURCE_TOPICS } from './sources.ts';
 import type { AuthoredExercise } from './types.ts';
 
@@ -32,6 +33,7 @@ export const AUTHORED_EXERCISES: AuthoredExercise[] = [
   ...PRIVATE_DAY5_EXERCISES,
   ...PRIVATE_DAY6_EXERCISES,
   ...PRIVATE_DAY7_EXERCISES,
+  ...PRIVATE_DAY10_EXERCISES,
 ];
 
 export const AUTHORED_LAYER = {

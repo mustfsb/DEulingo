@@ -549,6 +549,112 @@ export const SUMMARY_TOPICS: SummaryTopicDef[] = [
     title: 'Evimi Anlatmak İçin Cümle Kalıpları',
     matchTitles: ['Evimi Anlatmak İçin Cümle Kalıpları'],
   },
+  // Private track — 10. Gün
+  {
+    id: 'private.day10.hedef',
+    day: 10,
+    track: 'private',
+    title: 'Bugünün Hedefi — Gününü Anlatmak',
+    matchTitles: ['Bugünün Hedefi — Gününü Anlatmak'],
+  },
+  {
+    id: 'private.day10.trennbar-nedir',
+    day: 10,
+    track: 'private',
+    title: 'Ayrılabilen Fiil Nedir?',
+    matchTitles: ['Ayrılabilen Fiil Nedir?'],
+  },
+  {
+    id: 'private.day10.kern-verben',
+    day: 10,
+    track: 'private',
+    title: 'En Önemli Ayrılabilen Fiiller',
+    matchTitles: ['En Önemli Ayrılabilen Fiiller'],
+  },
+  {
+    id: 'private.day10.mein-tag-sabah',
+    day: 10,
+    track: 'private',
+    title: 'Mein Tag — Sabah',
+    matchTitles: ['Mein Tag — Sabah'],
+  },
+  {
+    id: 'private.day10.mein-tag-gun',
+    day: 10,
+    track: 'private',
+    title: 'Mein Tag — Gün İçinde',
+    matchTitles: ['Mein Tag — Gün İçinde'],
+  },
+  {
+    id: 'private.day10.mein-tag-aksam',
+    day: 10,
+    track: 'private',
+    title: 'Mein Tag — Akşam',
+    matchTitles: ['Mein Tag — Akşam'],
+  },
+  {
+    id: 'private.day10.dann-danach',
+    day: 10,
+    track: 'private',
+    title: 'Dann ve Danach',
+    matchTitles: ['Dann ve Danach'],
+  },
+  {
+    id: 'private.day10.trennbar-nicht',
+    day: 10,
+    track: 'private',
+    title: 'Ayrılan / Ayrılmayan Fiil Karşılaştırması',
+    matchTitles: ['Ayrılan / Ayrılmayan Fiil Karşılaştırması'],
+  },
+  {
+    id: 'private.day10.uhrzeit-frage',
+    day: 10,
+    track: 'private',
+    title: 'Saat Kaç? — Wie spät ist es?',
+    matchTitles: ['Saat Kaç? — Wie spät ist es?'],
+  },
+  {
+    id: 'private.day10.uhrzeit-resmi',
+    day: 10,
+    track: 'private',
+    title: 'Resmî Saatler',
+    matchTitles: ['Resmî Saatler'],
+  },
+  {
+    id: 'private.day10.uhrzeit-gunluk',
+    day: 10,
+    track: 'private',
+    title: 'Günlük Saatler',
+    matchTitles: ['Günlük Saatler'],
+  },
+  {
+    id: 'private.day10.halb-viertel',
+    day: 10,
+    track: 'private',
+    title: 'halb / Viertel / vor / nach',
+    matchTitles: ['halb / Viertel / vor / nach'],
+  },
+  {
+    id: 'private.day10.um-uhr',
+    day: 10,
+    track: 'private',
+    title: '`um` ile Saat Söylemek',
+    matchTitles: ['`um` ile Saat Söylemek'],
+  },
+  {
+    id: 'private.day10.mein-tag-tam',
+    day: 10,
+    track: 'private',
+    title: 'Mein Tag — Tam Anlatım',
+    matchTitles: ['Mein Tag — Tam Anlatım'],
+  },
+  {
+    id: 'private.day10.wortschatz',
+    day: 10,
+    track: 'private',
+    title: 'Diğer Yeni Kelimeler',
+    matchTitles: ['Diğer Yeni Kelimeler'],
+  },
 ];
 
 export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
@@ -655,6 +761,21 @@ const P7_BRA = 'private.day7.brauchen';
 const P7_KEL = 'private.day7.faydali-kelimeler';
 const P7_EVIM = 'private.day7.evimi-anlatiyorum';
 const P7_KAL = 'private.day7.kaliplar';
+const P10_HED = 'private.day10.hedef';
+const P10_TRE = 'private.day10.trennbar-nedir';
+const P10_VER = 'private.day10.kern-verben';
+const P10_SAB = 'private.day10.mein-tag-sabah';
+const P10_GUN = 'private.day10.mein-tag-gun';
+const P10_AKS = 'private.day10.mein-tag-aksam';
+const P10_DAN = 'private.day10.dann-danach';
+const P10_KAR = 'private.day10.trennbar-nicht';
+const P10_SOR = 'private.day10.uhrzeit-frage';
+const P10_RES = 'private.day10.uhrzeit-resmi';
+const P10_GUL = 'private.day10.uhrzeit-gunluk';
+const P10_HAL = 'private.day10.halb-viertel';
+const P10_UMU = 'private.day10.um-uhr';
+const P10_TAM = 'private.day10.mein-tag-tam';
+const P10_WOR = 'private.day10.wortschatz';
 
 export const CONCEPTS: Array<Concept & { anchor: string }> = [
   /* ---------------------------------------------------------------- */
@@ -1147,6 +1268,94 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = [
     { id: 'private.day7.kalip.hat-auch', topicId: P7_KAL, label: '... hat auch + isim', anchor: 'hat auch + isim' },
     { id: 'private.day7.kalip.es-gibt', topicId: P7_KAL, label: 'Es gibt + isim', anchor: 'Es gibt + isim', prerequisites: ['private.day3.esgibt.temel'] },
     { id: 'private.day7.kalip.sira', topicId: P7_KAL, label: 'evi anlatma sırası', anchor: 'kaç oda/tuvalet var' },
+  ]),
+
+  /* ---------------------------------------------------------------- */
+  /* Özel Ders — 10. Gün                                               */
+  /* ---------------------------------------------------------------- */
+  ...buildTrack(10, 'private', [
+    { id: 'private.day10.hedef.giris', topicId: P10_HED, label: '10. Gün hedefi: gününü anlatmak + saati söylemek', anchor: 'Günün sonunda hedef net' },
+
+    { id: 'private.day10.trennbar.kural', topicId: P10_TRE, label: 'ayrılabilen fiil kuralı: kök 2. sırada, önek sonda', anchor: 'kök ikinci sırada, önek en sonda', prerequisites: ['private.day3.ayrilabilen.kural'] },
+    { id: 'private.day10.trennbar.ornek', topicId: P10_TRE, label: 'Ich stehe um 7 Uhr auf.', anchor: 'Ich stehe um 7 Uhr auf.', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.trennbar.saat-basta', topicId: P10_TRE, label: 'Um 7 Uhr stehe ich auf.', anchor: 'Um 7 Uhr stehe ich auf.', prerequisites: ['private.day10.trennbar.kural', 'private.day3.dizilisi.zaman-basta'] },
+
+    { id: 'private.day10.verb.aufstehen', topicId: P10_VER, label: 'aufstehen = yataktan kalkmak', anchor: 'aufstehen = yataktan kalkmak', prerequisites: ['private.day3.aufstehen'] },
+    { id: 'private.day10.verb.aufwachen', topicId: P10_VER, label: 'aufwachen = uyanmak', anchor: 'aufwachen = uyanmak', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.uyanma-farki', topicId: P10_VER, label: 'aufwachen (göz açmak) ↔ aufstehen (kalkmak) farkı', anchor: 'gözlerini açmak', prerequisites: ['private.day10.verb.aufstehen', 'private.day10.verb.aufwachen'] },
+    { id: 'private.day10.verb.anziehen', topicId: P10_VER, label: 'sich anziehen = giyinmek', anchor: 'sich anziehen = giyinmek', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.ausziehen', topicId: P10_VER, label: 'sich ausziehen = üstünü çıkarmak', anchor: 'sich ausziehen = üstünü çıkarmak', prerequisites: ['private.day10.verb.anziehen'] },
+    { id: 'private.day10.verb.anziehen-chunk', topicId: P10_VER, label: 'Ich ziehe mich an. (hazır kalıp)', anchor: 'Ich ziehe mich an.', prerequisites: ['private.day10.verb.anziehen', 'private.day3.refleksif.temel'] },
+    { id: 'private.day10.verb.einkaufen', topicId: P10_VER, label: 'einkaufen = alışveriş yapmak', anchor: 'einkaufen = alışveriş yapmak', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.einkaufen-cumle', topicId: P10_VER, label: 'Ich kaufe ein.', anchor: 'Ich kaufe ein.', prerequisites: ['private.day10.verb.einkaufen'] },
+    { id: 'private.day10.verb.aufraeumen', topicId: P10_VER, label: 'aufräumen = odayı toplamak', anchor: 'aufräumen = odayı toplamak', prerequisites: ['private.day3.aufraeumen'] },
+    { id: 'private.day10.verb.aufraeumen-cumle', topicId: P10_VER, label: 'Ich räume auf.', anchor: 'Ich räume auf.', prerequisites: ['private.day10.verb.aufraeumen'] },
+    { id: 'private.day10.verb.anrufen', topicId: P10_VER, label: 'anrufen = telefonla aramak', anchor: 'anrufen = telefonla aramak', prerequisites: ['private.day7.fiil.anrufen'] },
+    { id: 'private.day10.verb.anrufen-cumle', topicId: P10_VER, label: 'Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['private.day10.verb.anrufen', 'private.day7.fiil.anrufen-ayrilabilen'] },
+    { id: 'private.day10.verb.fernsehen', topicId: P10_VER, label: 'fernsehen = televizyon izlemek', anchor: 'fernsehen = televizyon izlemek', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.fernsehen-cumle', topicId: P10_VER, label: 'Ich sehe am Abend fern.', anchor: 'Ich sehe am Abend fern.', prerequisites: ['private.day10.verb.fernsehen'] },
+    { id: 'private.day10.verb.aufhoeren', topicId: P10_VER, label: 'aufhören = bırakmak', anchor: 'aufhören = bırakmak', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.vorbereiten', topicId: P10_VER, label: 'vorbereiten = hazırlamak', anchor: 'vorbereiten = hazırlamak', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.einladen', topicId: P10_VER, label: 'einladen = davet etmek', anchor: 'einladen = davet etmek', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.mitbringen', topicId: P10_VER, label: 'mitbringen = beraberinde getirmek', anchor: 'mitbringen = beraberinde getirmek', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.aufsetzen', topicId: P10_VER, label: 'aufsetzen = takmak', anchor: 'aufsetzen = takmak', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.zurueckkommen', topicId: P10_VER, label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['private.day3.zurueckkommen'] },
+    { id: 'private.day10.verb.achtgeben', topicId: P10_VER, label: 'achtgeben = dikkat etmek', anchor: 'achtgeben = dikkat etmek', prerequisites: ['private.day10.trennbar.kural'] },
+    { id: 'private.day10.verb.gern-sorular', topicId: P10_VER, label: 'Was machst du gern? / Wann stehst du auf?', anchor: 'Was machst du gern?', prerequisites: ['private.day3.gern.kullanim'] },
+
+    { id: 'private.day10.sabah.gesicht', topicId: P10_SAB, label: 'Ich wasche mein Gesicht.', anchor: 'Ich wasche mein Gesicht.' },
+    { id: 'private.day10.sabah.zaehne', topicId: P10_SAB, label: 'Ich putze meine Zähne.', anchor: 'Ich putze meine Zähne.' },
+    { id: 'private.day10.sabah.duschen', topicId: P10_SAB, label: 'Ich dusche. (kısa biçim)', anchor: 'Ich dusche.', prerequisites: ['private.day3.sich-duschen'] },
+    { id: 'private.day10.sabah.fruehstueck-fark', topicId: P10_SAB, label: 'Frühstück machen (hazırlamak) ↔ frühstücken (etmek)', anchor: 'Frühstück machen = kahvaltı hazırlamak', prerequisites: ['private.day3.gunluk-rutin'] },
+    { id: 'private.day10.sabah.fruehstuecken', topicId: P10_SAB, label: 'Ich frühstücke.', anchor: 'Ich frühstücke.', prerequisites: ['private.day10.sabah.fruehstueck-fark'] },
+
+    { id: 'private.day10.gun.schule', topicId: P10_GUN, label: 'Ich gehe zur Schule.', anchor: 'Ich gehe zur Schule.', prerequisites: ['private.day2.verben.gehen-zur'] },
+    { id: 'private.day10.gun.lernen', topicId: P10_GUN, label: 'Ich lerne Deutsch und Mathe in der Schule.', anchor: 'Ich lerne Deutsch und Mathe in der Schule.' },
+    { id: 'private.day10.gun.mittag', topicId: P10_GUN, label: 'Ich esse zu Mittag.', anchor: 'Ich esse zu Mittag.', prerequisites: ['private.day1.verben.essen'] },
+    { id: 'private.day10.gun.hausaufgaben', topicId: P10_GUN, label: 'Ich mache meine Hausaufgaben.', anchor: 'Ich mache meine Hausaufgaben.', prerequisites: ['private.day2.verben.machen'] },
+    { id: 'private.day10.gun.freunde', topicId: P10_GUN, label: 'Ich spiele mit meinen Freunden.', anchor: 'Ich spiele mit meinen Freunden.', prerequisites: ['private.day3.mit-meinen-freunden'] },
+
+    { id: 'private.day10.aksam.abendessen', topicId: P10_AKS, label: 'Ich esse um neun Uhr Abendessen.', anchor: 'Ich esse um neun Uhr Abendessen.', prerequisites: ['private.day3.zaman.um-uhr'] },
+    { id: 'private.day10.aksam.ausziehen', topicId: P10_AKS, label: 'Ich ziehe mich aus.', anchor: 'Ich ziehe mich aus.', prerequisites: ['private.day10.verb.ausziehen'] },
+    { id: 'private.day10.aksam.buch', topicId: P10_AKS, label: 'Ich lese ein Buch.', anchor: 'Ich lese ein Buch.', prerequisites: ['private.day2.gunluk.kitap-okuma'] },
+    { id: 'private.day10.aksam.bett', topicId: P10_AKS, label: 'Danach gehe ich ins Bett.', anchor: 'Danach gehe ich ins Bett.', prerequisites: ['private.day3.kontraksiyon.ins'] },
+    { id: 'private.day10.aksam.spazieren', topicId: P10_AKS, label: 'spazieren gehen = yürüyüş yapmak', anchor: 'spazieren gehen = yürüyüş yapmak' },
+
+    { id: 'private.day10.dann.dann', topicId: P10_DAN, label: 'Dann gehe ich zur Schule.', anchor: 'Dann gehe ich zur Schule.', prerequisites: ['private.day3.zaman.dann'] },
+    { id: 'private.day10.dann.danach', topicId: P10_DAN, label: 'Danach komme ich nach Hause.', anchor: 'Danach komme ich nach Hause.', prerequisites: ['private.day3.zaman.dann'] },
+    { id: 'private.day10.dann.v2', topicId: P10_DAN, label: 'Danach başta → fiil ikinci sırada', anchor: 'Danach komme ich', prerequisites: ['private.day10.dann.danach', 'private.day3.dizilisi.zaman-basta'] },
+
+    { id: 'private.day10.karsi.besuchen', topicId: P10_KAR, label: 'besuchen ayrılmaz: Ich besuche dich.', anchor: 'Ich besuche dich.', prerequisites: ['private.day10.verb.anrufen-cumle'] },
+    { id: 'private.day10.karsi.ipucu', topicId: P10_KAR, label: 'ayrılmayan başlangıçlar: be-, emp-, er-, ver-, zer-', anchor: 'be-, emp-, er-, ver-, zer-', prerequisites: ['private.day10.karsi.besuchen'] },
+    { id: 'private.day10.karsi.liste', topicId: P10_KAR, label: 'empfinden/erklären/vergessen/zerstören/zerreißen tanıma', anchor: 'zerstören = tahrip etmek', prerequisites: ['private.day10.karsi.ipucu'] },
+
+    { id: 'private.day10.soru.wie-spaet', topicId: P10_SOR, label: 'Wie spät ist es? = saat kaç?', anchor: 'Wie spät ist es?' },
+    { id: 'private.day10.soru.wie-viel', topicId: P10_SOR, label: 'Wie viel Uhr ist es? = saat kaç?', anchor: 'Wie viel Uhr ist es?', prerequisites: ['private.day10.soru.wie-spaet'] },
+    { id: 'private.day10.soru.einheiten', topicId: P10_SOR, label: 'die Uhr / die Stunde / die Minute / die Sekunde', anchor: 'die Stunde = saat' },
+
+    { id: 'private.day10.resmi.kural', topicId: P10_RES, label: 'resmî saat kalıbı: saat + Uhr + dakika', anchor: 'resmî saat = saat + Uhr + dakika', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
+    { id: 'private.day10.resmi.ornek', topicId: P10_RES, label: 'Es ist acht Uhr zwanzig.', anchor: 'Es ist acht Uhr zwanzig.', prerequisites: ['private.day10.resmi.kural'] },
+
+    { id: 'private.day10.gunluk.nach-vor', topicId: P10_GUL, label: 'zwanzig nach fünf / zwanzig vor vier', anchor: 'zwanzig nach fünf', prerequisites: ['private.day10.soru.einheiten'] },
+    { id: 'private.day10.gunluk.viertel', topicId: P10_GUL, label: 'Viertel nach sechs / Viertel vor neun', anchor: 'Viertel nach sechs', prerequisites: ['private.day10.gunluk.nach-vor'] },
+
+    { id: 'private.day10.halb.anlam', topicId: P10_HAL, label: 'halb acht = 07.30 (bir sonrakini söyler)', anchor: 'halb acht = 07.30', prerequisites: ['private.day10.soru.einheiten'] },
+    { id: 'private.day10.halb.ornek', topicId: P10_HAL, label: 'Es ist halb acht.', anchor: 'Es ist halb acht.', prerequisites: ['private.day10.halb.anlam'] },
+
+    { id: 'private.day10.um.kural', topicId: P10_UMU, label: 'um sieben Uhr = saat yedide', anchor: 'um sieben Uhr = saat yedide', prerequisites: ['private.day3.zaman.um-uhr'] },
+    { id: 'private.day10.um.ornek', topicId: P10_UMU, label: 'Ich stehe um sieben Uhr auf.', anchor: 'Ich stehe um sieben Uhr auf.', prerequisites: ['private.day10.um.kural', 'private.day10.verb.aufstehen'] },
+
+    { id: 'private.day10.tam.model', topicId: P10_TAM, label: 'Mein Tag kanonik A1 modeli (16 cümle)', anchor: 'Ich wache um sieben Uhr auf.', prerequisites: ['private.day10.sabah.zaehne', 'private.day10.gun.hausaufgaben', 'private.day10.aksam.bett'] },
+    { id: 'private.day10.tam.sablon', topicId: P10_TAM, label: 'Mein Tag kopya iskeleti', anchor: 'Ich stehe um ... Uhr auf.', prerequisites: ['private.day10.tam.model'] },
+    { id: 'private.day10.tam.uretim', topicId: P10_TAM, label: 'Erzähle deinen Tag. (serbest üretim)', anchor: 'Erzähle deinen Tag.', prerequisites: ['private.day10.tam.sablon'] },
+
+    { id: 'private.day10.wort.ruhig', topicId: P10_WOR, label: 'ruhig / nur / beide', anchor: 'ruhig = sessiz' },
+    { id: 'private.day10.wort.beide', topicId: P10_WOR, label: 'beide = ikisi de', anchor: 'beide = ikisi de', prerequisites: ['private.day10.wort.ruhig'] },
+    { id: 'private.day10.wort.badewanne', topicId: P10_WOR, label: 'die Badewanne = küvet', anchor: 'die Badewanne = küvet' },
+    { id: 'private.day10.wort.zimmer-satz', topicId: P10_WOR, label: 'Das Zimmer ist zehn Quadratmeter groß.', anchor: 'zehn Quadratmeter groß', prerequisites: ['private.day7.tarif.gross-klein'] },
+    { id: 'private.day10.wort.kosten', topicId: P10_WOR, label: 'Es kostet nur 180 Euro im Monat.', anchor: 'Es kostet nur 180 Euro im Monat.', prerequisites: ['private.day7.fiyat.kosten'] },
+    { id: 'private.day10.wort.ziemlich', topicId: P10_WOR, label: 'ziemlich = oldukça', anchor: 'ziemlich = oldukça' },
+    { id: 'private.day10.wort.frueh-lange', topicId: P10_WOR, label: 'früh = erken, lange = uzun', anchor: 'früh = erken' },
   ]),
 ];
 
