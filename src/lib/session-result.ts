@@ -6,9 +6,8 @@
  * yalnizca bu nesneden beslenir; hicbiri rota state'inden yeniden kurulmaz.
  */
 
-import type { Exercise, LearningTrack } from '../content/types';
+import type { Exercise } from '../content/types';
 import type { ActiveLesson, AttemptResult, LessonResult, MistakeRecord, UserProgress } from './storage';
-import { getTrackDays, setTrackDays } from './storage';
 import { normalizeStreak } from './streak';
 import { addDailyActivity } from './daily-goal';
 
@@ -258,18 +257,18 @@ export function completeLesson(
   now = new Date(),
 ): UserProgress {
   const day = result.day;
-  const track: LearningTrack = (result.track as LearningTrack | undefined) ?? (result.day !== undefined ? 'normal' : 'normal');
-  // maintain legacy days + track-aware storage
+  // Yalnızca gün dersleri (`mode === 'day'`) gün sayacını artırır.
+  // Genel Tekrar (`review`) ve hata tekrarı (`mistakes`) gün tamamlaması SAYILMAZ (§48).
   let nextProgress = progress;
   if (day !== undefined && result.mode === 'day') {
-    const trackDays = { ...getTrackDays(progress, track) };
-    const entry = trackDays[day] ?? { day, sessionsCompleted: 0 };
-    trackDays[day] = {
+    const days = { ...progress.days };
+    const entry = days[day] ?? { day, sessionsCompleted: 0 };
+    days[day] = {
       ...entry,
       sessionsCompleted: entry.sessionsCompleted + 1,
       lastCompletedAt: now.toISOString(),
     };
-    nextProgress = setTrackDays(progress, track, trackDays);
+    nextProgress = { ...progress, days };
   }
   return {
     ...nextProgress,

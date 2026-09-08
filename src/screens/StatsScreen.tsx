@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-import { allExercises, days, exercisesForDay, daysForTrack, allExercisesForTrack } from '../lib/content';
-import type { LearningTrack } from '../content/types';
+import { dayExercises, days, exercisesForDay, reviewBank } from '../lib/content';
 import { getDayStats, getGlobalSummary, getTopicStats, resetAllProgress, resetDayProgress } from '../lib/progress';
 import { parseImportedProgress, serializeProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -10,10 +9,9 @@ import { GOAL_OPTIONS, goalProgress } from '../lib/daily-goal';
 export function StatsScreen({ api }: { api: ProgressApi }) {
   const { progress, update, replace } = api;
   const dayNumbers = days.map((day) => day.day);
-  const summary = getGlobalSummary(progress, allExercises, dayNumbers);
-  const normalSummary = getGlobalSummary(progress, allExercisesForTrack('normal'), daysForTrack('normal').map((d) => d.day), 'normal');
-  const privateSummary = getGlobalSummary(progress, allExercisesForTrack('private'), daysForTrack('private').map((d) => d.day), 'private');
-  const topics = getTopicStats(progress, allExercises).filter((topic) => topic.incorrect + topic.typo > 0);
+  const summary = getGlobalSummary(progress, dayExercises, dayNumbers);
+  const reviewAttempted = reviewBank.filter((exercise) => progress.exercises[exercise.id]?.attempts.length).length;
+  const topics = getTopicStats(progress, dayExercises).filter((topic) => topic.incorrect + topic.typo > 0);
   const today = goalProgress(progress);
 
   const [confirmReset, setConfirmReset] = useState(false);
@@ -88,19 +86,17 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
       </section>
 
       <section className="mt-7 grid grid-cols-2 gap-3">
-        <Metric label="Normal — Doğruluk" value={normalSummary.accuracy === null ? '—' : `%${Math.round(normalSummary.accuracy * 100)}`} />
-        <Metric label="Özel Ders — Doğruluk" value={privateSummary.accuracy === null ? '—' : `%${Math.round(privateSummary.accuracy * 100)}`} />
-        <Metric label="Normal — Çözülen" value={`${normalSummary.attemptedExercises}/${normalSummary.totalExercises}`} />
-        <Metric label="Özel Ders — Çözülen" value={`${privateSummary.attemptedExercises}/${privateSummary.totalExercises}`} />
+        <Metric label="Genel Tekrar — Çözülen" value={`${reviewAttempted}/${reviewBank.length}`} />
+        <Metric label="Tamamlanan gün" value={`${summary.completedDays}/${dayNumbers.length}`} />
       </section>
 
       <section className="mt-10">
-        <h2 className="text-2xl">Gün gün — Normal</h2>
+        <h2 className="text-2xl">Gün gün</h2>
         <div className="mt-4 flex flex-col gap-2">
-          {daysForTrack('normal').map((day) => {
-            const stats = getDayStats(progress, day.day, exercisesForDay(day.day, 'normal'));
+          {days.map((day) => {
+            const stats = getDayStats(progress, day.day, exercisesForDay(day.day));
             return (
-              <div key={`normal-${day.day}`} className="card flex items-center gap-4 px-4 py-3">
+              <div key={day.day} className="card flex items-center gap-4 px-4 py-3">
                 <span className="numeral w-8 text-2xl">{day.day}</span>
                 <div className="flex-1">
                   <div className="rail h-2">
@@ -120,35 +116,6 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
               </div>
             );
           })}
-        </div>
-      </section>
-      <section className="mt-8">
-        <h2 className="text-2xl">Gün gün — Özel Ders</h2>
-        <div className="mt-4 flex flex-col gap-2">
-          {daysForTrack('private').map((day) => {
-            const stats = getDayStats(progress, day.day, exercisesForDay(day.day, 'private'));
-            return (
-              <div key={`private-${day.day}`} className="card flex items-center gap-4 px-4 py-3">
-                <span className="numeral w-8 text-2xl">🎓 {day.day}</span>
-                <div className="flex-1">
-                  <div className="rail h-2">
-                    <div
-                      className="rail-fill"
-                      style={{
-                        width: `${Math.round(stats.completionPct * 100)}%`,
-                        background: stats.state === 'completed' ? 'var(--color-good)' : 'var(--color-brand)',
-                      }}
-                    />
-                  </div>
-                </div>
-                <span className="w-28 text-right text-sm text-ink-soft">
-                  {stats.completed}/{stats.total} ·{' '}
-                  {stats.accuracy === null ? '—' : `%${Math.round(stats.accuracy * 100)}`}
-                </span>
-              </div>
-            );
-          })}
-          {daysForTrack('private').length === 0 && <p className="text-ink-soft">Özel Ders için henüz gün yok.</p>}
         </div>
       </section>
 
@@ -323,20 +290,11 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             onChange={(event) => setResetDay(event.target.value || null)}
           >
             <option value="">Gün seç</option>
-            <optgroup label="Normal">
-              {daysForTrack('normal').map((day) => (
-                <option key={`normal-${day.day}`} value={`normal:${day.day}`}>
-                  {day.day}. Gün
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Özel Ders">
-              {daysForTrack('private').map((day) => (
-                <option key={`private-${day.day}`} value={`private:${day.day}`}>
-                  🎓 {day.day}. Gün
-                </option>
-              ))}
-            </optgroup>
+            {days.map((day) => (
+              <option key={day.day} value={String(day.day)}>
+                {day.day}. Gün
+              </option>
+            ))}
           </select>
           <button
             type="button"
@@ -344,12 +302,10 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             disabled={resetDay === null}
             onClick={() => {
               if (resetDay === null) return;
-              const [trackStr, dayStr] = resetDay.split(':');
-              const t = (trackStr as LearningTrack) ?? 'normal';
-              const d = Number(dayStr);
-              if (!window.confirm(`${t === 'private' ? '🎓 ' : ''}${d}. Gün ilerlemesi silinsin mi? Bu işlem geri alınamaz.`)) return;
-              update((current) => resetDayProgress(current, d, t));
-              setMessage(`${t === 'private' ? '🎓 ' : ''}${d}. Gün ilerlemesi sıfırlandı.`);
+              const d = Number(resetDay);
+              if (!window.confirm(`${d}. Gün ilerlemesi silinsin mi? Bu işlem geri alınamaz.`)) return;
+              update((current) => resetDayProgress(current, d));
+              setMessage(`${d}. Gün ilerlemesi sıfırlandı.`);
               setResetDay(null);
             }}
           >

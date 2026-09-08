@@ -1,4 +1,4 @@
-/** Uretilmis icerigi yukler ve indeksler. */
+/** Uretilmis icerigi yukler ve indeksler. Tek müfredat: gün kimliği tektir, izlek yok. */
 
 import bundle from '../../generated/exercises.json';
 import type {
@@ -8,29 +8,21 @@ import type {
   Exercise,
   SummaryDay,
   SummaryTopic,
-  LearningTrack,
 } from '../content/types';
 
 export const content = bundle as unknown as ContentBundle;
-
-function trackOf(ex: { track?: LearningTrack }): LearningTrack {
-  return (ex.track as LearningTrack | undefined) ?? 'normal';
-}
 
 export const exercisesById = new Map<string, Exercise>(
   content.exercises.map((exercise) => [exercise.id, exercise]),
 );
 
-export const days: Day[] = [...content.days].sort((a, b) =>
-  (a.track ?? 'normal') === (b.track ?? 'normal') ? a.day - b.day : (a.track ?? 'normal').localeCompare(b.track ?? 'normal'),
-);
+/** Gün dersleri (Genel Tekrar bankası gün değildir). */
+export const days: Day[] = [...content.days].sort((a, b) => a.day - b.day);
 
 export const concepts: Concept[] = content.concepts ?? [];
 export const conceptsById = new Map(concepts.map((concept) => [concept.id, concept]));
 
-export const summaries: SummaryDay[] = [...(content.summaries ?? [])].sort((a, b) =>
-  (a.track ?? 'normal') === (b.track ?? 'normal') ? a.day - b.day : (a.track ?? 'normal').localeCompare(b.track ?? 'normal'),
-);
+export const summaries: SummaryDay[] = [...(content.summaries ?? [])].sort((a, b) => a.day - b.day);
 
 export const summaryTopicsById = new Map<string, SummaryTopic>(
   summaries.flatMap((day) => day.topics.map((topic) => [topic.id, topic] as const)),
@@ -41,34 +33,30 @@ export const topicDay = new Map<string, number>(
   summaries.flatMap((day) => day.topics.map((topic) => [topic.id, day.day] as const)),
 );
 
-/** Konu ID → ait olduğu izlek. */
-export const topicTrack = new Map<string, LearningTrack>(
-  (summaries.flatMap((day) => day.topics.map((topic) => [topic.id, (day.track ?? 'normal') as LearningTrack] as const)) as Array<[string, LearningTrack]>),
-);
-
-export function getDay(day: number, track: LearningTrack = 'normal'): Day | undefined {
-  return days.find((entry) => entry.day === day && trackOf(entry) === track);
+export function getDay(day: number): Day | undefined {
+  return days.find((entry) => entry.day === day);
 }
 
-export function getSummary(day: number, track: LearningTrack = 'normal'): SummaryDay | undefined {
-  return summaries.find((entry) => entry.day === day && entry.track === track);
+export function getSummary(day: number): SummaryDay | undefined {
+  return summaries.find((entry) => entry.day === day);
 }
 
-export function exercisesForDay(day: number, track: LearningTrack = 'normal'): Exercise[] {
-  const entry = getDay(day, track);
+/** Bir günün ders havuzu (Genel Tekrar bankası DAHİL DEĞİL). */
+export function exercisesForDay(day: number): Exercise[] {
+  const entry = getDay(day);
   if (!entry) return [];
   return entry.exerciseIds
     .map((id) => exercisesById.get(id))
     .filter((exercise): exercise is Exercise => Boolean(exercise));
 }
 
-/** Onceki tum gunlerin havuzu — karma tekrar icin. */
-export function exercisesBeforeDay(day: number, track: LearningTrack = 'normal'): Exercise[] {
-  return content.exercises.filter((exercise) => exercise.day < day && trackOf(exercise) === track);
+/** Onceki tum gunlerin havuzu — karma tekrar icin (Genel Tekrar DAHİL DEĞİL). */
+export function exercisesBeforeDay(day: number): Exercise[] {
+  return dayExercises.filter((exercise) => exercise.day < day);
 }
 
 export function exercisesForTopic(topicId: string): Exercise[] {
-  return content.exercises.filter((exercise) => exercise.topicId === topicId);
+  return dayExercises.filter((exercise) => exercise.topicId === topicId);
 }
 
 export function getExercises(ids: string[]): Exercise[] {
@@ -78,21 +66,25 @@ export function getExercises(ids: string[]): Exercise[] {
 }
 
 /** Bir gunun ozet konulari (ustalik cubuklari ve konu calismasi icin). */
-export function topicsForDay(day: number, track: LearningTrack = 'normal'): SummaryTopic[] {
-  return getSummary(day, track)?.topics ?? [];
+export function topicsForDay(day: number): SummaryTopic[] {
+  return getSummary(day)?.topics ?? [];
 }
 
-export function daysForTrack(track: LearningTrack): Day[] {
-  return days.filter((day) => trackOf(day) === track);
+/** Tum gun dersleri (sıralı). */
+export function allDays(): Day[] {
+  return days;
 }
 
-export function summariesForTrack(track: LearningTrack): SummaryDay[] {
-  return summaries.filter((day) => day.track === track);
+/** Tum gun ozetleri (sıralı). */
+export function allSummaries(): SummaryDay[] {
+  return summaries;
 }
 
-export function allExercisesForTrack(track: LearningTrack): Exercise[] {
-  return content.exercises.filter((ex) => trackOf(ex) === track);
-}
+/** Gün havuzlarının tamamı (Genel Tekrar bankası hariç). */
+export const dayExercises: Exercise[] = content.exercises.filter((exercise) => !exercise.reviewOnly);
+
+/** Kümülatif Genel Tekrar bankası. */
+export const reviewBank: Exercise[] = content.exercises.filter((exercise) => exercise.reviewOnly);
 
 /** Bir alistirmanin ilk kavraminin bagli oldugu ozet konusu. */
 export function summaryTopicForExercise(exercise: Exercise): SummaryTopic | undefined {
@@ -108,7 +100,7 @@ export const allExercises = content.exercises;
 export const contentVersion = content.contentVersion ?? 'bilinmiyor';
 
 /* ------------------------------------------------------------------ */
-/* Ozet arama (§50)                                                    */
+/* Ozet arama                                                           */
 /* ------------------------------------------------------------------ */
 
 export interface SummarySearchHit {

@@ -5,10 +5,9 @@
  */
 
 import { useMemo, useState } from 'react';
-import { allExercises, content, days, summaries } from '../lib/content';
+import { allExercises, content, days, reviewBank, summaries } from '../lib/content';
 import { auditExerciseContent } from '../lib/content-audit';
 import type { Difficulty, Skill } from '../content/types';
-import { DAY_4_6_SOURCE_TOPICS, sourcesForDay } from '../content/authored/sources';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 const SKILLS: Skill[] = ['recognition', 'recall', 'production', 'correction', 'speaking'];
@@ -29,27 +28,25 @@ export function DebugScreen() {
   const perDay = useMemo(
     () =>
       days.map((day) => {
-        const exercises = allExercises.filter((exercise) => exercise.day === day.day);
+        const exercises = allExercises.filter((exercise) => exercise.day === day.day && !exercise.reviewOnly);
         const coverage = (content.coverage ?? []).filter((item) => item.day === day.day);
         const uncovered = coverage.filter((item) => !item.summaryCovered);
         const noPractice = coverage.filter(
           (item) => item.exercises.easy + item.exercises.medium + item.exercises.hard === 0,
         );
-        const sources = sourcesForDay(day.day);
-        const sourceTopics = DAY_4_6_SOURCE_TOPICS.filter((item) => item.day === day.day);
         return {
           day,
           exercises,
           coverage,
           uncovered,
           noPractice,
-          sources,
-          sourceTopics,
           audit: auditExerciseContent(exercises),
         };
       }),
     [],
   );
+
+  const reviewAudit = useMemo(() => auditExerciseContent(reviewBank), []);
 
   return (
     <main className="mx-auto w-full max-w-[900px] px-5 pb-24 pt-6 font-mono text-[0.9rem]">
@@ -85,7 +82,7 @@ export function DebugScreen() {
         </ul>
       )}
 
-      {perDay.map(({ day, exercises, coverage, uncovered, noPractice, sources, sourceTopics, audit }) => (
+      {perDay.map(({ day, exercises, coverage, uncovered, noPractice, audit }) => (
         <section key={day.day} className="mt-10">
           <h2 className="font-display text-2xl">
             {day.day}. Gün — {exercises.length} alıştırma
@@ -126,21 +123,7 @@ export function DebugScreen() {
             </p>
           </div>
 
-          {sources.length > 0 && (
-            <div className="mt-3 rounded-xl bg-sunk px-3 py-2 text-[0.84rem] leading-relaxed text-ink-soft">
-              <p>
-                Kaynaklar: {sources.length} video · altyazı: {sources.filter((item) => item.transcriptAvailable).length}/{sources.length} · özet eşlemesi: {sourceTopics.length}
-              </p>
-              <p>
-                Çeviri: {exercises.filter((item) => item.type === 'word-bank-translation' && item.wordBank?.direction === 'de-to-tr').length} DE→TR / {exercises.filter((item) => item.type === 'word-bank-translation' && item.wordBank?.direction === 'tr-to-de').length} TR→DE · Dinleme: {exercises.filter((item) => item.type === 'listen-choice' || item.type === 'dictation').length} · Üretim: {exercises.filter((item) => ['production', 'correction', 'speaking'].includes(item.skill)).length}
-              </p>
-              {sources.filter((item) => !item.transcriptAvailable).map((item) => (
-                <p key={item.id} style={{ color: 'var(--color-warn)' }}>
-                  Altyazı yok: {item.title} ({item.transcriptSource === 'video-description' ? 'başlık/açıklama kanıtı' : 'kanıt belirtilmedi'})
-                </p>
-              ))}
-            </div>
-          )}
+          {sourcesBlock(exercises)}
 
           <p className="mt-3 font-bold">
             Kavram kapsamı: {coverage.length - uncovered.length}/{coverage.length} özet karşılığı var
@@ -182,6 +165,34 @@ export function DebugScreen() {
       <button type="button" className="btn mt-8" onClick={() => setShowAll((value) => !value)}>
         {showAll ? 'Kavram tablolarını gizle' : 'Kavram tablolarını göster'}
       </button>
+
+      <section className="mt-10">
+        <h2 className="font-display text-2xl">
+          Genel Tekrar — {reviewBank.length} alıştırma
+        </h2>
+        <div className="mt-3 rounded-xl bg-sunk px-3 py-2 text-[0.84rem] leading-relaxed text-ink-soft">
+          <p>
+            Toplam: {reviewAudit.total} · Benzersiz ID: {reviewAudit.uniqueIds} · Normalize soru:{' '}
+            {reviewAudit.uniqueNormalizedPrompts} · Olası yakın kopya: {reviewAudit.nearDuplicates.length}
+          </p>
+        </div>
+        {sourcesBlock(reviewBank)}
+      </section>
     </main>
+  );
+}
+
+function sourcesBlock(exercises: { type: string; skill: string; wordBank?: { direction: string } }[]) {
+  return (
+    <div className="mt-3 rounded-xl bg-sunk px-3 py-2 text-[0.84rem] leading-relaxed text-ink-soft">
+      <p>
+        Çeviri:{' '}
+        {exercises.filter((item) => item.type === 'word-bank-translation' && item.wordBank?.direction === 'de-to-tr').length}{' '}
+        DE→TR /{' '}
+        {exercises.filter((item) => item.type === 'word-bank-translation' && item.wordBank?.direction === 'tr-to-de').length}{' '}
+        TR→DE · Dinleme: {exercises.filter((item) => item.type === 'listen-choice' || item.type === 'dictation').length} ·
+        Üretim: {exercises.filter((item) => ['production', 'correction', 'speaking'].includes(item.skill)).length}
+      </p>
+    </div>
   );
 }

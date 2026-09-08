@@ -1,11 +1,9 @@
-import { useState } from 'react';
-import { daysForTrack, exercisesForDay, allExercisesForTrack } from '../lib/content';
+import { days, exercisesForDay, dayExercises } from '../lib/content';
 import { getDayStats, getGlobalSummary } from '../lib/progress';
 import { goalProgress } from '../lib/daily-goal';
 import { recommendNext } from '../lib/recommendation';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
-import type { LearningTrack } from '../content/types';
 
 const GREETINGS: Array<{ until: number; de: string; tr: string }> = [
   { until: 9, de: 'Guten Morgen', tr: 'Günaydın' },
@@ -22,18 +20,15 @@ function greeting(date = new Date()) {
 export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (route: Route) => void }) {
   const { progress } = api;
   const hello = greeting();
-  const [track, setTrack] = useState<LearningTrack>('normal');
 
-  const trackDays = daysForTrack(track);
+  const dayNumbers = days.map((day) => day.day);
   const recommendation = recommendNext({
     progress,
-    dayNumbers: trackDays.map((day) => day.day),
-    exercisesForDay: (day: number) => exercisesForDay(day, track),
-    track,
-  } as any);
+    dayNumbers,
+    exercisesForDay: (day: number) => exercisesForDay(day),
+  });
   const goal = goalProgress(progress);
-  const overallNormal = getGlobalSummary(progress, allExercisesForTrack('normal'), daysForTrack('normal').map((d) => d.day), 'normal');
-  const overallPrivate = getGlobalSummary(progress, allExercisesForTrack('private'), daysForTrack('private').map((d) => d.day), 'private');
+  const overall = getGlobalSummary(progress, dayExercises, dayNumbers);
   const totalMistakes = Object.keys(progress.mistakes).length;
 
   return (
@@ -94,15 +89,10 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
       <section className="mt-8">
         <h2 className="eyebrow mb-3">Son durum</h2>
         <div className="flex flex-wrap gap-3">
-          <MiniStat label="Normal gün" value={String(daysForTrack('normal').length)} />
-          <MiniStat label="Özel Ders gün" value={String(daysForTrack('private').length)} />
+          <MiniStat label="Ders günü" value={String(days.length)} />
           <MiniStat
-            label="Normal doğruluk"
-            value={overallNormal.accuracy === null ? '—' : `%${Math.round(overallNormal.accuracy * 100)}`}
-          />
-          <MiniStat
-            label="Özel Ders doğruluk"
-            value={overallPrivate.accuracy === null ? '—' : `%${Math.round(overallPrivate.accuracy * 100)}`}
+            label="Doğruluk"
+            value={overall.accuracy === null ? '—' : `%${Math.round(overall.accuracy * 100)}`}
           />
           <MiniStat label="Aktif hata" value={String(totalMistakes)} />
         </div>
@@ -111,35 +101,19 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
       <section className="mt-10">
         <div className="flex items-center gap-2 mb-5">
           <h2 className="eyebrow">Öğrenme yolu</h2>
-          <div className="ml-auto flex rounded-xl border-2 border-line overflow-hidden">
-            {(['normal','private'] as LearningTrack[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="px-3 py-1.5 text-sm font-bold"
-                style={{
-                  background: track === t ? 'var(--color-brand)' : 'transparent',
-                  color: track === t ? '#fff' : 'var(--color-ink-soft)',
-                }}
-                onClick={() => setTrack(t)}
-              >
-                {t === 'normal' ? 'Normal Çalışma' : '🎓 Özel Ders'}
-              </button>
-            ))}
-          </div>
         </div>
         <ol className="relative flex flex-col gap-4">
-          {trackDays.map((day, index) => {
-            const exercises = exercisesForDay(day.day, track);
+          {days.map((day, index) => {
+            const exercises = exercisesForDay(day.day);
             const stats = getDayStats(progress, day.day, exercises);
             const accuracy = stats.accuracy === null ? null : Math.round(stats.accuracy * 100);
 
             return (
-              <li key={`${track}-${day.day}`} className="relative flex gap-4">
+              <li key={day.day} className="relative flex gap-4">
                 <div className="relative flex w-10 flex-none justify-center">
                   <div
                     className="spine absolute inset-y-0 w-[9px]"
-                    style={{ opacity: index === trackDays.length - 1 ? 0.35 : 1 }}
+                    style={{ opacity: index === days.length - 1 ? 0.35 : 1 }}
                     aria-hidden="true"
                   />
                   <span
@@ -164,10 +138,10 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
                   className="day-tile flex-1"
                   data-state={stats.state}
                   data-review={stats.reviewRecommended}
-                  onClick={() => navigate({ name: 'day', track, day: day.day })}
+                  onClick={() => navigate({ name: 'day', day: day.day })}
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-2xl">{track === 'private' ? `🎓 ${day.day}. Gün` : `${day.day}. Gün`}</h3>
+                    <h3 className="text-2xl">{day.day}. Gün</h3>
                     <span className="text-sm font-bold text-ink-faint">
                       {stats.completed}/{stats.total} alıştırma
                     </span>
@@ -239,9 +213,6 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
             );
           })}
         </ol>
-        {track === 'private' && trackDays.length === 0 && (
-          <p className="mt-4 text-ink-soft">Özel Ders için henüz içerik yok.</p>
-        )}
       </section>
     </main>
   );

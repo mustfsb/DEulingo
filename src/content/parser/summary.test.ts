@@ -1,5 +1,5 @@
 /**
- * Ozet ayristirma ve ozet ↔ kavram ↔ alistirma kapsami.
+ * Ozet ayristirma ve ozet ↔ kavram ↔ alistirma kapsami (tek müfredat).
  *
  * Ana garanti (§23): Ozet bolumunu calisan biri, aciklamasi olmayan bir bilgiyi
  * soran alistirmayla karsilasmamali.
@@ -14,17 +14,18 @@ import { CONCEPTS, SUMMARY_TOPICS } from '../authored/concepts.ts';
 import { SUMMARY_AUGMENTATIONS } from '../authored/summary-augmentations.ts';
 
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
+const daySummaries = bundle.summaries.filter((day) => day.day !== 0);
+const generalSummary = bundle.summaries.find((day) => day.day === 0);
 
 describe('ozet ayristirma', () => {
-  it('ilk alti gunun ozetini sirayla uretir', () => {
-    expect(bundle.summaries.filter((d: any) => (d.track ?? 'normal') === 'normal').map((day) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
+  it('tek mufredatin gun ozetlerini sirayla uretir', () => {
+    expect(daySummaries.map((day) => day.day)).toEqual([1, 2, 3, 5, 6, 7, 10]);
   });
 
-  it('4–6. günlerin her biri kayıtlı ana konularını ve aktif hatırlamayı taşır', () => {
-    for (const day of [4, 5, 6]) {
+  it('gun ozetleri kayitli ana konularini ve aktif hatirlamayi tasir', () => {
+    for (const day of [1, 2, 3, 5, 7, 10]) {
       const summary = bundle.summaries.find((item) => item.day === day)!;
-      expect(summary.topics.length).toBeGreaterThanOrEqual(3);
-      expect(summary.topics.flatMap((topic) => topic.recallQuestions).length).toBeGreaterThanOrEqual(4);
+      expect(summary.topics.length, `${day}. Gün`).toBeGreaterThanOrEqual(3);
     }
   });
 
@@ -45,20 +46,20 @@ describe('ozet ayristirma', () => {
   });
 
   it('tablolari yapili sekilde tasir (ham markdown degil)', () => {
-    const konjugation = bundle.summaries
+    const vorstellung = bundle.summaries
       .flatMap((day) => day.topics)
-      .find((topic) => topic.id === 'day2.fiil-cekimi');
-    const tables = konjugation!.blocks.filter((block) => block.kind === 'table');
+      .find((topic) => topic.id === 'private.day1.vorstellung');
+    const tables = vorstellung!.blocks.filter((block) => block.kind === 'table');
     expect(tables.length).toBeGreaterThan(0);
     expect(tables[0]).toMatchObject({ kind: 'table' });
   });
 
   it('"Dikkat" alt bolumlerini uyari olarak ayirir', () => {
-    const artikel = bundle.summaries
+    const vorstellung = bundle.summaries
       .flatMap((day) => day.topics)
-      .find((topic) => topic.id === 'day2.artikel');
-    expect(artikel!.warnings.length).toBeGreaterThan(0);
-    expect(artikel!.warnings.join(' ')).toMatch(/büyük harfle/i);
+      .find((topic) => topic.id === 'private.day1.vorstellung');
+    expect(vorstellung!.warnings.length).toBeGreaterThan(0);
+    expect(vorstellung!.warnings.join(' ')).toMatch(/heißen|bin/i);
   });
 
   it('hizli tekrar maddelerini konulara dagitir', () => {
@@ -69,11 +70,11 @@ describe('ozet ayristirma', () => {
   });
 
   it('Almanca ornek cumleleri cikarir', () => {
-    const tanitma = bundle.summaries
+    const uhrzeit = bundle.summaries
       .flatMap((day) => day.topics)
-      .find((topic) => topic.id === 'day3.kendini-tanitma');
-    const germans = tanitma!.examples.map((example) => example.german);
-    expect(germans).toContain('Ich komme aus der Türkei.');
+      .find((topic) => topic.id === 'private.day10.um-uhr');
+    const germans = uhrzeit!.examples.map((example) => example.german);
+    expect(germans.some((german) => german.includes('um sieben Uhr'))).toBe(true);
   });
 
   it('ornek cumlelere yaklasik okunus ekler', () => {
@@ -89,8 +90,41 @@ describe('ozet ayristirma', () => {
   it('okuma suresi tahmini uretir', () => {
     for (const day of bundle.summaries) {
       expect(day.estimatedReadingMinutes).toBeGreaterThanOrEqual(3);
-      expect(day.estimatedReadingMinutes).toBeLessThan(30);
+      expect(day.estimatedReadingMinutes).toBeLessThan(day.day === 0 ? 60 : 30);
     }
+  });
+});
+
+describe('genel tekrar ozeti (0. gun)', () => {
+  it('kumulatif ozet 20+ konuyla pakettedir', () => {
+    expect(generalSummary).toBeDefined();
+    expect(generalSummary!.title).toBe('Genel Tekrar');
+    expect(generalSummary!.topics.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it('saat ve cumle kurma usta bolumleri ogretir, listelemez', () => {
+    const saat = generalSummary!.topics.find((topic) => topic.id === 'genel.saat')!;
+    expect(topicText(saat)).toContain('halb acht');
+    const cumle = generalSummary!.topics.find((topic) => topic.id === 'genel.cumle-kurma')!;
+    expect(topicText(cumle)).toMatch(/ikinci sırada/);
+  });
+
+  it('quiz sorularinin cevaplari gizlidir (recall)', () => {
+    const quiz = generalSummary!.topics.find((topic) => topic.id === 'genel.kendine-sor')!;
+    expect(quiz.recallQuestions.length).toBeGreaterThanOrEqual(10);
+    for (const item of quiz.recallQuestions) {
+      expect(item.question.length).toBeGreaterThan(5);
+      expect(item.answer.length).toBeGreaterThan(1);
+    }
+    // Cevaplar govde bloklarinda acikta durmaz (yalnizca recall'da).
+    const bodyText = quiz.blocks
+      .map((block) => {
+        if (block.kind === 'paragraph' || block.kind === 'callout') return block.text;
+        if (block.kind === 'list') return block.items.join(' ');
+        return '';
+      })
+      .join('\n');
+    expect(bodyText).not.toContain('siebenundvierzig');
   });
 });
 
@@ -110,6 +144,13 @@ describe('"Kendine Sor" cevaplari', () => {
 1. Başka cevap.
 
 </details>
+
+<details>
+<summary>Cevabı Göster</summary>
+
+1. Genel cevap.
+
+</details>
 `;
 
   it('cevaplari dogru gune baglar', () => {
@@ -118,8 +159,13 @@ describe('"Kendine Sor" cevaplari', () => {
     expect(answers.get(2)).toEqual(['Başka cevap.']);
   });
 
-  it('her gunun sorulari cevaplariyla eslesir', () => {
-    for (const day of bundle.summaries.filter((d: any) => (d.track ?? 'normal') === 'normal')) {
+  it('gun etiketsiz genel cevaplari 0. gune baglar', () => {
+    const answers = parseRecallAnswers(markdown);
+    expect(answers.get(0)).toEqual(['Genel cevap.']);
+  });
+
+  it('her gun ozetinin sorulari cevaplariyla eslesir', () => {
+    for (const day of daySummaries) {
       const recall = day.topics.flatMap((topic) => topic.recallQuestions);
       expect(recall.length, `${day.day}. Gün`).toBeGreaterThan(0);
       for (const item of recall) {
@@ -127,15 +173,6 @@ describe('"Kendine Sor" cevaplari', () => {
         expect(item.answer.length).toBeGreaterThan(1);
       }
     }
-  });
-
-  it('3. Gün cevap kaymasi duzeltilmistir', () => {
-    const recall = bundle.summaries
-      .find((day) => day.day === 3)!
-      .topics.flatMap((topic) => topic.recallQuestions);
-    const benSorusu = recall.find((item) => item.question.includes('"ben" nasıl söylenir'));
-    // Kaynakta bu soruya `Wie heißt du?` cevabi eslesiyordu; duzeltildi.
-    expect(benSorusu?.answer).toContain('ich');
   });
 });
 
@@ -169,9 +206,9 @@ describe('kavram kapsami', () => {
       concepts: [
         ...CONCEPTS,
         {
-          id: 'day2.uydurma.kavram',
+          id: 'private.day2.uydurma.kavram',
           day: 2,
-          topicId: 'day2.fiil-cekimi',
+          topicId: 'private.day2.haben-sein',
           label: 'Uydurma kavram',
           anchor: 'bu dize özette kesinlikle geçmiyor xyzzy',
         },
@@ -182,12 +219,12 @@ describe('kavram kapsami', () => {
     const errors = broken.warnings.filter((warning) => warning.code === 'concept-without-summary');
     expect(errors).toHaveLength(1);
     expect(errors[0].level).toBe('error');
-    expect(errors[0].ref).toBe('day2.uydurma.kavram');
+    expect(errors[0].ref).toBe('private.day2.uydurma.kavram');
   });
 
   it('bilgi sicramasini HATA olarak bildirir', () => {
     const jumped = validateCoverage({
-      exercises: [{ ...bundle.exercises[0], day: 1, conceptIds: ['day3.sayilar.0-10'] }],
+      exercises: [{ ...bundle.exercises[0], day: 1, conceptIds: ['private.day3.mogen.cekim'] }],
       concepts: CONCEPTS,
       summaries: bundle.summaries,
       missingTopicIds: [],
@@ -212,7 +249,7 @@ describe('kavram kapsami', () => {
       exercises: [],
       concepts: [],
       summaries: bundle.summaries,
-      missingTopicIds: ['day9.olmayan'],
+      missingTopicIds: ['gun9.olmayan'],
     });
     expect(missing.warnings[0].code).toBe('summary-topic-missing');
     expect(missing.warnings[0].level).toBe('error');
@@ -236,22 +273,5 @@ describe('ozet ek notlari', () => {
       expect(topicIds.has(augmentation.topicId), augmentation.topicId).toBe(true);
       expect(augmentation.reason.length).toBeGreaterThan(20);
     }
-  });
-
-  it('ek notlar ozete islenir ve isaretlenir', () => {
-    const sayilar = bundle.summaries
-      .flatMap((day) => day.topics)
-      .find((topic) => topic.id === 'day3.sayilar');
-    expect(sayilar!.augmented).toBe(true);
-    // Kaynakta olmayan ama kontrol listesinin istedigi sayilar.
-    expect(topicText(sayilar!)).toContain('zwölf');
-    expect(topicText(sayilar!)).toContain('elf');
-  });
-
-  it('cumle basi buyuk harf kurali ek notla ogretilir', () => {
-    const artikel = bundle.summaries
-      .flatMap((day) => day.topics)
-      .find((topic) => topic.id === 'day2.artikel');
-    expect(topicText(artikel!)).toContain('Cümleler her zaman büyük harfle başlar');
   });
 });

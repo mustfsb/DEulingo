@@ -8,8 +8,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { daysForTrack, exercisesById, exercisesForDay, getSummary, summaryTopicsById } from '../lib/content';
-import type { LearningTrack } from '../content/types';
+import { days, exercisesById, exercisesForDay, getSummary, summaryTopicsById } from '../lib/content';
 import { audioController } from '../lib/audio/playback';
 import { goalProgress, markGoalCelebrated } from '../lib/daily-goal';
 import { MOTION, prefersReducedMotion } from '../lib/motion';
@@ -31,7 +30,6 @@ const NEAR_PERFECT = 0.9;
 const NEEDS_WORK = 0.7;
 
 export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteScreenProps) {
-  const resultTrack: LearningTrack = (result.track as LearningTrack | undefined) ?? 'normal';
   const { progress, update } = api;
   const reduced = useMemo(prefersReducedMotion, []);
   const [revealed, setRevealed] = useState(reduced);
@@ -51,9 +49,9 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     [progress.mistakes, result],
   );
 
-  const nextDay = day === undefined ? undefined : daysForTrack(resultTrack).find((entry) => entry.day === day + 1)?.day;
-  const challengeReady = day === undefined ? false : challengeReadiness(exercisesForDay(day, resultTrack)).ready;
-  const hasSummary = day !== undefined && Boolean(getSummary(day, resultTrack));
+  const nextDay = day === undefined ? undefined : days.find((entry) => entry.day > day)?.day;
+  const challengeReady = day === undefined ? false : challengeReadiness(exercisesForDay(day)).ready;
+  const hasSummary = day !== undefined && Boolean(getSummary(day));
   const nextExerciseSetId = result.exerciseSetId
     ? EXERCISE_SET_IDS[EXERCISE_SET_IDS.indexOf(result.exerciseSetId) + 1]
     : undefined;
@@ -114,7 +112,6 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
         ...current,
         activeLesson: {
           mode: 'mistakes',
-          track: resultTrack,
           day: result.day,
           queue: mistakeIds.map((exerciseId) => ({ exerciseId, presentationReason: 'primary' as const })),
           index: 0,
@@ -125,13 +122,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
           sourceSessionId: result.sessionId,
         },
       }));
-      navigate({ name: 'mistake-review', track: resultTrack, day: result.day });
+      navigate({ name: 'mistake-review', day: result.day });
     });
 
   const startChallenge = () =>
     run('challenge', () => {
       if (day === undefined) return;
-      navigate({ name: 'lesson', track: resultTrack, day, mode: 'challenge' });
+      navigate({ name: 'lesson', day, mode: 'challenge' });
     });
 
   const repeatSession = () =>
@@ -139,7 +136,6 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
       if (day === undefined) return;
       navigate({
         name: 'lesson',
-        track: resultTrack,
         day,
         mode: result.sessionMode ?? 'normal',
         topicId: result.topicId,
@@ -150,13 +146,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
   const startNextSet = () =>
     run('next-set', () => {
       if (day === undefined || !nextExerciseSetId) return;
-      navigate({ name: 'lesson', track: resultTrack, day, mode: 'set', exerciseSetId: nextExerciseSetId });
+      navigate({ name: 'lesson', day, mode: 'set', exerciseSetId: nextExerciseSetId });
     });
 
   const practiceWeakTopic = () =>
     run('weak-topic', () => {
       if (day === undefined || !weakest) return;
-      navigate({ name: 'lesson', track: resultTrack, day, mode: 'topic', topicId: weakest.topicId });
+      navigate({ name: 'lesson', day, mode: 'topic', topicId: weakest.topicId });
     });
 
   const headline = resultHeadline(result, accuracy, isFollowUp);
@@ -189,7 +185,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     actions.push({
       id: 'next-day',
       label: `${nextDay}. Güne Geç`,
-      onClick: () => run('next-day', () => navigate({ name: 'day', track: resultTrack, day: nextDay })),
+      onClick: () => run('next-day', () => navigate({ name: 'day', day: nextDay })),
     });
   }
   if (!isFollowUp && day !== undefined) {
@@ -201,21 +197,28 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     actions.push({
       id: 'quick',
       label: 'Hızlı Tekrar',
-      onClick: () => run('quick', () => navigate({ name: 'lesson', track: resultTrack, day, mode: 'quick' })),
+      onClick: () => run('quick', () => navigate({ name: 'lesson', day, mode: 'quick' })),
     });
   }
   if (Object.keys(progress.mistakes).length > 0) {
     actions.push({
       id: 'all-mistakes',
       label: 'Hatalarım',
-      onClick: () => run('all-mistakes', () => navigate({ name: 'mistakes', track: resultTrack })),
+      onClick: () => run('all-mistakes', () => navigate({ name: 'mistakes' })),
     });
   }
   if (hasSummary && day !== undefined) {
     actions.push({
       id: 'summary',
       label: '📖 Özeti Oku',
-      onClick: () => run('summary', () => navigate({ name: 'summary', track: resultTrack, day })),
+      onClick: () => run('summary', () => navigate({ name: 'summary', day })),
+    });
+  }
+  if (result.mode === 'review') {
+    actions.push({
+      id: 'general-review',
+      label: '🔁 Genel Tekrar’a Dön',
+      onClick: () => run('general-review', () => navigate({ name: 'general-review' })),
     });
   }
   actions.push({
@@ -309,7 +312,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
                       <button
                         type="button"
                         className="underline underline-offset-2"
-                        onClick={() => navigate({ name: 'summary', track: resultTrack, day, topicId: weakest.topicId })}
+                        onClick={() => navigate({ name: 'summary', day, topicId: weakest.topicId })}
                       >
                         özeti aç
                       </button>
@@ -363,8 +366,7 @@ export function resultHeadline(
           : `${answered} · ${result.correctCount + result.typoCount} doğru · ${result.incorrectCount} tekrar öneriliyor`,
     };
   }
-  const track = (result.track as LearningTrack | undefined) ?? 'normal';
-  const dayLabel = result.day === undefined ? 'Ders' : `${result.day}. Gün${track === 'private' ? ' — Özel Ders' : ''}`;
+  const dayLabel = result.day === undefined ? (result.mode === 'review' ? 'Genel Tekrar' : 'Tekrar') : `${result.day}. Gün`;
   if (result.perfect) {
     return { title: 'Mükemmel ders!', subtitle: `${dayLabel} · ${answered} · tüm sorular doğru.` };
   }

@@ -183,6 +183,15 @@ export function parseDocument(file: string, markdown: string): RawDocument {
   return { file, days };
 }
 
+/**
+ * Gün başlığı taşımayan (kümülatif) özet dosyası: tüm H2 bölümlerini
+ * 0. günün konuları sayar. `Genel Tekrar Özet.md` bu yolla pakete girer.
+ */
+export function parseGeneralDay(markdown: string): RawDay {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  return buildDay(0, lines);
+}
+
 function buildDay(day: number, lines: string[]): RawDay {
   const { body, groups } = extractAnswerGroups(lines);
   const sections: RawSection[] = [];

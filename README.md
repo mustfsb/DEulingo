@@ -47,16 +47,17 @@ uygulama Obsidian kasasına hiçbir şey yazmaz.
 {
   "vaultPath": "/Users/mustafa/Library/Mobile Documents/iCloud~md~obsidian/Documents/almanca",
   "files": [
-    { "path": "İlk 3 Hafta/İlk 3 Hafta Alıştırma.md", "role": "exercises" },
-    { "path": "İlk 3 Hafta/İlk 3 Hafta Özet.md", "role": "summary" }
+    { "path": "Özel Ders Özet.md", "role": "summary" },
+    { "path": "Genel Tekrar Özet.md", "role": "summary" }
   ]
 }
 ```
 
-Geçici olarak başka bir klasörü denemek için: `ALMANCA_VAULT=/başka/yol npm run sync`
+Tek müfredat vardır (1, 2, 3, 5, 6, 7, 10. günler); gün alıştırmaları
+`src/content/authored/exercises/` içindeki yazılmış havuzlardan, kümülatif
+Genel Tekrar bankası (`reviewOnly`, 275 soru) `generalReview*.ts` dosyalarından gelir.
 
-Yeni bir gün eklemek için tek yapman gereken Alıştırma dosyasına `# 📅 4. Gün` bölümü ve
-`<details>` içinde cevap anahtarını yazmak. Parser günleri kendisi bulur ve sıralar.
+Geçici olarak başka bir klasörü denemek için: `ALMANCA_VAULT=/başka/yol npm run sync`
 
 ## Proje yapısı
 
@@ -66,8 +67,8 @@ src/content/types.ts           Alıştırma / kavram / özet şeması
 src/content/overrides.ts       Kurasyon katmanı (belirsiz kaynakların elle düzeltmesi)
 src/content/authored/          Uygulama içi içerik katmanı
   concepts.ts                    kavram kaydı + özet konusu ID'leri + `anchor`lar
-  exercises/day{1,2,3}.ts        yazılmış alıştırma havuzları
-  vault-tags.ts                  kasa alıştırmalarına kavram/zorluk/beceri etiketi
+  exercises/privateDay{1,2,3,5,6,7,10}.ts  yazılmış gün havuzları (tek müfredat)
+  exercises/generalReview*.ts    kümülatif Genel Tekrar bankası (reviewOnly)
   pronunciation.ts               Türkçe yaklaşık okunuş sözlüğü + kural motoru
   summary-augmentations.ts       kaynakta eksik kalan A1 açıklamaları
 src/content/parser/            Markdown → alıştırma boru hattı
@@ -154,8 +155,11 @@ Her takvim günü için gerçek çalışma süresi (yanıt süresi + okuma payı
 90 sn) toplanır ve ana sayfadaki hedef çubuğunu sürer. Hedef süresi İstatistik ekranından
 5 / 10 / 20 dakika olarak seçilir. Hesap, sunucu veya seri baskısı yoktur.
 
-Havuz ile oturum ayrıdır: gün başına 59–76 alıştırmalık havuzdan her çalışmada farklı
-ama yapılandırılmış bir seçki kurulur (Normal 18, Tam 45, Hızlı 8, Zor 12, Konu en çok 12).
+Havuz ile oturum ayrıdır: gün havuzundan her çalışmada farklı ama yapılandırılmış
+bir seçki kurulur (Normal ~18–22, Tam ~45–52, Hızlı ~8–10, Zor ~12–18, Konu ~12).
+Genel Tekrar bankası (275 kümülatif soru) gün havuzlarından ayrıdır ve gün
+tamamlamasını etkilemez (Karışık 28, Kelime 24, Cümle 24, Writing 7, Dinleme 16,
+Hızlı 12, Zor 22, Konu 20).
 Birincil sıra oturum başında örneklemesiz tekrar olmadan tamamen kurulur; yanlış bir soru
 en az üç farklı sorudan sonra, en fazla bir kez ve açık `mistake-retry` gerekçesiyle dönebilir.
 
@@ -166,8 +170,7 @@ tile'larıyla kurduran `word-bank-translation` sorularını içerir: Almanca →
 Türkçe → Almanca. Tile'a tıklamak onu cevaba taşır; seçilmiş tile'a tıklamak geri verir.
 Klavye ile kelimeyi yazmak aynı tile'ı seçer; `Backspace` önce görünmez eşleştirme
 buffer'ını, boşsa son tile'ı siler. `Enter` önce tam eşleşmeyi, cevap tamamlandığında
-kontrolü çalıştırır. Tam Çalışma'da güncel/önceki-gün karışımında bu türler %20–35
-bandında tutulur.
+kontrolü çalıştırır.
 
 ## İlerleme verisi
 

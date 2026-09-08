@@ -1,6 +1,4 @@
 import { exercisesBeforeDay, exercisesForDay, getDay, getSummary, topicsForDay } from '../lib/content';
-import type { LearningTrack } from '../content/types';
-import { getTrackDays } from '../lib/storage';
 import { getDayStats } from '../lib/progress';
 import { computeTopicMastery } from '../lib/mastery';
 import { exerciseSetsForDay } from '../content/exercise-sets';
@@ -26,20 +24,17 @@ const MODES: Array<{
 ];
 
 export function DayIntroScreen({
-  track = 'normal',
   day,
   api,
   navigate,
 }: {
-  track?: LearningTrack;
   day: number;
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
-  const resolvedTrack: LearningTrack = track ?? 'normal';
-  const entry = getDay(day, resolvedTrack);
-  const exercises = exercisesForDay(day, resolvedTrack);
-  const summary = getSummary(day, resolvedTrack);
+  const entry = getDay(day);
+  const exercises = exercisesForDay(day);
+  const summary = getSummary(day);
   const exerciseSets = exerciseSetsForDay(exercises);
 
   if (!entry) {
@@ -54,7 +49,7 @@ export function DayIntroScreen({
   }
 
   const stats = getDayStats(api.progress, day, exercises);
-  const topics = topicsForDay(day, resolvedTrack);
+  const topics = topicsForDay(day);
   const mastery = computeTopicMastery(api.progress, exercises, topics);
   const difficulty = {
     easy: exercises.filter((item) => item.difficulty === 'easy').length,
@@ -70,7 +65,7 @@ export function DayIntroScreen({
 
       <header className="mt-4 anim-pop">
         <p className="eyebrow">{entry.topics.join(' • ')}</p>
-        <h1 className="mt-1 text-5xl sm:text-7xl">{resolvedTrack === 'private' ? '🎓 ' : ''}{day}. Gün{resolvedTrack === 'private' ? ' — Özel Ders' : ''}</h1>
+        <h1 className="mt-1 text-5xl sm:text-7xl">{day}. Gün</h1>
       </header>
 
       <div className="mt-7 flex flex-wrap gap-3">
@@ -93,7 +88,7 @@ export function DayIntroScreen({
                     type="button"
                     className="text-left text-lg font-bold underline-offset-4 hover:underline"
                     onClick={() =>
-                      navigate({ name: 'lesson', track: resolvedTrack, day, mode: 'topic', topicId: topic.topicId })
+                      navigate({ name: 'lesson', day, mode: 'topic', topicId: topic.topicId })
                     }
                   >
                     {topic.title}
@@ -129,13 +124,12 @@ export function DayIntroScreen({
         <h2 className="eyebrow mb-4">Nasıl çalışmak istersin?</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {MODES.map((item) => {
-            const trackDays = getTrackDays(api.progress, resolvedTrack);
             const plan = buildSessionPlan({
               pool: exercises,
-              previous: exercisesBeforeDay(day, resolvedTrack),
+              previous: exercisesBeforeDay(day),
               progress: api.progress,
               mode: item.mode,
-              seed: `${resolvedTrack}:${day}:${item.mode}::${trackDays[day]?.sessionsCompleted ?? 0}`,
+              seed: `${day}:${item.mode}::${api.progress.days[day]?.sessionsCompleted ?? 0}`,
             });
             const count = plan.primaryQueue.length;
             const minutes = estimateModeMinutes(exercises, count);
@@ -159,7 +153,7 @@ export function DayIntroScreen({
                 }
                 onClick={() => {
                   if (disabled) return;
-                  navigate({ name: 'lesson', track: resolvedTrack, day, mode: item.mode });
+                  navigate({ name: 'lesson', day, mode: item.mode });
                 }}
               >
                 <p className="text-lg font-bold">{item.label}</p>
@@ -176,7 +170,7 @@ export function DayIntroScreen({
           <button
             type="button"
             className="btn btn-quiet mt-4 w-full"
-            onClick={() => navigate({ name: 'summary', track: resolvedTrack, day })}
+            onClick={() => navigate({ name: 'summary', day })}
           >
             📖 Özeti Oku (~{summary.estimatedReadingMinutes} dk)
           </button>
@@ -197,7 +191,7 @@ export function DayIntroScreen({
                   key={set.id}
                   type="button"
                   className="card mode-card p-4 text-left"
-                  onClick={() => navigate({ name: 'lesson', track: resolvedTrack, day, mode: 'set', exerciseSetId: set.id })}
+                  onClick={() => navigate({ name: 'lesson', day, mode: 'set', exerciseSetId: set.id })}
                 >
                   <p className="text-lg font-bold">{set.label}</p>
                   <p className="mt-1 text-[0.92rem] text-ink-soft">

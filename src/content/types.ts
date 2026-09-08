@@ -146,6 +146,12 @@ export interface Exercise {
   day: number;
   /** Hangi izleğe ait — normal ve private izlekler ayrıdır. */
   track?: LearningTrack;
+  /**
+   * Genel Tekrar bankası üyesi. `true` ise alıştırma gün havuzlarına girmez;
+   * yalnızca kümülatif Genel Tekrar oturumlarında kullanılır. İlerleme,
+   * ustalık ve hata takibi normal alıştırmalarla aynı kurallarla çalışır.
+   */
+  reviewOnly?: boolean;
   topic: string;
   type: ExerciseType;
 

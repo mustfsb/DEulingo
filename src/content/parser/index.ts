@@ -21,14 +21,9 @@ import {
   SECTION_OVERRIDES,
   type SectionOverride,
 } from '../overrides.ts';
-import type { AuthoredExercise } from '../authored/types.ts';
-import type { VaultTag } from '../authored/vault-tags.ts';
-import {
-  validateSourceMappings,
-  type LearningSourceVideo,
-  type SourceTopicMapping,
-} from '../authored/sources.ts';
-import { findAnswerGroup, parseDocument, type RawSection } from './document.ts';
+import type { AuthoredExercise, VaultTag } from '../authored/types.ts';
+import { SUMMARY_TOPICS as SUMMARY_TOPIC_DEFS } from '../authored/concepts.ts';
+import { findAnswerGroup, parseDocument, parseGeneralDay, type RawSection } from './document.ts';
 import { extractSection, isSkippableSection, type DraftExercise } from './extract.ts';
 import { sectionToNote } from './notes.ts';
 import { refineDraft, toExercise } from './refine.ts';
@@ -54,8 +49,6 @@ export interface AuthoredLayer {
   concepts: AnchoredConcept[];
   exercises: AuthoredExercise[];
   vaultTags: Record<string, VaultTag>;
-  sources?: LearningSourceVideo[];
-  sourceTopics?: SourceTopicMapping[];
 }
 
 export interface ParseOptions {
@@ -107,7 +100,7 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
 
   const notesByDay = new Map<string, LessonNote[]>();
   const summaries: SummaryDay[] = [];
-  const missingTopicIds: string[] = [];
+  const foundByTrack = new Map<string, Set<string>>();
 
   const conceptsByTopic = new Map<string, string[]>();
   for (const concept of authored?.concepts ?? []) {
@@ -129,11 +122,23 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
       notesByDay.set(key, [...(notesByDay.get(key) ?? []), ...notes]);
     }
     if (authored) {
-      const built = buildSummaries(document.days, file.markdown, attributionKeys, conceptsByTopic, track);
+      // Gün başlığı yoksa kümülatif genel özet dosyasıdır (0. gün).
+      const general = document.days.length === 0;
+      const summaryTrack = general ? 'private' : track;
+      const rawDays = general ? [parseGeneralDay(file.markdown)] : document.days;
+      const built = buildSummaries(rawDays, file.markdown, attributionKeys, conceptsByTopic, summaryTrack);
       summaries.push(...built.days);
-      missingTopicIds.push(...built.missingTopicIds);
+      const found = foundByTrack.get(summaryTrack) ?? new Set<string>();
+      for (const id of built.foundTopicIds) found.add(id);
+      foundByTrack.set(summaryTrack, found);
     }
   }
+
+  // Eksik konular dosya bazında değil paket genelinde hesaplanır: kayıtlı her
+  // konu, kendi izleğinin dosyalarından en az birinde bulunmalıdır.
+  const missingTopicIds = SUMMARY_TOPIC_DEFS
+    .filter((def) => !(foundByTrack.get(def.track ?? 'private') ?? new Set()).has(def.id))
+    .map((def) => def.id);
 
   // 2) Alistirma dosyalarindan alistirmalar.
   for (const file of exerciseFiles) {
@@ -273,6 +278,9 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
     exercise.topic = topicTitles.get(item.topicId) ?? item.topicId;
     exercises.push(exercise);
 
+    // Genel Tekrar bankası gün havuzlarına girmez (§48): gün sayacı, gün
+    // istatistiği ve gün oturumları etkilenmez.
+    if (item.reviewOnly) continue;
     const dk = dayKey(track, item.day);
     const existing = days.get(dk);
     if (existing) existing.exerciseIds.push(exercise.id);
@@ -299,7 +307,7 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
       .filter(Boolean);
     day.topics = noteTopics.length ? noteTopics : (FALLBACK_DAY_TOPICS[day.day] ?? []);
 
-    const dayExercises = exercises.filter((exercise) => exercise.day === day.day && (exercise.track ?? 'normal') === day.track);
+    const dayExercises = exercises.filter((exercise) => !exercise.reviewOnly && exercise.day === day.day && (exercise.track ?? 'normal') === day.track);
     day.estimatedMinutes = Math.max(
       3,
       Math.round(dayExercises.reduce((total, item) => total + (item.estimatedSeconds ?? 25), 0) / 60),
@@ -338,16 +346,6 @@ export function parseContent(files: SourceFile[], options: ParseOptions = {}): C
     });
     warnings.push(...result.warnings, ...validateNoDuplicates(exercises));
     coverage = result.coverage;
-    if (authored.sources?.length || authored.sourceTopics?.length) {
-      warnings.push(
-        ...validateSourceMappings({
-          sources: authored.sources ?? [],
-          mappings: authored.sourceTopics ?? [],
-          concepts: authored.concepts,
-          summaries,
-        }),
-      );
-    }
   }
 
   return {

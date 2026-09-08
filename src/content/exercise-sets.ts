@@ -3,6 +3,7 @@
  *
  * Aynı içerik havuzunda deterministik atama yapılır. Her konu/zorluk kovası
  * korunurken en küçük set önce doldurulur; böylece setler hem ayrık hem de eşit kalır.
+ * Tek müfredatta ilk üç gün (1, 2, 3) için geçerlidir.
  */
 
 import type { Exercise, ExerciseSetId } from './types.ts';
@@ -38,8 +39,8 @@ export function assignExerciseSets(exercises: Exercise[]): Exercise[] {
 
   for (const exercise of exercises) {
     if (!SET_DAYS.has(exercise.day)) continue;
-    const track = (exercise.track as string | undefined) ?? 'normal';
-    if (track !== 'normal') continue;
+    // Genel Tekrar bankası gün havuzlarına karışmaz; set ataması da almaz.
+    if ((exercise as { reviewOnly?: boolean }).reviewOnly) continue;
     // Aynı konu ve zorluk aynı setin üstüne yığılmasın.
     const key = `${exercise.day}|${exercise.topicId}|${exercise.difficulty}`;
     buckets.set(key, [...(buckets.get(key) ?? []), exercise]);

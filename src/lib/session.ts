@@ -18,7 +18,21 @@ import type { Difficulty, Exercise, ExerciseSetId } from '../content/types';
 import type { SessionPresentation, UserProgress } from './storage';
 import { computeConceptProgress } from './mastery';
 
-export type SessionMode = 'normal' | 'full' | 'quick' | 'challenge' | 'topic' | 'set';
+export type SessionMode =
+  | 'normal'
+  | 'full'
+  | 'quick'
+  | 'challenge'
+  | 'topic'
+  | 'set'
+  | 'gr-mixed'
+  | 'gr-vocab'
+  | 'gr-sentence'
+  | 'gr-writing'
+  | 'gr-listening'
+  | 'gr-quick'
+  | 'gr-challenge'
+  | 'gr-topic';
 
 interface ModeConfig {
   size: number;
@@ -44,6 +58,20 @@ const MODE_CONFIG: Record<SessionMode, ModeConfig> = {
   topic: { size: 12, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
   // Set modunda seçilen havuzun tamamı, pedagojik sıra dayatılmadan karışır.
   set: { size: Number.MAX_SAFE_INTEGER, previousDayRatio: 0, mix: { easy: 0, medium: 0, hard: 0 } },
+  // Genel Tekrar: havuz zaten kümülatiftir, önceki-gün katkısı yoktur.
+  'gr-mixed': { size: 28, previousDayRatio: 0, mix: { easy: 0.25, medium: 0.5, hard: 0.25 } },
+  'gr-vocab': { size: 24, previousDayRatio: 0, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
+  'gr-sentence': { size: 24, previousDayRatio: 0, mix: { easy: 0.15, medium: 0.45, hard: 0.4 } },
+  'gr-writing': { size: 7, previousDayRatio: 0, mix: { easy: 0.2, medium: 0.5, hard: 0.3 } },
+  'gr-listening': { size: 16, previousDayRatio: 0, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
+  'gr-quick': { size: 12, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  'gr-challenge': {
+    size: 22,
+    difficulties: ['medium', 'hard'],
+    previousDayRatio: 0,
+    mix: { easy: 0, medium: 0.35, hard: 0.65 },
+  },
+  'gr-topic': { size: 20, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
 };
 
 /**
@@ -51,20 +79,22 @@ const MODE_CONFIG: Record<SessionMode, ModeConfig> = {
  *
  * Varsayilan `MODE_CONFIG` boyutlari TUM gunler icin gecerlidir; burada
  * yalnizca havuzu belirgin sekilde daha buyuk olan gunler icin daha genis
- * bir oturum tanimlanir. Kayitli olmayan her gun/izlek varsayilanla calisir,
- * bu yuzden onceki gunlerin davranisi degismez.
+ * bir oturum tanimlanir. Kayitli olmayan her gun varsayilanla calisir,
+ * bu yuzden onceki gunlerin davranisi degismez. Genel Tekrar havuzu
+ * (`reviewOnly`) bu tablodan etkilenmez.
  */
 export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, number>>> = {
-  // Özel Ders 7. Gün: 139 alistirmalik kelime agirlikli havuz.
+  // 7. Gün: 139 alistirmalik kelime agirlikli havuz.
   'private:7': { normal: 22, full: 50, quick: 10, challenge: 16 },
-  // Özel Ders 10. Gün: 120 alistirmalik uretim agirlikli havuz.
+  // 10. Gün: 120 alistirmalik uretim agirlikli havuz.
   'private:10': { normal: 22, full: 52, quick: 10, challenge: 18 },
 };
 
 function sizeKey(pool: Exercise[]): string | undefined {
   const first = pool[0];
   if (!first) return undefined;
-  return `${first.track ?? 'normal'}:${first.day}`;
+  if (first.reviewOnly) return undefined;
+  return `${first.track ?? 'private'}:${first.day}`;
 }
 
 function modeSize(mode: SessionMode, pool: Exercise[]): number {
@@ -305,12 +335,12 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
       ? candidates.filter((exercise) => exercise.exerciseSetId === exerciseSetId)
       : [];
   }
-  if (mode === 'challenge') {
+  if (mode === 'challenge' || mode === 'gr-challenge') {
     candidates = challengeCandidates(candidates);
   } else if (config.difficulties) {
     candidates = candidates.filter((exercise) => config.difficulties!.includes(exercise.difficulty));
   }
-  if (mode === 'quick') {
+  if (mode === 'quick' || mode === 'gr-quick') {
     // Yalnizca hata gecmisi olan, zayif konuya ait ya da hic gorulmemis olanlar.
     const weakOnly = candidates.filter((exercise) => {
       const entry = progress.exercises[exercise.id];
@@ -359,7 +389,7 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
   const actualReviewCount = Math.min(uniquePrevious.length, capacity - primaryCount);
 
   let selected =
-    mode === 'challenge'
+    mode === 'challenge' || mode === 'gr-challenge'
       ? selectChallenge(candidates, primaryCount, rank)
       : selectByMix(candidates, primaryCount, config.mix, rank);
   if (mode === 'full') selected = ensureTopicCoverage(selected, candidates, primaryCount, rank);

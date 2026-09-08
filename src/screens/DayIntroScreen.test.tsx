@@ -34,10 +34,10 @@ function mount(day: number) {
   act(() => root.render(createElement(DayIntroScreen, { day, api, navigate: (route) => routes.push(route) })));
   const find = (label: string) => [...dom.window.document.querySelectorAll<HTMLButtonElement>('button')]
     .find((button) => button.textContent?.includes(label));
-  return { root, routes, find };
+  return { dom, root, routes, find };
 }
 
-describe('Gün 4–6 çalışma başlangıcı', () => {
+describe('gun girisi (tek mufredat)', () => {
   it('bütün öğrenme modları ve özet eylemi çalışır; challenge devre dışı kalmaz', () => {
     const modes = [
       ['Normal Çalışma', 'normal'],
@@ -46,20 +46,28 @@ describe('Gün 4–6 çalışma başlangıcı', () => {
       ['Zor Sorular', 'challenge'],
     ] as const;
 
-    for (const day of [4, 5, 6]) {
+    for (const day of [5, 6, 7]) {
       for (const [label, mode] of modes) {
         const view = mount(day);
         const button = view.find(label);
         expect(button?.disabled, `${day}/${mode}`).toBe(false);
         act(() => button!.click());
-        expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day, mode }]);
+        expect(view.routes).toEqual([{ name: 'lesson', day, mode }]);
         act(() => view.root.unmount());
       }
       const view = mount(day);
       act(() => view.find('Özeti Oku')!.click());
-      expect(view.routes).toEqual([{ name: 'summary', track: 'normal', day }]);
+      expect(view.routes).toEqual([{ name: 'summary', day }]);
       act(() => view.root.unmount());
     }
+  });
+
+  it('izlek secici yoktur; baslikta "Özel Ders" gecmez', () => {
+    const view = mount(10);
+    const text = view.dom.window.document.body.textContent ?? '';
+    expect(text).not.toContain('Özel Ders');
+    expect(text).not.toContain('Normal Ders');
+    act(() => view.root.unmount());
   });
 });
 
@@ -73,7 +81,6 @@ describe('Gün 1–3 alıştırma seti seçimi', () => {
         act(() => button!.click());
         expect(view.routes.at(-1)).toEqual({
           name: 'lesson',
-          track: 'normal',
           day,
           mode: 'set',
           exerciseSetId: `set-${set}`,

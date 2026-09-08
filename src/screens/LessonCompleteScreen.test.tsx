@@ -18,11 +18,12 @@ import type { Route } from '../lib/router';
 import { LessonCompleteScreen, pickPrimaryAction, resultHeadline } from './LessonCompleteScreen';
 
 const doms: JSDOM[] = [];
-const day2 = allExercises.filter((exercise) => exercise.day === 2);
-const day3 = allExercises.filter((exercise) => exercise.day === 3);
-const day4 = allExercises.filter((exercise) => exercise.day === 4);
-const day5 = allExercises.filter((exercise) => exercise.day === 5);
-const day6 = allExercises.filter((exercise) => exercise.day === 6);
+const dayPool = (day: number) => allExercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
+const day2 = dayPool(2);
+const day3 = dayPool(3);
+const day5 = dayPool(5);
+const day6 = dayPool(6);
+const day10 = dayPool(10);
 
 afterEach(() => {
   for (const dom of doms.splice(0)) dom.window.close();
@@ -182,7 +183,7 @@ describe('ders sonucu eylemleri', () => {
     expect(lesson?.index).toBe(0);
     expect(lesson?.queue.map((item) => item.exerciseId)).toEqual([day2[1].id, day2[2].id]);
     expect(lesson?.sourceSessionId).toBe(result.sessionId);
-    expect(view.routes).toEqual([{ name: 'mistake-review', track: 'normal', day: 2 }]);
+    expect(view.routes).toEqual([{ name: 'mistake-review', day: 2 }]);
     act(() => view.root.unmount());
   });
 
@@ -195,7 +196,7 @@ describe('ders sonucu eylemleri', () => {
     );
 
     view.click('Zor Sorular');
-    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 2, mode: 'challenge' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'challenge' }]);
     act(() => view.root.unmount());
   });
 
@@ -211,15 +212,15 @@ describe('ders sonucu eylemleri', () => {
     act(() => view.root.unmount());
   });
 
-  it('Gün 3–5 tamamlanınca sonraki gerçek güne ilerler', () => {
-    for (const [day, nextDay, pool] of [[3, 4, day3], [4, 5, day4], [5, 6, day5]] as const) {
+  it('gun bitince sonraki gercek gune ilerler (3→5, 5→6, 6→7)', () => {
+    for (const [day, nextDay, pool] of [[3, 5, day3], [5, 6, day5], [6, 7, day6]] as const) {
       const view = mount(
         resultFor(pool.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })), day),
       );
 
       expect(view.find(`${nextDay}. Güne Geç`)).toBeDefined();
       view.click(`${nextDay}. Güne Geç`);
-      expect(view.routes).toEqual([{ name: 'day', track: 'normal', day: nextDay }]);
+      expect(view.routes).toEqual([{ name: 'day', day: nextDay }]);
       act(() => view.root.unmount());
     }
   });
@@ -229,22 +230,41 @@ describe('ders sonucu eylemleri', () => {
 
     expect(view.find('2. Sete Geç')).toBeDefined();
     view.click('2. Sete Geç');
-    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 2, mode: 'set', exerciseSetId: 'set-2' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'set', exerciseSetId: 'set-2' }]);
     act(() => view.root.unmount());
   });
 
-  it('son gunde olu "Sonraki Gün" yerine gercek alternatifler gosterir', () => {
+  it('son gunde (10) olu "Sonraki Gün" yerine gercek alternatifler gosterir', () => {
     const view = mount(
       resultFor(
-        day6.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })),
-        6,
+        day10.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })),
+        10,
       ),
     );
 
     expect(view.find('Güne Geç')).toBeUndefined();
     expect(view.find('Hızlı Tekrar')).toBeDefined();
     view.click('Hızlı Tekrar');
-    expect(view.routes).toEqual([{ name: 'lesson', track: 'normal', day: 6, mode: 'quick' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', day: 10, mode: 'quick' }]);
+    act(() => view.root.unmount());
+  });
+
+  it('genel tekrar sonucu "Genel Tekrar’a Dön" eylemini sunar', () => {
+    const lesson: ActiveLesson = {
+      mode: 'review',
+      sessionMode: 'gr-mixed',
+      queue: [{ exerciseId: day2[0].id, presentationReason: 'primary' }],
+      index: 1,
+      startedAt: '2026-08-17T10:00:00.000Z',
+      results: [{ exerciseId: day2[0].id, result: 'correct' }],
+      retries: {},
+    };
+    const view = mount(
+      buildLessonResult(lesson, { lookup: (id) => allExercises.find((exercise) => exercise.id === id) }),
+    );
+    expect(view.find('Genel Tekrar’a Dön')).toBeDefined();
+    view.click('Genel Tekrar’a Dön');
+    expect(view.routes).toEqual([{ name: 'general-review' }]);
     act(() => view.root.unmount());
   });
 

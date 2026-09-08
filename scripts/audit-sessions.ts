@@ -3,25 +3,21 @@ import { buildSessionPlan, type SessionMode } from '../src/lib/session.ts';
 import { RETRY_GAP_MIN, scheduleRetry } from '../src/lib/lesson.ts';
 import { createEmptyProgress } from '../src/lib/storage.ts';
 import { auditExerciseContent } from '../src/lib/content-audit.ts';
-import type { ContentBundle, Exercise, LearningTrack } from '../src/content/types.ts';
+import type { ContentBundle, Exercise } from '../src/content/types.ts';
 
 const bundle = JSON.parse(readFileSync(new URL('../generated/exercises.json', import.meta.url), 'utf8')) as ContentBundle;
 const modes: SessionMode[] = ['normal', 'full', 'quick', 'challenge'];
 const seeds = 50;
 let failures = 0;
 
-const trackOf = (item: { track?: LearningTrack }): LearningTrack => item.track ?? 'normal';
-const dayTrackPairs = [...new Set(bundle.days.map((item) => `${trackOf(item)}:${item.day}`))]
-  .map((key) => {
-    const [track, day] = key.split(':');
-    return { track: track as LearningTrack, day: Number(day) };
-  });
+const dayPool = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
+const daysSorted = [...new Set(bundle.days.map((item) => item.day))].sort((a, b) => a - b);
 
-for (const { day, track } of dayTrackPairs) {
-  const pool = bundle.exercises.filter((exercise) => exercise.day === day && trackOf(exercise) === track);
-  const previous = bundle.exercises.filter((exercise) => exercise.day < day && trackOf(exercise) === track);
+for (const day of daysSorted) {
+  const pool = dayPool(day);
+  const previous = bundle.exercises.filter((exercise) => exercise.day < day && !exercise.reviewOnly);
   const content = auditExerciseContent(pool);
-  console.log(`\n[${track}] ${day}. Gün — toplam ${content.total}, benzersiz ID ${content.uniqueIds}, normalize soru ${content.uniqueNormalizedPrompts}, aile ${content.familyCount}`);
+  console.log(`\n${day}. Gün — toplam ${content.total}, benzersiz ID ${content.uniqueIds}, normalize soru ${content.uniqueNormalizedPrompts}, aile ${content.familyCount}`);
   if (content.largestFamily) console.log(`  En büyük aile: ${content.largestFamily.id} (${content.largestFamily.count}) · olası yakın kopya: ${content.nearDuplicates.length}`);
 
   for (const mode of modes) {
@@ -54,7 +50,7 @@ for (const { day, track } of dayTrackPairs) {
 
 console.log('\nAlıştırma setleri — 50 tohumlu tam havuz denetimi');
 for (const day of [1, 2, 3]) {
-  const pool = bundle.exercises.filter((exercise) => exercise.day === day && trackOf(exercise) === 'normal');
+  const pool = dayPool(day);
   for (const exerciseSetId of ['set-1', 'set-2', 'set-3'] as const) {
     const expected = pool.filter((exercise) => exercise.exerciseSetId === exerciseSetId);
     const expectedIds = new Set(expected.map((exercise) => exercise.id));
@@ -62,7 +58,7 @@ for (const day of [1, 2, 3]) {
     for (let seed = 0; seed < seeds; seed += 1) {
       const plan = buildSessionPlan({
         pool,
-        previous: bundle.exercises.filter((exercise) => exercise.day < day && trackOf(exercise) === 'normal'),
+        previous: bundle.exercises.filter((exercise) => exercise.day < day && !exercise.reviewOnly),
         progress: createEmptyProgress(),
         mode: 'set',
         exerciseSetId,

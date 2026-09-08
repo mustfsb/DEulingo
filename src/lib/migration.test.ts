@@ -1,165 +1,191 @@
 /**
- * Depolama gocu — v1 → v2.
+ * Tek müfredat göçü — v8 → v9.
  *
- * Bu testler yukseltmenin ESKI ILERLEMEYI KAYBETMEDIGINI garanti eder.
- * Fixture, v2 alanlarindan hicbirini icermeyen gercek bir v1 kaydidir.
+ * - Private izlek verisi kanonik müfredata taşınır (kaybolmaz).
+ * - Normal izlek verisi taşınmaz (müfredat kaldırıldı).
+ * - Göç deterministik ve idempotenttir.
  */
 
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_SETTINGS,
+  createEmptyProgress,
   loadProgress,
   migrate,
   saveProgress,
   STORAGE_KEY,
   STORAGE_VERSION,
+  type ExerciseProgress,
+  type UserProgress,
 } from './storage';
 
-/** Yukseltmeden once uretilmis gercek bir v1 kaydi. */
-const V1_FIXTURE = {
-  version: 1,
-  createdAt: '2026-08-10T09:00:00.000Z',
-  updatedAt: '2026-08-15T18:30:00.000Z',
-  days: {
-    1: { day: 1, sessionsCompleted: 2, lastCompletedAt: '2026-08-14T10:00:00.000Z' },
-    2: { day: 2, sessionsCompleted: 1 },
-  },
-  exercises: {
-    'd1-1-1-1-1luodn5': {
-      exerciseId: 'd1-1-1-1-1luodn5',
-      day: 1,
-      attempts: [
-        {
-          timestamp: '2026-08-14T09:58:00.000Z',
-          input: '"ay" gibi',
-          normalizedInput: '"ay" gibi',
-          expected: '"ay" gibi',
-          result: 'correct',
-          attemptNumber: 1,
-        },
-      ],
-      firstSeenAt: '2026-08-14T09:58:00.000Z',
-      lastSeenAt: '2026-08-14T09:58:00.000Z',
-      correctCount: 1,
-      incorrectCount: 0,
-      typoCount: 0,
-      mastered: false,
-    },
-    'd2-2-6-1-abcdefg': {
-      exerciseId: 'd2-2-6-1-abcdefg',
-      day: 2,
-      attempts: [
-        {
-          timestamp: '2026-08-15T18:20:00.000Z',
-          input: 'Du kommen aus Deutschland.',
-          expected: 'Du kommst aus Deutschland.',
-          result: 'incorrect',
-          attemptNumber: 1,
-        },
-      ],
-      firstSeenAt: '2026-08-15T18:20:00.000Z',
-      lastSeenAt: '2026-08-15T18:20:00.000Z',
-      correctCount: 0,
-      incorrectCount: 1,
-      typoCount: 0,
-    },
-  },
-  mistakes: {
-    'd2-2-6-1-abcdefg': {
-      exerciseId: 'd2-2-6-1-abcdefg',
-      day: 2,
-      topic: 'Hata Avı',
-      prompt: 'Du kommen aus Deutschland.',
-      userAnswer: 'Du kommen aus Deutschland.',
-      expectedAnswer: 'Du kommst aus Deutschland.',
-      count: 1,
-      typoCount: 0,
-      lastOccurredAt: '2026-08-15T18:20:00.000Z',
-      type: 'grammar',
-    },
-  },
-  activeLesson: {
-    mode: 'day',
-    day: 2,
-    queue: ['d2-2-6-1-abcdefg', 'd1-1-1-1-1luodn5'],
-    index: 1,
-    startedAt: '2026-08-15T18:19:00.000Z',
-    results: [{ exerciseId: 'd2-2-6-1-abcdefg', result: 'incorrect' }],
-    retries: {},
-  },
-  settings: { dailyGoalMinutes: 15 },
-  stats: {
-    totalAttempts: 2,
-    totalCorrect: 1,
-    totalTypos: 0,
-    totalIncorrect: 1,
-    lastStudiedAt: '2026-08-15T18:20:00.000Z',
-    studyDates: ['2026-08-14', '2026-08-15'],
-  },
-};
+function privateEntry(id: string, day: number, incorrect = 0): ExerciseProgress {
+  const now = '2026-09-01T10:00:00.000Z';
+  return {
+    exerciseId: id,
+    day,
+    track: 'private',
+    attempts: [
+      {
+        timestamp: now,
+        input: 'x',
+        normalizedInput: 'x',
+        expected: 'y',
+        result: incorrect > 0 ? 'incorrect' : 'correct',
+        attemptNumber: 1,
+      },
+    ],
+    firstSeenAt: now,
+    lastSeenAt: now,
+    correctCount: incorrect > 0 ? 0 : 1,
+    incorrectCount: incorrect,
+    typoCount: 0,
+  };
+}
 
-describe('v1 → guncel surum gocu', () => {
-  const migrated = migrate(structuredClone(V1_FIXTURE))!;
+function normalEntry(id: string, day: number): ExerciseProgress {
+  return { ...privateEntry(id, day), track: 'normal' };
+}
 
-  it('gocu basariyla tamamlar ve surumu yukseltir', () => {
-    expect(migrated).not.toBeNull();
+/** Gerçekçi bir v8 kaydı: iki izlekte de veri var. */
+function v8Fixture(): UserProgress {
+  const base = createEmptyProgress();
+  return {
+    ...base,
+    version: 8,
+    days: { 1: { day: 1, sessionsCompleted: 9 } },
+    tracks: {
+      normal: { days: { 1: { day: 1, sessionsCompleted: 9 } } },
+      private: { days: { 1: { day: 1, sessionsCompleted: 4 }, 3: { day: 3, sessionsCompleted: 2 } } },
+    } as never,
+    exercises: {
+      'p1-vor-wie-heisst-mc': privateEntry('p1-vor-wie-heisst-mc', 1),
+      'p3-af-kural-mc': privateEntry('p3-af-kural-mc', 3, 1),
+      'd1-eski-soru': normalEntry('d1-eski-soru', 1),
+    },
+    mistakes: {
+      'p3-af-kural-mc': {
+        exerciseId: 'p3-af-kural-mc',
+        track: 'private',
+        day: 3,
+        topic: 'Ayrılabilen Fiiller',
+        prompt: 'Ich aufstehe.',
+        userAnswer: 'Ich aufstehe.',
+        expectedAnswer: 'Ich stehe auf.',
+        count: 1,
+        typoCount: 0,
+        lastOccurredAt: '2026-09-01T10:00:00.000Z',
+        type: 'grammar',
+      },
+      'd1-eski-soru': {
+        exerciseId: 'd1-eski-soru',
+        track: 'normal',
+        day: 1,
+        topic: 'Eski konu',
+        prompt: 'eski',
+        userAnswer: 'eski',
+        expectedAnswer: 'yeni',
+        count: 2,
+        typoCount: 0,
+        lastOccurredAt: '2026-09-01T10:00:00.000Z',
+        type: 'vocabulary',
+      },
+    },
+    stats: {
+      totalAttempts: 3,
+      totalCorrect: 1,
+      totalTypos: 0,
+      totalIncorrect: 1,
+      lastStudiedAt: '2026-09-01T10:00:00.000Z',
+      studyDates: ['2026-09-01'],
+    },
+  };
+}
+
+describe('v8 → v9 tek mufredat gocu', () => {
+  it('surumu yukseltir ve izlek anahtarini kaldirir', () => {
+    const migrated = migrate(structuredClone(v8Fixture()))!;
     expect(migrated.version).toBe(STORAGE_VERSION);
-    expect(STORAGE_VERSION).toBe(8);
+    expect(STORAGE_VERSION).toBe(9);
+    expect((migrated as unknown as { tracks?: unknown }).tracks).toBeUndefined();
   });
 
-  it('v7 alanlarini bos ama kullanilabilir baslatir', () => {
-    expect(migrated.daily).toEqual({});
-    expect(migrated.lastResult).toBeUndefined();
+  it('A: private denemeleri ve hatalari aynen tasinir', () => {
+    const migrated = migrate(structuredClone(v8Fixture()))!;
+    expect(Object.keys(migrated.exercises).sort()).toEqual(['p1-vor-wie-heisst-mc', 'p3-af-kural-mc']);
+    expect(migrated.exercises['p1-vor-wie-heisst-mc'].correctCount).toBe(1);
+    expect(Object.keys(migrated.mistakes)).toEqual(['p3-af-kural-mc']);
   });
 
-  it('deneme gecmisini oldugu gibi korur', () => {
-    expect(Object.keys(migrated.exercises)).toHaveLength(2);
-    expect(migrated.exercises['d1-1-1-1-1luodn5'].attempts).toHaveLength(1);
-    expect(migrated.exercises['d2-2-6-1-abcdefg'].incorrectCount).toBe(1);
-    expect(migrated.exercises['d1-1-1-1-1luodn5'].firstSeenAt).toBe('2026-08-14T09:58:00.000Z');
+  it('B/D: normal izlek verisi kanonik alana tasinmaz', () => {
+    const migrated = migrate(structuredClone(v8Fixture()))!;
+    expect(migrated.exercises['d1-eski-soru']).toBeUndefined();
+    expect(migrated.mistakes['d1-eski-soru']).toBeUndefined();
   });
 
-  it('hata kayitlarini korur', () => {
-    expect(migrated.mistakes['d2-2-6-1-abcdefg'].expectedAnswer).toBe('Du kommst aus Deutschland.');
-    expect(migrated.mistakes['d2-2-6-1-abcdefg'].type).toBe('grammar');
+  it('D: gun sayaclarinda private kazanir', () => {
+    const migrated = migrate(structuredClone(v8Fixture()))!;
+    // 1. Gün iki izlekte de var → private (4) kazanır, normal (9) ezilir.
+    expect(migrated.days[1]?.sessionsCompleted).toBe(4);
+    // 3. Gün yalnızca private'ta → korunur.
+    expect(migrated.days[3]?.sessionsCompleted).toBe(2);
   });
 
-  it('gun ve istatistik verisini korur', () => {
-    expect((migrated.tracks?.normal.days[1] ?? migrated.days[1]).sessionsCompleted).toBe(2);
+  it('istatistikler tasinan kayitlardan yeniden hesaplanir, tarihler korunur', () => {
+    const migrated = migrate(structuredClone(v8Fixture()))!;
     expect(migrated.stats.totalAttempts).toBe(2);
-    expect(migrated.stats.studyDates).toEqual(['2026-08-14', '2026-08-15']);
-    expect(migrated.createdAt).toBe('2026-08-10T09:00:00.000Z');
+    expect(migrated.stats.totalCorrect).toBe(1);
+    expect(migrated.stats.totalIncorrect).toBe(1);
+    expect(migrated.stats.studyDates).toEqual(['2026-09-01']);
   });
 
-  it('yarim kalan dersi korur', () => {
-    expect(migrated.activeLesson?.day).toBe(2);
-    expect(migrated.activeLesson?.index).toBe(1);
-    expect(migrated.activeLesson?.queue).toEqual([
-      { exerciseId: 'd2-2-6-1-abcdefg', presentationReason: 'primary' },
-      { exerciseId: 'd1-1-1-1-1luodn5', presentationReason: 'primary' },
-    ]);
+  it('normal yanim dersi cope gider, private yanim ders korunur', () => {
+    const withPrivateActive = {
+      ...structuredClone(v8Fixture()),
+      activeLesson: {
+        mode: 'day' as const,
+        track: 'private' as const,
+        day: 3,
+        queue: [{ exerciseId: 'p3-af-kural-mc', presentationReason: 'primary' as const }],
+        index: 0,
+        startedAt: '2026-09-01T10:00:00.000Z',
+        results: [],
+        retries: {},
+      },
+    };
+    expect(migrate(withPrivateActive)?.activeLesson?.day).toBe(3);
+
+    const withNormalActive = {
+      ...structuredClone(v8Fixture()),
+      activeLesson: {
+        mode: 'day' as const,
+        track: 'normal' as const,
+        day: 1,
+        queue: [{ exerciseId: 'd1-eski-soru', presentationReason: 'primary' as const }],
+        index: 0,
+        startedAt: '2026-09-01T10:00:00.000Z',
+        results: [],
+        retries: {},
+      },
+    };
+    expect(migrate(withNormalActive)?.activeLesson).toBeUndefined();
   });
 
-  it('kullanicinin var olan ayarini ezmez', () => {
-    expect(migrated.settings.dailyGoalMinutes).toBe(15);
-  });
-
-  it('yeni ayarlari varsayilanlarla doldurur (ses varsayilan ACIK)', () => {
-    expect(migrated.settings.showPronunciation).toBe(true);
-    expect(migrated.settings.soundEffects).toBe(true);
-    expect(migrated.settings.autoPronunciation).toBe(true);
-    expect(migrated.settings.speechSpeed).toBe('normal');
-    expect(migrated.settings.speechVoice).toBe('kerstin');
-    expect(migrated.settings.readSummaries).toEqual({});
-    expect(migrated.settings.bookmarks).toEqual([]);
-    expect(migrated.settings.themePreference).toBe('system');
-  });
-
-  it('goc tekrar calistirilinca veriyi bozmaz (idempotent)', () => {
-    const twice = migrate(structuredClone(migrated))!;
-    expect(twice.exercises).toEqual(migrated.exercises);
-    expect(twice.settings).toEqual(migrated.settings);
+  it('C: goc tekrar calistirilinca veriyi bozmaz (idempotent)', () => {
+    const once = migrate(structuredClone(v8Fixture()))!;
+    const twice = migrate(structuredClone(once))!;
+    expect(twice.exercises).toEqual(once.exercises);
+    expect(twice.mistakes).toEqual(once.mistakes);
+    expect(twice.days).toEqual(once.days);
+    expect(twice.stats).toEqual(once.stats);
     expect(twice.version).toBe(STORAGE_VERSION);
+  });
+
+  it('E: yeni kurulumda goc sorunu yok', () => {
+    const fresh = createEmptyProgress();
+    const migrated = migrate(structuredClone(fresh))!;
+    expect(migrated.version).toBe(STORAGE_VERSION);
+    expect(migrated.exercises).toEqual({});
+    expect(migrated.days).toEqual({});
   });
 });
 
@@ -178,58 +204,35 @@ describe('depolama katmani', () => {
     } as Storage;
   }
 
-  it('diskteki v1 kaydini okurken goc uygular', () => {
+  it('diskteki v8 kaydini okurken goc uygular', () => {
     const storage = memoryStorage();
-    storage.setItem(STORAGE_KEY, JSON.stringify(V1_FIXTURE));
+    storage.setItem(STORAGE_KEY, JSON.stringify(v8Fixture()));
     const loaded = loadProgress(storage);
     expect(loaded.version).toBe(STORAGE_VERSION);
-    expect(loaded.settings.showPronunciation).toBe(true);
-    expect(Object.keys(loaded.exercises)).toHaveLength(2);
+    expect(Object.keys(loaded.exercises)).toEqual(['p1-vor-wie-heisst-mc', 'p3-af-kural-mc']);
   });
 
   it('gelecekteki bir surumu silmez, yedekler', () => {
     const storage = memoryStorage();
-    storage.setItem(STORAGE_KEY, JSON.stringify({ ...V1_FIXTURE, version: 99 }));
+    storage.setItem(STORAGE_KEY, JSON.stringify({ ...v8Fixture(), version: 99 }));
     const loaded = loadProgress(storage);
     expect(loaded.exercises).toEqual({});
     const backup = storage.getItem('almanca-alistirma:progress-backup');
     expect(backup).toContain('"version":99');
-    // Denemeler yedekte duruyor: veri silinmedi.
-    expect(backup).toContain('d2-2-6-1-abcdefg');
+    expect(backup).toContain('p1-vor-wie-heisst-mc');
   });
 
   it('yazip okuma dongusu ayarlari korur', () => {
     const storage = memoryStorage();
-    const progress = migrate(structuredClone(V1_FIXTURE))!;
+    const progress = migrate(structuredClone(v8Fixture()))!;
     progress.settings.showPronunciation = false;
-    progress.settings.bookmarks = ['day2.fiil-cekimi'];
+    progress.settings.bookmarks = ['private.day2.fiil-cekimi'];
     progress.settings.themePreference = 'dark';
-    progress.settings.speechVoice = 'eva';
     saveProgress(progress, storage);
 
     const loaded = loadProgress(storage);
     expect(loaded.settings.showPronunciation).toBe(false);
-    expect(loaded.settings.bookmarks).toEqual(['day2.fiil-cekimi']);
+    expect(loaded.settings.bookmarks).toEqual(['private.day2.fiil-cekimi']);
     expect(loaded.settings.themePreference).toBe('dark');
-    expect(loaded.settings.speechVoice).toBe('eva');
-  });
-
-  it('varsayilan ayarlar telaffuzu acik tutar', () => {
-    expect(DEFAULT_SETTINGS.showPronunciation).toBe(true);
-    expect(DEFAULT_SETTINGS.soundEffects).toBe(true);
-    expect(DEFAULT_SETTINGS.autoPronunciation).toBe(true);
-  });
-
-  it('v5 ayarinda yeni hızlı hız seçeneğini ilerlemeyi bozmadan korur', () => {
-    const v5 = {
-      ...structuredClone(V1_FIXTURE),
-      version: 5,
-      settings: { ...DEFAULT_SETTINGS, speechSpeed: 'fast' as const },
-    };
-
-    const migrated = migrate(v5)!;
-    expect(migrated.version).toBe(STORAGE_VERSION);
-    expect(migrated.settings.speechSpeed).toBe('fast');
-    expect(migrated.exercises).toEqual(v5.exercises);
   });
 });

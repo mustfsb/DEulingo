@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Markup } from '../components/Markup';
-import { exercisesById, getExercises, summaryTopicsById, topicDay, topicTrack } from '../lib/content';
-import type { LearningTrack } from '../content/types';
+import { exercisesById, getExercises, summaryTopicsById, topicDay } from '../lib/content';
 import { buildReviewQueue } from '../lib/lesson';
 import { MISTAKE_LABELS } from '../lib/progress';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -19,14 +18,10 @@ type GroupBy = 'topic' | 'type';
 export function MistakesScreen({
   api,
   navigate,
-  track,
 }: {
   api: ProgressApi;
   navigate: (route: Route) => void;
-  track?: LearningTrack;
 }) {
-  const initialTrack: LearningTrack = track ?? 'normal';
-  const [filterTrack, setFilterTrack] = useState<LearningTrack>(initialTrack);
   const { progress, update } = api;
   const [groupBy, setGroupBy] = useState<GroupBy>('topic');
 
@@ -34,9 +29,6 @@ export function MistakesScreen({
     const buckets = new Map<string, { label: string; topicId?: string; records: MistakeRecord[] }>();
 
     for (const record of Object.values(progress.mistakes)) {
-      const ex = exercisesById.get(record.exerciseId);
-      const recTrack: LearningTrack = (record.track as LearningTrack | undefined) ?? (ex?.track as LearningTrack | undefined) ?? 'normal';
-      if (recTrack !== filterTrack) continue;
       const exercise = exercisesById.get(record.exerciseId);
       const key =
         groupBy === 'topic' ? (exercise?.topicId ?? record.topic) : MISTAKE_LABELS[record.type];
@@ -56,16 +48,11 @@ export function MistakesScreen({
         weight: bucket.records.reduce((sum, record) => sum + record.count * 2 + record.typoCount, 0),
       }))
       .sort((a, b) => b.weight - a.weight);
-  }, [progress.mistakes, groupBy, filterTrack]);
+  }, [progress.mistakes, groupBy]);
 
   const repeatedTypos = useMemo(
-    () =>
-      Object.values(progress.mistakes).filter((record) => {
-        const ex = exercisesById.get(record.exerciseId);
-        const recTrack: LearningTrack = (record.track as LearningTrack | undefined) ?? (ex?.track as LearningTrack | undefined) ?? 'normal';
-        return recTrack === filterTrack && record.typoCount >= TYPO_WARNING_THRESHOLD;
-      }),
-    [progress.mistakes, filterTrack],
+    () => Object.values(progress.mistakes).filter((record) => record.typoCount >= TYPO_WARNING_THRESHOLD),
+    [progress.mistakes],
   );
 
   const startReview = (ids: string[]) => {
@@ -75,7 +62,6 @@ export function MistakesScreen({
       ...current,
       activeLesson: {
         mode: 'review',
-        track: filterTrack,
         queue: queue.map((exerciseId) => ({ exerciseId, presentationReason: 'primary' as const })),
         index: 0,
         startedAt: new Date().toISOString(),
@@ -84,18 +70,13 @@ export function MistakesScreen({
         streak: { current: 0, best: 0, firedMilestones: [] },
       },
     }));
-    navigate({ name: 'review', track: filterTrack });
+    navigate({ name: 'review' });
   };
 
   // "Hepsini tekrar çalış" en zorlanılandan başlar (zayıflık puanına göre),
   // hata listesinin görüntüleme sırasına göre değil.
   const allIds = buildReviewQueue(
-    getExercises(Object.keys(progress.mistakes).filter((id) => {
-      const ex = exercisesById.get(id);
-      const rec = progress.mistakes[id];
-      const recTrack: LearningTrack = (rec.track as LearningTrack | undefined) ?? (ex?.track as LearningTrack | undefined) ?? 'normal';
-      return recTrack === filterTrack;
-    })),
+    getExercises(Object.keys(progress.mistakes)),
     progress,
     REVIEW_LIMIT,
   );
@@ -105,20 +86,10 @@ export function MistakesScreen({
       <header className="anim-pop">
         <p className="eyebrow">Zayıf noktalar</p>
         <h1 className="mt-1 text-[2.5rem] sm:text-5xl">Hatalarım</h1>
+        <p className="mt-3 text-lg text-ink-soft">
+          Tüm günlerin hataları tek listede birikir.
+        </p>
       </header>
-      <div className="mt-6 flex rounded-xl border-2 border-line overflow-hidden w-fit">
-        {(['normal','private'] as LearningTrack[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            className="px-4 py-2 text-sm font-bold"
-            style={{ background: filterTrack === t ? 'var(--color-brand)' : 'transparent', color: filterTrack === t ? '#fff' : 'var(--color-ink-soft)' }}
-            onClick={() => setFilterTrack(t)}
-          >
-            {t === 'normal' ? 'Normal' : '🎓 Özel Ders'}
-          </button>
-        ))}
-      </div>
 
       {groups.length === 0 ? (
         <div className="card mt-8 p-8 text-center">
@@ -202,7 +173,6 @@ export function MistakesScreen({
                           onClick={() =>
                             navigate({
                               name: 'lesson',
-                              track: topicTrack.get(group.topicId!) ?? filterTrack,
                               day: topicDay.get(group.topicId!) ?? group.records[0].day,
                               mode: 'topic',
                               topicId: group.topicId,
@@ -217,7 +187,6 @@ export function MistakesScreen({
                           onClick={() =>
                             navigate({
                               name: 'summary',
-                              track: topicTrack.get(group.topicId!) ?? filterTrack,
                               day: topicDay.get(group.topicId!) ?? group.records[0].day,
                               topicId: group.topicId,
                             })
@@ -242,7 +211,9 @@ export function MistakesScreen({
                     <li key={record.exerciseId} className="card p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                          {(exercisesById.get(record.exerciseId)?.track === 'private' ? '🎓 ' : '')}{record.day}. Gün
+                          {record.day === 0 || record.exerciseId.startsWith('gr-')
+                            ? '🔁 Genel Tekrar'
+                            : `${record.day}. Gün`}
                         </span>
                         <span className="badge" style={{ background: 'var(--color-sunk)' }}>
                           {MISTAKE_LABELS[record.type]}

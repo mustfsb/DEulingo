@@ -140,6 +140,7 @@ export function buildAuthoredExercise(item: AuthoredExercise): Exercise {
   if (draft.validation) exercise.validation = draft.validation;
   if (item.familyId) exercise.familyId = item.familyId;
   if (item.masteryWeight !== undefined) exercise.masteryWeight = item.masteryWeight;
+  if (item.reviewOnly) exercise.reviewOnly = true;
 
   return attachPronunciation(exercise, item.pronounce);
 }

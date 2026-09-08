@@ -19,7 +19,7 @@ import { isLearningTrack } from '../content/types';
 
 export const STORAGE_KEY = 'almanca-alistirma:progress';
 export const BACKUP_KEY = 'almanca-alistirma:progress-backup';
-export const STORAGE_VERSION = 8;
+export const STORAGE_VERSION = 9;
 
 export type AttemptResult = 'correct' | 'minor-typo' | 'incorrect' | 'skipped' | 'self-assessed';
 
@@ -106,7 +106,7 @@ export interface StreakState {
 export interface ActiveLesson {
   /** Gunluk ders icin gun numarasi; tekrar oturumunda `review` / `mistakes`. */
   mode: LessonKind;
-  /** Hangi izlek — normal ve private birbirinden bağımsızdır. */
+  /** Tarihî izlek işareti (v9 öncesi). Tek müfredatta yoksayılır. */
   track?: LearningTrack;
   day?: number;
   queue: SessionPresentation[];
@@ -133,7 +133,21 @@ export interface ActiveLesson {
   sourceSessionId?: string;
 }
 
-export type SessionMode = 'normal' | 'full' | 'quick' | 'challenge' | 'topic' | 'set';
+export type SessionMode =
+  | 'normal'
+  | 'full'
+  | 'quick'
+  | 'challenge'
+  | 'topic'
+  | 'set'
+  | 'gr-mixed'
+  | 'gr-vocab'
+  | 'gr-sentence'
+  | 'gr-writing'
+  | 'gr-listening'
+  | 'gr-quick'
+  | 'gr-challenge'
+  | 'gr-topic';
 
 /**
  * v7: Biten bir dersin YAPILI sonucu.
@@ -230,9 +244,13 @@ export interface UserProgress {
   version: number;
   createdAt: string;
   updatedAt: string;
+  /** Tek müfredat: gün → sayaç. İzlek ayrımı yok. */
   days: Record<number, DayProgressState>;
-  /** v8: izlek bazlı gün sayaçları — tracks.normal.days === days (senkron tutulur). */
-  tracks?: Record<LearningTrack, { days: Record<number, DayProgressState> }>;
+  /**
+   * v8 artığı: eski kayıtlarda `tracks.normal/private` bulunabilir.
+   * `migrate` bunu tek `days` haritasına indirir ve anahtarı siler.
+   */
+  tracks?: Record<string, { days: Record<number, DayProgressState> }>;
   exercises: Record<string, ExerciseProgress>;
   mistakes: Record<string, MistakeRecord>;
   activeLesson?: ActiveLesson;
@@ -246,34 +264,18 @@ export interface UserProgress {
   daily: Record<string, DailyActivity>;
 }
 
-export function getTrackDays(progress: UserProgress, track: LearningTrack): Record<number, DayProgressState> {
-  if (progress.tracks && progress.tracks[track]) return progress.tracks[track].days;
-  if (track === 'normal') return progress.days;
-  return {};
-}
-
-export function setTrackDays(progress: UserProgress, track: LearningTrack, days: Record<number, DayProgressState>): UserProgress {
-  const tracks = progress.tracks ?? { normal: { days: progress.days }, private: { days: {} } };
-  const nextTracks: Record<LearningTrack, { days: Record<number, DayProgressState> }> = {
-    normal: { days: track === 'normal' ? days : tracks.normal.days },
-    private: { days: track === 'private' ? days : tracks.private.days },
-  };
-  // keep legacy days in sync for normal
-  return { ...progress, days: nextTracks.normal.days, tracks: nextTracks };
+/** Tek müfredat: gün sayaçları doğrudan `progress.days` içindedir. */
+export function getDayEntry(progress: UserProgress, day: number): DayProgressState | undefined {
+  return progress.days[day];
 }
 
 export function createEmptyProgress(): UserProgress {
   const now = new Date().toISOString();
-  const tracks: Record<LearningTrack, { days: Record<number, DayProgressState> }> = {
-    normal: { days: {} },
-    private: { days: {} },
-  };
   return {
     version: STORAGE_VERSION,
     createdAt: now,
     updatedAt: now,
-    days: tracks.normal.days,
-    tracks,
+    days: {},
     exercises: {},
     mistakes: {},
     daily: {},
@@ -469,7 +471,83 @@ function migrateV7ToV8(progress: UserProgress): UserProgress {
   };
 }
 
+/**
+ * v8 → v9: tek müfredata geçiş.
+ *
+ * - Gün sayaçları: `tracks.private.days` KAZANIR (üstüne yazar);
+ *   altında kalan normal gün verisi yalnızca private'ta karşılığı yoksa korunur.
+ * - Alıştırma/deneme kayıtları: yalnızca `track === 'private'` olanlar yaşar.
+ *   Eski normal müfredat verisi bilinçli olarak taşınmaz (müfredat kaldırıldı).
+ * - Hata kayıtları: aynı kural (yalnızca private yaşar).
+ * - Yarım ders: private ise korunur, normal ise çöpe gider (içeriği yok).
+ * - İstatistikler taşınan kayıtlardan yeniden hesaplanır; `studyDates` korunur.
+ * - `tracks` anahtarı silinir; işlem idempotenttir.
+ */
+function migrateV8ToV9(progress: UserProgress): UserProgress {
+  const rawTracks = (progress as unknown as { tracks?: unknown }).tracks;
+  const privateDays: Record<number, DayProgressState> =
+    rawTracks && typeof rawTracks === 'object' && (rawTracks as Record<string, { days?: unknown }>).private &&
+    typeof ((rawTracks as Record<string, { days?: unknown }>).private as { days?: unknown }).days === 'object'
+      ? (((rawTracks as Record<string, { days: Record<number, DayProgressState> }>).private.days ?? {}) as Record<number, DayProgressState>)
+      : {};
+  const days: Record<number, DayProgressState> = {
+    ...(isDayMap(progress.days) ? progress.days : {}),
+    ...privateDays,
+  };
+
+  const exercises: Record<string, ExerciseProgress> = {};
+  for (const [id, entry] of Object.entries(progress.exercises ?? {})) {
+    if ((entry as ExerciseProgress).track === 'private') exercises[id] = entry as ExerciseProgress;
+  }
+  const mistakes: Record<string, MistakeRecord> = {};
+  for (const [id, record] of Object.entries(progress.mistakes ?? {})) {
+    if ((record as MistakeRecord).track === 'private') mistakes[id] = record as MistakeRecord;
+  }
+
+  let totalAttempts = 0;
+  let totalCorrect = 0;
+  let totalTypos = 0;
+  let totalIncorrect = 0;
+  let lastStudiedAt: string | undefined;
+  for (const entry of Object.values(exercises)) {
+    totalAttempts += entry.attempts.length;
+    totalCorrect += entry.correctCount;
+    totalTypos += entry.typoCount;
+    totalIncorrect += entry.incorrectCount;
+    if (!lastStudiedAt || entry.lastSeenAt > lastStudiedAt) lastStudiedAt = entry.lastSeenAt;
+  }
+
+  const activeLesson =
+    progress.activeLesson && (progress.activeLesson.track as string | undefined) === 'normal'
+      ? undefined
+      : progress.activeLesson;
+
+  const next: UserProgress = {
+    ...progress,
+    version: 9,
+    days,
+    exercises,
+    mistakes,
+    activeLesson,
+    stats: {
+      totalAttempts,
+      totalCorrect,
+      totalTypos,
+      totalIncorrect,
+      lastStudiedAt,
+      studyDates: progress.stats?.studyDates ?? [],
+    },
+  };
+  delete (next as unknown as { tracks?: unknown }).tracks;
+  return next;
+}
+
+function isDayMap(value: unknown): value is Record<number, DayProgressState> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function migrateV6ToV7(progress: UserProgress): UserProgress {
+
   const daily = isDailyMap(progress.daily) ? progress.daily : {};
   return {
     ...progress,
@@ -533,6 +611,7 @@ export function migrate(raw: unknown): UserProgress | null {
   if (progress.version === 5) progress = migrateV5ToV6(progress);
   if (progress.version === 6) progress = migrateV6ToV7(progress);
   if (progress.version === 7) progress = migrateV7ToV8(progress);
+  if (progress.version === 8) progress = migrateV8ToV9(progress);
 
   if (!isGermanVoiceId(progress.settings.speechVoice)) {
     progress = {
@@ -547,15 +626,9 @@ export function migrate(raw: unknown): UserProgress | null {
     };
   }
 
-  // ensure tracks exists even if file was manually edited
-  if (!progress.tracks || !progress.tracks.normal || !progress.tracks.private) {
-    const normalDays = progress.tracks?.normal?.days ?? progress.days ?? {};
-    const privateDays = progress.tracks?.private?.days ?? {};
-    progress = { ...progress, days: normalDays, tracks: { normal: { days: normalDays }, private: { days: privateDays } } };
-  } else {
-    // keep legacy days in sync
-    progress = { ...progress, days: progress.tracks.normal.days };
-  }
+  // v9: tek müfredat — `tracks` anahtarı taşınmaz, gün haritası tektir.
+  delete (progress as unknown as { tracks?: unknown }).tracks;
+  if (!isDayMap(progress.days)) progress = { ...progress, days: {} };
   progress.version = STORAGE_VERSION;
   return progress;
 }

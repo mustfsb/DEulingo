@@ -3,13 +3,11 @@
  * Tum sayilar localStorage'daki denemelerden hesaplanir; ayrica ozet tutulmaz.
  */
 
-import type { Exercise, LearningTrack } from '../content/types';
+import type { Exercise } from '../content/types';
 import type { ValidationResult } from './validation';
 import { evaluateExercise } from './validation';
 import { addDailyActivity, answerDurationMs } from './daily-goal';
 import {
-  getTrackDays,
-  setTrackDays,
   createEmptyProgress,
   type AttemptResult,
   type ExerciseProgress,
@@ -156,7 +154,7 @@ export function recordAttempt(
   options: RecordOptions = {},
 ): UserProgress {
   const now = new Date().toISOString();
-  const track: LearningTrack = (exercise.track as LearningTrack | undefined) ?? 'normal';
+  const track = exercise.track ?? 'private';
   const previous: ExerciseProgress = progress.exercises[exercise.id] ?? {
     exerciseId: exercise.id,
     day: exercise.day,
@@ -375,7 +373,6 @@ export function getGlobalSummary(
   progress: UserProgress,
   exercises: Exercise[],
   dayNumbers: number[],
-  track: LearningTrack = 'normal',
 ): GlobalSummary {
   const attempted = exercises.filter((exercise) => progress.exercises[exercise.id]?.attempts.length);
   const mastered = attempted.filter((exercise) => progress.exercises[exercise.id]?.mastered);
@@ -383,7 +380,7 @@ export function getGlobalSummary(
   const graded = totalCorrect + totalTypos + totalIncorrect;
 
   const completedDays = dayNumbers.filter((day) => {
-    const dayExercises = exercises.filter((exercise) => exercise.day === day && ((exercise.track as LearningTrack | undefined) ?? 'normal') === track);
+    const dayExercises = exercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
     return dayExercises.length > 0 && getDayStats(progress, day, dayExercises).state === 'completed';
   }).length;
 
@@ -403,27 +400,24 @@ export function getGlobalSummary(
 /* Sifirlama                                                           */
 /* ------------------------------------------------------------------ */
 
-export function resetDayProgress(progress: UserProgress, day: number, track: LearningTrack = 'normal'): UserProgress {
+export function resetDayProgress(progress: UserProgress, day: number): UserProgress {
   const exercises = { ...progress.exercises };
   const mistakes = { ...progress.mistakes };
   for (const [id, entry] of Object.entries(progress.exercises)) {
-    const entryTrack: LearningTrack = (entry.track as LearningTrack | undefined) ?? 'normal';
-    if (entry.day === day && entryTrack === track) delete exercises[id];
+    // Genel Tekrar bankası (`gr-` ID'li) gün sıfırlamadan etkilenmez.
+    if (entry.day === day && !entry.exerciseId.startsWith('gr-')) delete exercises[id];
   }
   for (const [id, record] of Object.entries(progress.mistakes)) {
-    const recTrack: LearningTrack = (record.track as LearningTrack | undefined) ?? 'normal';
-    if (record.day === day && recTrack === track) delete mistakes[id];
+    if (record.day === day && !record.exerciseId.startsWith('gr-')) delete mistakes[id];
   }
-  // track-aware days
-  const trackDays = { ...getTrackDays(progress, track) };
-  delete trackDays[day];
-  const updatedProgress = setTrackDays(progress, track, trackDays);
+  const days = { ...progress.days };
+  delete days[day];
 
   const stats = recomputeStats(exercises);
   const activeLesson =
-    progress.activeLesson?.day === day && ((progress.activeLesson.track as LearningTrack | undefined) ?? 'normal') === track ? undefined : progress.activeLesson;
+    progress.activeLesson?.day === day && progress.activeLesson.mode === 'day' ? undefined : progress.activeLesson;
 
-  return { ...updatedProgress, exercises, mistakes, activeLesson, stats: {
+  return { ...progress, days, exercises, mistakes, activeLesson, stats: {
     ...stats,
     studyDates: progress.stats.studyDates,
   } };

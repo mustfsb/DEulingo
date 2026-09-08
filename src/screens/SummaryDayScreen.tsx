@@ -3,32 +3,31 @@ import { Markup } from '../components/Markup';
 import { NoteBlockView } from '../components/NoteBlocks';
 import { AudioButton } from '../components/AudioButton';
 import { getSummary } from '../lib/content';
-import type { LearningTrack } from '../content/types';
+import { GENERAL_TOPIC_ACTION } from '../lib/general-review';
+import { startReviewSession } from '../lib/start-review';
 import { audioController } from '../lib/audio/playback';
 import type { GermanExample, RecallQuestion, SummaryTopic } from '../content/types';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
 export function SummaryDayScreen({
-  track = 'normal',
   day,
   topicId,
   api,
   navigate,
 }: {
-  track?: LearningTrack;
   day: number;
   topicId?: string;
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
-  const resolvedTrack: LearningTrack = track ?? 'normal';
-  const summary = getSummary(day, resolvedTrack);
+  const summary = getSummary(day);
   const { progress, update } = api;
   const showPronunciation = progress.settings.showPronunciation;
   const speechSpeed = progress.settings.speechSpeed;
   const speechVoice = progress.settings.speechVoice;
-  const audioContextId = `summary:${resolvedTrack}:${day}`;
+  const audioContextId = `summary:${day}`;
+  const isGeneral = day === 0;
 
   // Özet sayfasından ayrılınca elle başlatılmış telaffuz da sayfada kalmaz.
   useEffect(() => {
@@ -89,7 +88,7 @@ export function SummaryDayScreen({
     <div className="mx-auto flex w-full max-w-[1000px] gap-10 px-5 pb-24 pt-6 sm:pt-10">
       {/* Masaustunde yapiskan konu gezinmesi */}
       <nav className="sticky top-24 hidden h-fit w-52 flex-none lg:block" aria-label="Konular">
-        <p className="eyebrow mb-2">Bu günün konuları</p>
+        <p className="eyebrow mb-2">{isGeneral ? 'Konular' : 'Bu günün konuları'}</p>
         <ul className="flex flex-col gap-1">
           {summary.topics.map((topic) => (
             <li key={topic.id}>
@@ -118,8 +117,8 @@ export function SummaryDayScreen({
         </button>
 
         <header className="mt-4 anim-pop">
-          <p className="eyebrow">{resolvedTrack === 'private' ? '🎓 Özel Ders • ' : ''}{summary.topics.map((topic) => topic.title).join(' • ')}</p>
-          <h1 className="mt-1 text-[2.75rem] sm:text-6xl">{summary.title}{resolvedTrack === 'private' ? ' — Özel Ders' : ''}</h1>
+          <p className="eyebrow">{isGeneral ? '🔁 Kümülatif tekrar' : summary.topics.map((topic) => topic.title).join(' • ')}</p>
+          <h1 className="mt-1 text-[2.75rem] sm:text-6xl">{isGeneral ? '🔁 Genel Tekrar' : summary.title}</h1>
           <p className="mt-3 text-ink-soft">~{summary.estimatedReadingMinutes} dakikalık okuma</p>
         </header>
 
@@ -135,7 +134,19 @@ export function SummaryDayScreen({
               speechVoice={speechVoice}
               audioContextId={audioContextId}
               onToggleBookmark={() => toggleBookmark(topic.id)}
-              onPractice={() => navigate({ name: 'lesson', track: resolvedTrack, day, mode: 'topic', topicId: topic.id })}
+              onPractice={() => {
+                if (isGeneral) {
+                  const action = GENERAL_TOPIC_ACTION[topic.id];
+                  if (!action) return;
+                  startReviewSession(api, navigate, {
+                    mode: action.mode ?? 'topic',
+                    groupId: action.groupId,
+                  });
+                  return;
+                }
+                navigate({ name: 'lesson', day, mode: 'topic', topicId: topic.id });
+              }}
+              practiceVisible={isGeneral ? GENERAL_TOPIC_ACTION[topic.id] !== undefined : true}
             />
           ))}
         </div>
@@ -154,6 +165,7 @@ function TopicSection({
   audioContextId,
   onToggleBookmark,
   onPractice,
+  practiceVisible,
 }: {
   topic: SummaryTopic;
   day: number;
@@ -164,6 +176,7 @@ function TopicSection({
   audioContextId: string;
   onToggleBookmark: () => void;
   onPractice: () => void;
+  practiceVisible: boolean;
 }) {
   return (
     <section id={`konu-${topic.id}`} className="scroll-mt-24">
@@ -263,10 +276,14 @@ function TopicSection({
       {topic.recallQuestions.length > 0 && <RecallList items={topic.recallQuestions} />}
 
       <div className="mt-7 flex flex-wrap gap-3">
-        <button type="button" className="btn btn-primary" onClick={onPractice}>
-          Bu Konuyu Çalış
-        </button>
-        <span className="self-center text-sm text-ink-faint">{day}. Gün · {topic.title}</span>
+        {practiceVisible && (
+          <button type="button" className="btn btn-primary" onClick={onPractice}>
+            Bu Konuyu Çalış
+          </button>
+        )}
+        <span className="self-center text-sm text-ink-faint">
+          {day === 0 ? 'Genel Tekrar' : `${day}. Gün`} · {topic.title}
+        </span>
       </div>
     </section>
   );

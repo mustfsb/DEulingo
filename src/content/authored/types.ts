@@ -25,6 +25,11 @@ export interface AuthoredExercise {
   id: string;
   day: number;
   track?: import('../types.ts').LearningTrack;
+  /**
+   * Genel Tekrar bankası üyesi. `true` ise alıştırma gün havuzlarına girmez;
+   * yalnızca kümülatif Genel Tekrar oturumlarında kullanılır.
+   */
+  reviewOnly?: boolean;
   /** Bagli oldugu ozet konusu (`SUMMARY_TOPICS` ID'si). */
   topicId: string;
   type: ExerciseType;
@@ -58,6 +63,17 @@ export interface AuthoredExercise {
   pronounce?: string[];
   estimatedSeconds?: number;
   masteryWeight?: number;
+}
+
+/** Kasa alistirmalarinin ustveri etiketi (tek müfredatta kasa alıştırması yok; tip korunur). */
+export interface VaultTag {
+  topicId: string;
+  difficulty: Difficulty;
+  skill: Skill;
+  conceptIds: string[];
+  familyId?: string;
+  /** Cevaptan sonra okunusu gosterilecek ek Almanca dizeler. */
+  pronounce?: string[];
 }
 
 /** Uygulama ici ek ozet aciklamasi (kaynak dosya degistirilmeden). */

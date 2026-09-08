@@ -20,9 +20,8 @@ import {
 /**
  * Cikarim asamasindaki alistirma.
  *
- * v2 ustverisi (zorluk, beceri, kavram) bu asamada HENUZ bilinmez; kasa
- * alistirmalari icin `authored/vault-tags.ts` katmanindan, yazilmis
- * alistirmalar icin tanimin kendisinden gelir. Bu yuzden burada opsiyoneldir.
+ * v2 ustverisi (zorluk, beceri, kavram) bu asamada HENUZ bilinmez;
+ * yazilmis alistirmalar icin tanimin kendisinden gelir. Bu yuzden burada opsiyoneldir.
  */
 export type DraftExercise = Omit<
   Exercise,

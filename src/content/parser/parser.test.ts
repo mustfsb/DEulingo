@@ -218,8 +218,8 @@ describe('kelime bankasi butunlugu', () => {
 describe('gercek Obsidian icerigi', () => {
   const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8'));
 
-  it('ilk alti gunu uretir', () => {
-    expect(bundle.days.filter((d: any) => (d.track ?? 'normal') === 'normal').map((day: { day: number }) => day.day)).toEqual([1, 2, 3, 4, 5, 6]);
+  it('tek mufredatin gunlerini uretir (1, 2, 3, 5, 6, 7, 10)', () => {
+    expect(bundle.days.map((day: { day: number }) => day.day)).toEqual([1, 2, 3, 5, 6, 7, 10]);
   });
 
   it('hicbir icerik hatasi yok', () => {
@@ -245,15 +245,28 @@ describe('gercek Obsidian icerigi', () => {
     );
   });
 
-  it('kaynaktaki cevaplarla birebir ortusur', () => {
-    const find = (key: string) =>
-      bundle.exercises.find((exercise: { source: { naturalKey: string } }) => exercise.source.naturalKey === key);
-    expect(find('2/3/1').answer).toBe('komme');
-    expect(find('2/4/3').answer).toBe('hast');
-    expect(find('2/5/2').answer).toBe('das');
-    expect(find('2/6/1').answer).toBe('Du kommst aus Deutschland.');
-    expect(find('3/5/4').answer).toBe('fünfunddreißig');
-    expect(find('3/6/1').answer).toBe('Ich komme aus der Türkei.');
+  it('yazilmis alistirmalar konumdan bagimsiz kararli ID tasir', () => {
+    const find = (id: string) =>
+      bundle.exercises.find((exercise: { id: string }) => exercise.id === id);
+    expect(find('p1-vor-wie-heisst-mc')?.answer).toBe('Wie heißt du?');
+    expect(find('gr-cum-l4-stehe-sieben-auf')?.answer).toBe('Ich stehe jeden Morgen um sieben Uhr auf.');
+    expect(find('gr-cum-l4-stehe-sieben-auf')?.reviewOnly).toBe(true);
+  });
+
+  it('genel tekrar bankasi gun havuzlarina karismaz', () => {
+    const inDayPools = bundle.days.flatMap((day: { exerciseIds: string[] }) => day.exerciseIds);
+    const reviewIds = bundle.exercises
+      .filter((exercise: { reviewOnly?: boolean }) => exercise.reviewOnly)
+      .map((exercise: { id: string }) => exercise.id);
+    expect(reviewIds.length).toBeGreaterThanOrEqual(180);
+    for (const id of reviewIds) expect(inDayPools).not.toContain(id);
+  });
+
+  it('gun basligi olmayan ozet dosyasi 0. gun olarak paketlenir', () => {
+    const general = bundle.summaries.find((day: { day: number }) => day.day === 0);
+    expect(general).toBeDefined();
+    expect(general.title).toBe('Genel Tekrar');
+    expect(general.topics.length).toBeGreaterThanOrEqual(20);
   });
 
   it('sesli gorevler disinda her alistirmanin cevabi var', () => {

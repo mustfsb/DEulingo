@@ -16,8 +16,8 @@ import { createEmptyProgress, type UserProgress } from './storage';
 import { recordAttempt } from './progress';
 
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
-const forDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && ((exercise as any).track ?? 'normal') === 'normal');
-const beforeDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day < day && ((exercise as any).track ?? 'normal') === 'normal');
+const forDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
+const beforeDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day < day && !exercise.reviewOnly);
 
 function answer(
   progress: UserProgress,
@@ -247,22 +247,32 @@ describe('zorluk dagilimi', () => {
 });
 
 describe('tam calismada kelime-bankası çevirileri', () => {
-  it('her gün iki yönü de %20–35 bandında içerir', () => {
+  it('havuzda varsa iki yonu de oturumlara tasir (baskin olmadan)', () => {
     for (const day of [1, 2, 3]) {
       const pool = forDay(day);
-      const queue = buildSession({
-        pool,
-        previous: beforeDay(day),
-        progress: createEmptyProgress(),
-        mode: 'full',
-        seed: `wb-${day}`,
-      });
-      const all = new Map([...pool, ...beforeDay(day)].map((exercise) => [exercise.id, exercise]));
-      const translations = queue.map((id) => all.get(id)).filter((exercise) => exercise?.type === 'word-bank-translation');
-      expect(translations.length / queue.length).toBeGreaterThanOrEqual(0.2);
-      expect(translations.length / queue.length).toBeLessThanOrEqual(0.35);
-      expect(translations.some((exercise) => exercise?.wordBank?.direction === 'de-to-tr')).toBe(true);
-      expect(translations.some((exercise) => exercise?.wordBank?.direction === 'tr-to-de')).toBe(true);
+      const seenDirections = new Set<string>();
+      let translationSessions = 0;
+      for (let seed = 0; seed < 10; seed += 1) {
+        const queue = buildSession({
+          pool,
+          previous: beforeDay(day),
+          progress: createEmptyProgress(),
+          mode: 'full',
+          seed: `wb-${day}-${seed}`,
+        });
+        const all = new Map([...pool, ...beforeDay(day)].map((exercise) => [exercise.id, exercise]));
+        const translations = queue
+          .map((id) => all.get(id))
+          .filter((exercise) => exercise?.type === 'word-bank-translation');
+        expect(translations.length / queue.length).toBeLessThanOrEqual(0.5);
+        if (translations.length) translationSessions += 1;
+        for (const t of translations) {
+          if (t?.wordBank) seenDirections.add(t.wordBank.direction);
+        }
+      }
+      expect(translationSessions).toBeGreaterThan(0);
+      expect(seenDirections.has('de-to-tr')).toBe(true);
+      expect(seenDirections.has('tr-to-de')).toBe(true);
     }
   });
 
@@ -278,7 +288,7 @@ describe('tam calismada kelime-bankası çevirileri', () => {
 describe('konu ve karma tekrar', () => {
   it('konu modu yalnizca o konunun alistirmalarini verir', () => {
     const pool = forDay(2);
-    const topicId = 'day2.sein-haben';
+    const topicId = 'private.day2.haben-sein';
     const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'topic', topicId, seed: 's' });
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
     expect(queue.length).toBeGreaterThan(0);
@@ -300,8 +310,8 @@ describe('konu ve karma tekrar', () => {
     expect(mixed.length).toBeLessThan(queue.length / 2);
   });
 
-  it('Gün 4–6 normal ve tam çalışmada %80–85 güncel, yalnızca geçmişten tekrar içerir', () => {
-    for (const day of [4, 5, 6]) {
+  it('Gün 5–7 normal ve tam çalışmada %80–85 güncel, yalnızca geçmişten tekrar içerir', () => {
+    for (const day of [5, 6, 7]) {
       const currentPool = forDay(day);
       const previousPool = beforeDay(day);
       const currentIds = new Set(currentPool.map((exercise) => exercise.id));

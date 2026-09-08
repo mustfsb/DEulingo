@@ -5,6 +5,7 @@ import { ThemeModeButton } from './components/ThemeModeButton';
 import { hrefFor, useRoute, type Route } from './lib/router';
 import { DayIntroScreen } from './screens/DayIntroScreen';
 import { DebugScreen } from './screens/DebugScreen';
+import { GeneralReviewScreen } from './screens/GeneralReviewScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LessonCompleteScreen } from './screens/LessonCompleteScreen';
 import { LessonScreen } from './screens/LessonScreen';
@@ -15,6 +16,7 @@ import { SummaryIndexScreen } from './screens/SummaryIndexScreen';
 
 const NAV: Array<{ route: Route; label: string; matches: Route['name'][] }> = [
   { route: { name: 'home' }, label: 'Öğren', matches: ['home', 'day'] },
+  { route: { name: 'general-review' }, label: 'Genel Tekrar', matches: ['general-review'] },
   { route: { name: 'summaries' }, label: 'Özetler', matches: ['summaries', 'summary'] },
   { route: { name: 'mistakes' }, label: 'Hatalarım', matches: ['mistakes'] },
   { route: { name: 'stats' }, label: 'İstatistik', matches: ['stats'] },
@@ -51,7 +53,6 @@ function AppContents({
         // (orn. "Zor Sorular") ekranda hicbir sey degistirmez.
         key={hrefFor(route)}
         mode={route.name === 'lesson' ? 'day' : route.name === 'review' ? 'review' : 'mistakes'}
-        track={route.name === 'lesson' ? route.track : route.name === 'mistake-review' ? route.track : route.name === 'review' ? route.track : undefined}
         day={route.name === 'lesson' ? route.day : route.name === 'mistake-review' ? route.day : undefined}
         sessionMode={route.name === 'lesson' ? route.mode : undefined}
         topicId={route.name === 'lesson' ? route.topicId : undefined}
@@ -82,12 +83,13 @@ function AppContents({
         }
       />
       {route.name === 'home' && <HomeScreen api={api} navigate={navigate} />}
-      {route.name === 'day' && <DayIntroScreen track={route.track} day={route.day} api={api} navigate={navigate} />}
+      {route.name === 'day' && <DayIntroScreen day={route.day} api={api} navigate={navigate} />}
+      {route.name === 'general-review' && <GeneralReviewScreen api={api} navigate={navigate} />}
       {route.name === 'summaries' && <SummaryIndexScreen api={api} navigate={navigate} />}
       {route.name === 'summary' && (
-        <SummaryDayScreen track={route.track} day={route.day} topicId={route.topicId} api={api} navigate={navigate} />
+        <SummaryDayScreen day={route.day} topicId={route.topicId} api={api} navigate={navigate} />
       )}
-      {route.name === 'mistakes' && <MistakesScreen track={route.track} api={api} navigate={navigate} />}
+      {route.name === 'mistakes' && <MistakesScreen api={api} navigate={navigate} />}
       {route.name === 'stats' && <StatsScreen api={api} />}
       {route.name === 'debug' && <DebugScreen />}
     </div>

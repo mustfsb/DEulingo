@@ -1,22 +1,22 @@
-/** Kucuk hash tabanli yonlendirici — ek bagimlilik yok. */
+/** Kucuk hash tabanli yonlendirici — ek bagimlilik yok. Tek müfredat: rotalarda izlek yok. */
 
 import { useCallback, useEffect, useState } from 'react';
 import type { SessionMode } from './storage';
-import type { ExerciseSetId, LearningTrack } from '../content/types';
+import type { ExerciseSetId } from '../content/types';
 import { isExerciseSetId } from '../content/exercise-sets';
-import { isLearningTrack } from '../content/types';
 
 export type Route =
   | { name: 'home' }
-  | { name: 'day'; track: LearningTrack; day: number }
-  | { name: 'lesson'; track: LearningTrack; day: number; mode: SessionMode; topicId?: string; exerciseSetId?: ExerciseSetId }
-  | { name: 'review'; track?: LearningTrack }
-  | { name: 'mistake-review'; track?: LearningTrack; day?: number }
+  | { name: 'day'; day: number }
+  | { name: 'lesson'; day: number; mode: SessionMode; topicId?: string; exerciseSetId?: ExerciseSetId }
+  | { name: 'review' }
+  | { name: 'mistake-review'; day?: number }
   | { name: 'complete' }
-  | { name: 'summaries'; track?: LearningTrack }
-  | { name: 'summary'; track: LearningTrack; day: number; topicId?: string }
-  | { name: 'mistakes'; track?: LearningTrack }
-  | { name: 'stats'; track?: LearningTrack }
+  | { name: 'summaries' }
+  | { name: 'summary'; day: number; topicId?: string }
+  | { name: 'general-review' }
+  | { name: 'mistakes' }
+  | { name: 'stats' }
   | { name: 'debug' };
 
 const MODE_SLUGS: Record<string, SessionMode> = {
@@ -25,6 +25,14 @@ const MODE_SLUGS: Record<string, SessionMode> = {
   hizli: 'quick',
   zor: 'challenge',
   konu: 'topic',
+  'genel-karisik': 'gr-mixed',
+  'genel-kelime': 'gr-vocab',
+  'genel-cumle': 'gr-sentence',
+  'genel-yazma': 'gr-writing',
+  'genel-dinleme': 'gr-listening',
+  'genel-hizli': 'gr-quick',
+  'genel-zor': 'gr-challenge',
+  'genel-konu': 'gr-topic',
 };
 
 const SLUG_BY_MODE: Record<SessionMode, string> = {
@@ -34,11 +42,20 @@ const SLUG_BY_MODE: Record<SessionMode, string> = {
   challenge: 'zor',
   topic: 'konu',
   set: 'set',
+  'gr-mixed': 'genel-karisik',
+  'gr-vocab': 'genel-kelime',
+  'gr-sentence': 'genel-cumle',
+  'gr-writing': 'genel-yazma',
+  'gr-listening': 'genel-dinleme',
+  'gr-quick': 'genel-hizli',
+  'gr-challenge': 'genel-zor',
+  'gr-topic': 'genel-konu',
 };
 
-function parseTrack(segment: string | undefined): LearningTrack | undefined {
-  if (isLearningTrack(segment)) return segment;
-  return undefined;
+/** Sayı değilse undefined (bozuk segment güvenli varsayılan değil, yok sayılır). */
+function parseDay(segment: string | undefined): number | undefined {
+  const day = Number(segment);
+  return segment !== undefined && Number.isInteger(day) && day >= 1 ? day : undefined;
 }
 
 export function parseHash(hash: string): Route {
@@ -53,69 +70,48 @@ export function parseHash(hash: string): Route {
     case undefined:
       return { name: 'home' };
     case 'gun': {
-      // #/gun/1  or #/gun/private/1
-      if (rest.length === 1) return { name: 'day', track: 'normal', day: Number(rest[0]) || 1 };
-      const track = parseTrack(rest[0]);
-      if (track) return { name: 'day', track, day: Number(rest[1]) || 1 };
-      return { name: 'day', track: 'normal', day: Number(rest[0]) || 1 };
+      // Yeni: #/gun/3 — Eski: #/gun/private/3 ya da #/gun/normal/3 (izlek yoksayılır).
+      const day = parseDay(rest[rest.length - 1]);
+      return { name: 'day', day: day ?? 1 };
     }
     case 'ders': {
-      // legacy: #/ders/2/konu/... or #/ders/2/zor
-      // new: #/ders/private/2/konu/... or #/ders/private/2/zor
-      let track: LearningTrack = 'normal';
-      let idx = 0;
-      const maybeTrack = parseTrack(rest[0]);
-      if (maybeTrack) { track = maybeTrack; idx = 1; }
-      const day = Number(rest[idx]) || 1;
-      const second = rest[idx + 1];
-      const third = rest[idx + 2];
-      if (second === 'konu' && third) return { name: 'lesson', track, day, mode: 'topic', topicId: third };
+      // Yeni: #/ders/3/zor — Eski: #/ders/private/3/zor (izlek yoksayılır).
+      const segments = rest.filter((segment) => segment !== 'private' && segment !== 'normal');
+      const day = parseDay(segments[0]) ?? 1;
+      const second = segments[1];
+      const third = segments[2];
+      if (second === 'konu' && third) return { name: 'lesson', day, mode: 'topic', topicId: third };
       if (second === 'set' && isExerciseSetId(`set-${third ?? ''}`)) {
-        return { name: 'lesson', track, day, mode: 'set', exerciseSetId: `set-${third}` as ExerciseSetId };
+        return { name: 'lesson', day, mode: 'set', exerciseSetId: `set-${third}` as ExerciseSetId };
       }
-      return { name: 'lesson', track, day, mode: MODE_SLUGS[second ?? 'normal'] ?? 'normal' };
+      return { name: 'lesson', day, mode: MODE_SLUGS[second ?? 'normal'] ?? 'normal' };
     }
     case 'tekrar': {
-      const track = parseTrack(rest[0]);
-      return { name: 'review', track };
+      return { name: 'review' };
+    }
+    case 'genel-tekrar': {
+      return { name: 'general-review' };
     }
     case 'hata-tekrari': {
-      // #/hata-tekrari, #/hata-tekrari/2, #/hata-tekrari/private, #/hata-tekrari/private/2
-      if (rest.length === 0) return { name: 'mistake-review' };
-      if (rest.length === 1) {
-        const track = parseTrack(rest[0]);
-        if (track) return { name: 'mistake-review', track };
-        return { name: 'mistake-review', day: Number(rest[0]) || undefined };
-      }
-      const track = parseTrack(rest[0]);
-      if (track) return { name: 'mistake-review', track, day: rest[1] ? Number(rest[1]) || undefined : undefined };
-      return { name: 'mistake-review', day: Number(rest[0]) || undefined };
+      // #/hata-tekrari ya da #/hata-tekrari/2 (eski izlekli biçimler de buraya düşer).
+      const day = parseDay(rest[rest.length - 1]);
+      return { name: 'mistake-review', day };
     }
     case 'sonuc':
       return { name: 'complete' };
     case 'ozet': {
-      if (rest.length === 0) return { name: 'summaries' };
-      if (rest.length === 1) {
-        // could be day or track
-        const track = parseTrack(rest[0]);
-        if (track) return { name: 'summaries', track };
-        return { name: 'summary', track: 'normal', day: Number(rest[0]) || 1 };
-      }
-      // rest length >=2
-      const track = parseTrack(rest[0]);
-      if (track) {
-        if (rest.length === 1) return { name: 'summaries', track };
-        return { name: 'summary', track, day: Number(rest[1]) || 1, topicId: rest[2] };
-      }
-      return { name: 'summary', track: 'normal', day: Number(rest[0]) || 1, topicId: rest[1] };
+      // Yeni: #/ozet ya da #/ozet/3(/konu) — eski izlek segmenti yoksayılır.
+      // Kümülatif özet: #/ozet/genel.
+      const segments = rest.filter((segment) => segment !== 'private' && segment !== 'normal');
+      if (segments.length === 0) return { name: 'summaries' };
+      if (segments[0] === 'genel') return { name: 'summary', day: 0, topicId: segments[1] };
+      return { name: 'summary', day: parseDay(segments[0]) ?? 1, topicId: segments[1] };
     }
     case 'hatalarim': {
-      const track = parseTrack(rest[0]);
-      return { name: 'mistakes', track };
+      return { name: 'mistakes' };
     }
     case 'istatistik': {
-      const track = parseTrack(rest[0]);
-      return { name: 'stats', track };
+      return { name: 'stats' };
     }
     case 'icerik':
       return { name: 'debug' };
@@ -129,32 +125,36 @@ export function hrefFor(route: Route): string {
     case 'home':
       return '#/';
     case 'day':
-      return route.track === 'private' ? `#/gun/${route.track}/${route.day}` : `#/gun/${route.day}`;
+      return `#/gun/${route.day}`;
     case 'lesson': {
-      const prefix = route.track === 'private' ? `#/ders/${route.track}/${route.day}` : `#/ders/${route.day}`;
+      const prefix = `#/ders/${route.day}`;
       if (route.mode === 'topic' && route.topicId) return `${prefix}/konu/${encodeURIComponent(route.topicId)}`;
       if (route.mode === 'set' && route.exerciseSetId) return `${prefix}/set/${route.exerciseSetId.replace('set-', '')}`;
       return `${prefix}/${SLUG_BY_MODE[route.mode]}`;
     }
     case 'review':
-      return route.track ? `#/tekrar/${route.track}` : '#/tekrar';
+      return '#/tekrar';
     case 'mistake-review': {
-      if (route.track && route.day !== undefined) return `#/hata-tekrari/${route.track}/${route.day}`;
-      if (route.track) return `#/hata-tekrari/${route.track}`;
       return route.day === undefined ? '#/hata-tekrari' : `#/hata-tekrari/${route.day}`;
     }
     case 'complete':
       return '#/sonuc';
     case 'summaries':
-      return route.track ? `#/ozet/${route.track}` : '#/ozet';
+      return '#/ozet';
     case 'summary': {
-      const base = route.track === 'private' ? `#/ozet/${route.track}/${route.day}` : `#/ozet/${route.day}`;
+      if (route.day === 0) {
+        const base = '#/ozet/genel';
+        return route.topicId ? `${base}/${encodeURIComponent(route.topicId)}` : base;
+      }
+      const base = `#/ozet/${route.day}`;
       return route.topicId ? `${base}/${encodeURIComponent(route.topicId)}` : base;
     }
+    case 'general-review':
+      return '#/genel-tekrar';
     case 'mistakes':
-      return route.track ? `#/hatalarim/${route.track}` : '#/hatalarim';
+      return '#/hatalarim';
     case 'stats':
-      return route.track ? `#/istatistik/${route.track}` : '#/istatistik';
+      return '#/istatistik';
     case 'debug':
       return '#/icerik';
   }

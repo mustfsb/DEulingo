@@ -25,6 +25,7 @@ import type { RawDay, RawSection } from './document.ts';
 
 const KEY_POINTS = /Hızlı Tekrar/i;
 const RECALL = /Kendine Sor/i;
+const GENERAL_QUIZ = /Kendini Test Et/i;
 const SOURCES = /Bu Özeti Oluşturan/i;
 const WARNING_TITLE = /Dikkat/i;
 
@@ -192,7 +193,20 @@ export function parseRecallAnswers(markdown: string): Map<number, string[]> {
   for (const [, body] of blocks) {
     const label = body.match(/<summary>\s*(.*?)\s*<\/summary>/i)?.[1] ?? '';
     const day = Number(label.match(/(\d+)\s*\.\s*G[üu]n/u)?.[1]);
-    if (!Number.isInteger(day)) continue;
+    if (!Number.isInteger(day)) {
+      // Gün etiketi yoksa genel tekrar cevaplarıdır (0. gün).
+      if (!/cevab/i.test(label)) continue;
+      const items: string[] = [];
+      for (const line of body.split('\n')) {
+        const match = line.trim().match(/^(\d+)\s*[.)]\s+(.+)$/);
+        if (match) items.push(collapseSpaces(match[2]));
+      }
+      if (items.length) {
+        const existing = result.get(0) ?? [];
+        result.set(0, [...existing, ...items]);
+      }
+      continue;
+    }
 
     const items: string[] = [];
     for (const line of body.split('\n')) {
@@ -206,8 +220,8 @@ export function parseRecallAnswers(markdown: string): Map<number, string[]> {
 
 export interface SummaryParseResult {
   days: SummaryDay[];
-  /** Kayitli oldugu halde kaynakta bulunamayan konular. */
-  missingTopicIds: string[];
+  /** Bu dosyada bulunan kayıtlı konu ID'leri (eksik kontrolü pakette yapılır). */
+  foundTopicIds: string[];
 }
 
 export function buildSummaries(
@@ -247,7 +261,7 @@ export function buildSummaries(
         }
         found.add(def.id);
         const note = sectionToNote(section);
-        current = {
+        const created: SummaryTopic = {
           id: def.id,
           title: def.title,
           track,
@@ -259,7 +273,21 @@ export function buildSummaries(
           examples: [],
           pronunciation: [],
         };
-        topics.push(current);
+        current = created;
+        topics.push(created);
+        // 0. gün quiz bölümü: numaralı sorular gizli cevaplı recall olur,
+        // soru satırları gövdede tekrar etmez.
+        if (rawDay.day === 0 && GENERAL_QUIZ.test(section.title)) {
+          const questions = numberedItems(section);
+          const answers = recallAnswers.get(0) ?? [];
+          questions.forEach((question, index) => {
+            const answer = answers[index];
+            if (answer) created.recallQuestions.push({ question, answer: collapseSpaces(answer) });
+          });
+          created.blocks = created.blocks.filter(
+            (block) => !(block.kind === 'paragraph' && /^\d+\s*[.)]\s+/.test(block.text.trim())),
+          );
+        }
         continue;
       }
 
@@ -325,7 +353,7 @@ export function buildSummaries(
     days.push({
       day: rawDay.day,
       track,
-      title: `${rawDay.day}. Gün`,
+      title: rawDay.day === 0 ? 'Genel Tekrar' : `${rawDay.day}. Gün`,
       estimatedReadingMinutes: readingMinutes(topics),
       topics,
     });
@@ -333,7 +361,7 @@ export function buildSummaries(
 
   return {
     days,
-    missingTopicIds: SUMMARY_TOPICS.filter((topic) => ((topic.track as import('../types.ts').LearningTrack | undefined) ?? 'normal') === track && !found.has(topic.id)).map((topic) => topic.id),
+    foundTopicIds: [...found],
   };
 }
 

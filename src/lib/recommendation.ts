@@ -12,7 +12,7 @@
  *   5. Eski/zayif malzemenin hizli tekrari
  */
 
-import type { Exercise, LearningTrack } from '../content/types';
+import type { Exercise } from '../content/types';
 import type { Route } from './router';
 import { getDayStats, REVIEW_THRESHOLD } from './progress';
 import type { UserProgress } from './storage';
@@ -38,7 +38,6 @@ export interface RecommendationInput {
   /** Icerikteki gun numaralari, artan sirada. */
   dayNumbers: number[];
   exercisesForDay: (day: number) => Exercise[];
-  track?: LearningTrack;
 }
 
 /** Bu sayidan fazla acik hata varsa tekrar one cikar. */
@@ -50,21 +49,28 @@ const MODE_LABEL: Record<string, string> = {
   quick: 'Hızlı Tekrar',
   challenge: 'Zor Sorular',
   topic: 'Konu Çalışması',
+  'gr-mixed': 'Genel Tekrar',
+  'gr-vocab': 'Kelime Çalışması',
+  'gr-sentence': 'Cümle Kurma',
+  'gr-writing': 'Writing',
+  'gr-listening': 'Dinleme',
+  'gr-quick': 'Hızlı Tekrar',
+  'gr-challenge': 'Zor Sorular',
+  'gr-topic': 'Konu Çalışması',
 };
 
 export function recommendNext(input: RecommendationInput): Recommendation {
-  const { progress, dayNumbers, exercisesForDay, track } = input as RecommendationInput & { track?: LearningTrack };
+  const { progress, dayNumbers, exercisesForDay } = input;
   const active = progress.activeLesson;
-  const trackFilter: LearningTrack | undefined = track;
 
-  if (active && active.index < active.queue.length && (!trackFilter || ((active.track as LearningTrack | undefined) ?? 'normal') === trackFilter)) {
+  if (active && active.index < active.queue.length) {
     const remaining = active.queue.length - active.index;
     const label =
       active.mode === 'day'
         ? `${active.day}. Gün — ${MODE_LABEL[active.sessionMode ?? 'normal'] ?? 'Çalışma'}`
         : active.mode === 'mistakes'
           ? 'Hata tekrarı'
-          : 'Tekrar oturumu';
+          : `${MODE_LABEL[active.sessionMode ?? 'gr-mixed'] ?? 'Genel Tekrar'}`;
     return {
       kind: 'resume',
       eyebrow: 'Yarım kalan çalışma',
@@ -75,14 +81,13 @@ export function recommendNext(input: RecommendationInput): Recommendation {
         active.mode === 'day'
           ? {
             name: 'lesson',
-            track: (active.track as LearningTrack | undefined) ?? 'normal',
             day: active.day ?? dayNumbers[0] ?? 1,
             mode: active.sessionMode ?? 'normal',
             topicId: active.topicId,
           }
           : active.mode === 'mistakes'
-            ? { name: 'mistake-review', track: (active.track as LearningTrack | undefined) ?? 'normal', day: active.day }
-            : { name: 'review', track: (active.track as LearningTrack | undefined) },
+            ? { name: 'mistake-review', day: active.day }
+            : { name: 'review' },
     };
   }
 
@@ -107,20 +112,12 @@ export function recommendNext(input: RecommendationInput): Recommendation {
       title: `${weak.day}. Gün — Hızlı Tekrar`,
       description: `Doğruluğun %${Math.round((weak.stats.accuracy ?? 0) * 100)}. Kısa bir tur bunu toparlar.`,
       action: 'Hızlı Tekrar',
-      route: { name: 'lesson', track: trackFilter ?? 'normal', day: weak.day, mode: 'quick' },
+      route: { name: 'lesson', day: weak.day, mode: 'quick' },
     };
   }
 
   // 3. Biriken hatalar.
-  const openMistakes = trackFilter
-    ? Object.keys(progress.mistakes).filter((id) => {
-        const ex = (progress as unknown as { exercises: Record<string, { track?: string }> }).exercises[id];
-        // fallback: try to infer via mistake record track
-        const rec = (progress.mistakes[id] as unknown as { track?: string });
-        const recTrack = (rec?.track as LearningTrack | undefined) ?? (ex?.track as LearningTrack | undefined) ?? 'normal';
-        return recTrack === trackFilter;
-      }).length
-    : Object.keys(progress.mistakes).length;
+  const openMistakes = Object.keys(progress.mistakes).length;
   if (openMistakes >= OPEN_MISTAKE_THRESHOLD) {
     return {
       kind: 'mistakes',
@@ -128,7 +125,7 @@ export function recommendNext(input: RecommendationInput): Recommendation {
       title: `${openMistakes} aktif hata`,
       description: 'Hatalarını tekrar etmek, yeni gün açmaktan daha çok kazandırır.',
       action: 'Hataları Tekrar Et',
-      route: { name: 'mistakes', track: trackFilter },
+      route: { name: 'mistakes' },
     };
   }
 
@@ -147,7 +144,7 @@ export function recommendNext(input: RecommendationInput): Recommendation {
           ? `${next.stats.total - next.stats.completed} alıştırma henüz hiç karşına çıkmadı.`
           : 'Yeni gün seni bekliyor.',
       action: 'Başla',
-      route: { name: 'day', track: trackFilter ?? 'normal', day: next.day },
+      route: { name: 'day', day: next.day },
     };
   }
 
@@ -162,6 +159,6 @@ export function recommendNext(input: RecommendationInput): Recommendation {
     title: `${day}. Gün — Hızlı Tekrar`,
     description: 'Tüm günler tamam. Bilgiyi taze tutmak için kısa bir tur.',
     action: 'Hızlı Tekrar',
-    route: { name: 'lesson', track: trackFilter ?? 'normal', day, mode: 'quick' },
+    route: { name: 'lesson', day, mode: 'quick' },
   };
 }
