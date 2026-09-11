@@ -1,19 +1,28 @@
-/** Kucuk hash tabanli yonlendirici — ek bagimlilik yok. Tek müfredat: rotalarda izlek yok. */
+/**
+ * Kucuk hash tabanli yonlendirici — ek bagimlilik yok.
+ *
+ * Rotalar KONU tabanlidir ve kararlı konu slug'larini kullanir
+ * (`#/konu/modal-verbs`). Gün tabanlı eski bağlantılar (`#/gun/10`,
+ * `#/ders/7/tam`, `#/ozet/3/private.day3.yer-yon`, `#/hata-tekrari/2`)
+ * kırılmaz: karşılık gelen konu ekranına yönlenir ve adres çubuğu yeni
+ * biçimle değiştirilir.
+ */
 
 import { useCallback, useEffect, useState } from 'react';
 import type { SessionMode } from './storage';
-import type { ExerciseSetId } from '../content/types';
-import { isExerciseSetId } from '../content/exercise-sets';
+import { SECTION_BY_ID, TOPIC_BY_ID, TOPIC_BY_SLUG, TOPICS } from '../content/curriculum/topics';
+import { LEGACY_SECTION_MAP, legacyDayTopic } from '../content/curriculum/legacy';
 
 export type Route =
   | { name: 'home' }
-  | { name: 'day'; day: number }
-  | { name: 'lesson'; day: number; mode: SessionMode; topicId?: string; exerciseSetId?: ExerciseSetId }
+  | { name: 'topic'; topicId: string }
+  | { name: 'lesson'; topicId: string; mode: SessionMode; sectionId?: string }
   | { name: 'review' }
-  | { name: 'mistake-review'; day?: number }
+  | { name: 'mistake-review' }
   | { name: 'complete' }
   | { name: 'summaries' }
-  | { name: 'summary'; day: number; topicId?: string }
+  | { name: 'summary'; topicId: string; sectionId?: string }
+  | { name: 'review-summary'; sectionId?: string }
   | { name: 'general-review' }
   | { name: 'mistakes' }
   | { name: 'stats' }
@@ -24,7 +33,7 @@ const MODE_SLUGS: Record<string, SessionMode> = {
   tam: 'full',
   hizli: 'quick',
   zor: 'challenge',
-  konu: 'topic',
+  bolum: 'section',
   'genel-karisik': 'gr-mixed',
   'genel-kelime': 'gr-vocab',
   'genel-cumle': 'gr-sentence',
@@ -40,8 +49,7 @@ const SLUG_BY_MODE: Record<SessionMode, string> = {
   full: 'tam',
   quick: 'hizli',
   challenge: 'zor',
-  topic: 'konu',
-  set: 'set',
+  section: 'bolum',
   'gr-mixed': 'genel-karisik',
   'gr-vocab': 'genel-kelime',
   'gr-sentence': 'genel-cumle',
@@ -52,11 +60,33 @@ const SLUG_BY_MODE: Record<SessionMode, string> = {
   'gr-topic': 'genel-konu',
 };
 
+const FIRST_TOPIC_ID = TOPICS[0].id;
+
 /** Sayı değilse undefined (bozuk segment güvenli varsayılan değil, yok sayılır). */
-function parseDay(segment: string | undefined): number | undefined {
+function parseLegacyDay(segment: string | undefined): number | undefined {
   const day = Number(segment);
-  return segment !== undefined && Number.isInteger(day) && day >= 1 ? day : undefined;
+  return segment !== undefined && /^\d+$/.test(segment) && Number.isInteger(day) && day >= 1 ? day : undefined;
 }
+
+/** Slug ya da kanonik kimlik → kanonik konu kimliği. */
+function topicFromSegment(segment: string | undefined): string | undefined {
+  if (!segment) return undefined;
+  return TOPIC_BY_SLUG.get(segment)?.id ?? (TOPIC_BY_ID.has(segment) ? segment : undefined);
+}
+
+function slugFor(topicId: string): string {
+  return TOPIC_BY_ID.get(topicId)?.slug ?? topicId;
+}
+
+/** Eski gün bölümü kimliği (`private.day3.yer-yon`) → yeni bölüm. */
+function legacySection(id: string | undefined): { topicId: string; sectionId: string } | undefined {
+  if (!id) return undefined;
+  const mapped = LEGACY_SECTION_MAP[id] ?? (SECTION_BY_ID.has(id) ? id : undefined);
+  const section = mapped ? SECTION_BY_ID.get(mapped) : undefined;
+  return section ? { topicId: section.topicId, sectionId: section.id } : undefined;
+}
+
+const stripTrack = (segments: string[]) => segments.filter((segment) => segment !== 'private' && segment !== 'normal');
 
 export function parseHash(hash: string): Route {
   const path = hash
@@ -69,50 +99,74 @@ export function parseHash(hash: string): Route {
   switch (head) {
     case undefined:
       return { name: 'home' };
+    case 'konu': {
+      const topicId = topicFromSegment(rest[0]);
+      return topicId ? { name: 'topic', topicId } : { name: 'home' };
+    }
     case 'gun': {
-      // Yeni: #/gun/3 — Eski: #/gun/private/3 ya da #/gun/normal/3 (izlek yoksayılır).
-      const day = parseDay(rest[rest.length - 1]);
-      return { name: 'day', day: day ?? 1 };
+      // Eski: #/gun/3, #/gun/private/3 → o günün ana konusu.
+      const day = parseLegacyDay(stripTrack(rest)[0]);
+      return { name: 'topic', topicId: (day && legacyDayTopic(day)) || FIRST_TOPIC_ID };
     }
     case 'ders': {
-      // Yeni: #/ders/3/zor — Eski: #/ders/private/3/zor (izlek yoksayılır).
-      const segments = rest.filter((segment) => segment !== 'private' && segment !== 'normal');
-      const day = parseDay(segments[0]) ?? 1;
-      const second = segments[1];
-      const third = segments[2];
-      if (second === 'konu' && third) return { name: 'lesson', day, mode: 'topic', topicId: third };
-      if (second === 'set' && isExerciseSetId(`set-${third ?? ''}`)) {
-        return { name: 'lesson', day, mode: 'set', exerciseSetId: `set-${third}` as ExerciseSetId };
+      const segments = stripTrack(rest);
+      const day = parseLegacyDay(segments[0]);
+      if (day !== undefined) {
+        // Eski: #/ders/3/zor, #/ders/3/konu/<eski-bölüm>, #/ders/1/set/a.
+        const topicId = legacyDayTopic(day) || FIRST_TOPIC_ID;
+        const [, second, third] = segments;
+        if (second === 'konu') {
+          const section = legacySection(third);
+          return section
+            ? { name: 'lesson', topicId: section.topicId, mode: 'section', sectionId: section.sectionId }
+            : { name: 'lesson', topicId, mode: 'normal' };
+        }
+        const mode = MODE_SLUGS[second ?? 'normal'];
+        return { name: 'lesson', topicId, mode: mode && !mode.startsWith('gr-') && mode !== 'section' ? mode : 'normal' };
       }
-      return { name: 'lesson', day, mode: MODE_SLUGS[second ?? 'normal'] ?? 'normal' };
+      const topicId = topicFromSegment(segments[0]);
+      if (!topicId) return { name: 'home' };
+      const [, second, third] = segments;
+      if (second === 'bolum') {
+        const section = third ? SECTION_BY_ID.get(third) : undefined;
+        return section && section.topicId === topicId
+          ? { name: 'lesson', topicId, mode: 'section', sectionId: section.id }
+          : { name: 'topic', topicId };
+      }
+      const mode = MODE_SLUGS[second ?? 'normal'];
+      return { name: 'lesson', topicId, mode: mode && mode !== 'section' ? mode : 'normal' };
     }
-    case 'tekrar': {
+    case 'tekrar':
       return { name: 'review' };
-    }
-    case 'genel-tekrar': {
+    case 'genel-tekrar':
       return { name: 'general-review' };
-    }
-    case 'hata-tekrari': {
-      // #/hata-tekrari ya da #/hata-tekrari/2 (eski izlekli biçimler de buraya düşer).
-      const day = parseDay(rest[rest.length - 1]);
-      return { name: 'mistake-review', day };
-    }
+    case 'hata-tekrari':
+      // #/hata-tekrari — eski #/hata-tekrari/2 biçimi de buraya düşer.
+      return { name: 'mistake-review' };
     case 'sonuc':
       return { name: 'complete' };
     case 'ozet': {
-      // Yeni: #/ozet ya da #/ozet/3(/konu) — eski izlek segmenti yoksayılır.
-      // Kümülatif özet: #/ozet/genel.
-      const segments = rest.filter((segment) => segment !== 'private' && segment !== 'normal');
+      const segments = stripTrack(rest);
       if (segments.length === 0) return { name: 'summaries' };
-      if (segments[0] === 'genel') return { name: 'summary', day: 0, topicId: segments[1] };
-      return { name: 'summary', day: parseDay(segments[0]) ?? 1, topicId: segments[1] };
+      if (segments[0] === 'genel') return { name: 'review-summary', sectionId: segments[1] };
+      const day = parseLegacyDay(segments[0]);
+      if (day !== undefined) {
+        // Eski: #/ozet/3 ya da #/ozet/3/private.day3.yer-yon.
+        const section = legacySection(segments[1]);
+        if (section) return { name: 'summary', topicId: section.topicId, sectionId: section.sectionId };
+        return { name: 'summary', topicId: legacyDayTopic(day) || FIRST_TOPIC_ID };
+      }
+      const topicId = topicFromSegment(segments[0]);
+      if (!topicId) return { name: 'summaries' };
+      const section = segments[1] ? SECTION_BY_ID.get(segments[1]) : undefined;
+      return section && section.topicId === topicId
+        ? { name: 'summary', topicId, sectionId: section.id }
+        : { name: 'summary', topicId };
     }
-    case 'hatalarim': {
+    case 'hatalarim':
       return { name: 'mistakes' };
-    }
-    case 'istatistik': {
+    case 'istatistik':
       return { name: 'stats' };
-    }
     case 'icerik':
       return { name: 'debug' };
     default:
@@ -124,31 +178,27 @@ export function hrefFor(route: Route): string {
   switch (route.name) {
     case 'home':
       return '#/';
-    case 'day':
-      return `#/gun/${route.day}`;
+    case 'topic':
+      return `#/konu/${slugFor(route.topicId)}`;
     case 'lesson': {
-      const prefix = `#/ders/${route.day}`;
-      if (route.mode === 'topic' && route.topicId) return `${prefix}/konu/${encodeURIComponent(route.topicId)}`;
-      if (route.mode === 'set' && route.exerciseSetId) return `${prefix}/set/${route.exerciseSetId.replace('set-', '')}`;
+      const prefix = `#/ders/${slugFor(route.topicId)}`;
+      if (route.mode === 'section' && route.sectionId) return `${prefix}/bolum/${encodeURIComponent(route.sectionId)}`;
       return `${prefix}/${SLUG_BY_MODE[route.mode]}`;
     }
     case 'review':
       return '#/tekrar';
-    case 'mistake-review': {
-      return route.day === undefined ? '#/hata-tekrari' : `#/hata-tekrari/${route.day}`;
-    }
+    case 'mistake-review':
+      return '#/hata-tekrari';
     case 'complete':
       return '#/sonuc';
     case 'summaries':
       return '#/ozet';
     case 'summary': {
-      if (route.day === 0) {
-        const base = '#/ozet/genel';
-        return route.topicId ? `${base}/${encodeURIComponent(route.topicId)}` : base;
-      }
-      const base = `#/ozet/${route.day}`;
-      return route.topicId ? `${base}/${encodeURIComponent(route.topicId)}` : base;
+      const base = `#/ozet/${slugFor(route.topicId)}`;
+      return route.sectionId ? `${base}/${encodeURIComponent(route.sectionId)}` : base;
     }
+    case 'review-summary':
+      return route.sectionId ? `#/ozet/genel/${encodeURIComponent(route.sectionId)}` : '#/ozet/genel';
     case 'general-review':
       return '#/genel-tekrar';
     case 'mistakes':
@@ -160,13 +210,24 @@ export function hrefFor(route: Route): string {
   }
 }
 
+/** Gün tabanlı eski bağlantı mı (adres çubuğu yeni biçimle değiştirilir)? */
+export function isLegacyHash(hash: string): boolean {
+  return /^#\/(gun|ders|ozet|hata-tekrari)\/(?:(?:private|normal)\/)?\d+(?:\/|$)/.test(hash);
+}
+
 export function useRoute(): { route: Route; navigate: (route: Route) => void } {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
 
   useEffect(() => {
-    const onChange = () => setRoute(parseHash(window.location.hash));
-    window.addEventListener('hashchange', onChange);
-    return () => window.removeEventListener('hashchange', onChange);
+    const canonicalize = () => {
+      const hash = window.location.hash;
+      const parsed = parseHash(hash);
+      if (isLegacyHash(hash)) window.history.replaceState(null, '', hrefFor(parsed));
+      setRoute(parsed);
+    };
+    canonicalize();
+    window.addEventListener('hashchange', canonicalize);
+    return () => window.removeEventListener('hashchange', canonicalize);
   }, []);
 
   const navigate = useCallback((next: Route) => {

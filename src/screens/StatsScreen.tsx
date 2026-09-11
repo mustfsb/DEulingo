@@ -1,6 +1,22 @@
-import { useRef, useState } from 'react';
-import { dayExercises, days, exercisesForDay, reviewBank } from '../lib/content';
-import { getDayStats, getGlobalSummary, getTopicStats, resetAllProgress, resetDayProgress } from '../lib/progress';
+import { useMemo, useRef, useState } from 'react';
+import {
+  allExercises,
+  lessonExercises,
+  migrationContext,
+  primaryExercisesForTopic,
+  reviewBank,
+  topicMasteryDefs,
+  topics as curriculumTopics,
+  topicTitle,
+} from '../lib/content';
+import {
+  getGlobalSummary,
+  getTopicProgressStats,
+  getTopicStats,
+  resetAllProgress,
+  resetTopicProgress,
+} from '../lib/progress';
+import { computeTopicMastery } from '../lib/mastery';
 import { parseImportedProgress, serializeProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
 import { DEFAULT_GERMAN_VOICE_ID, GERMAN_VOICE_PROFILES, isSpeechSpeed } from '../lib/audio/tts';
@@ -8,14 +24,18 @@ import { GOAL_OPTIONS, goalProgress } from '../lib/daily-goal';
 
 export function StatsScreen({ api }: { api: ProgressApi }) {
   const { progress, update, replace } = api;
-  const dayNumbers = days.map((day) => day.day);
-  const summary = getGlobalSummary(progress, dayExercises, dayNumbers);
+  const summary = getGlobalSummary(progress, lessonExercises);
   const reviewAttempted = reviewBank.filter((exercise) => progress.exercises[exercise.id]?.attempts.length).length;
-  const topics = getTopicStats(progress, dayExercises).filter((topic) => topic.incorrect + topic.typo > 0);
+  // Zorlanılan konular Genel Tekrar cevaplarını da kanonik konusuna sayar.
+  const topics = getTopicStats(progress, allExercises).filter((topic) => topic.incorrect + topic.typo > 0);
   const today = goalProgress(progress);
+  const mastery = useMemo(
+    () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
+    [progress],
+  );
 
   const [confirmReset, setConfirmReset] = useState(false);
-  const [resetDay, setResetDay] = useState<string | null>(null);
+  const [resetTopic, setResetTopic] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -33,7 +53,7 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
   };
 
   const importProgress = async (file: File) => {
-    const result = parseImportedProgress(await file.text());
+    const result = parseImportedProgress(await file.text(), migrationContext);
     if (!result.ok || !result.progress) {
       setMessage(`İçe aktarılamadı: ${result.error}`);
       return;
@@ -57,8 +77,8 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
         />
         <Metric label="Toplam yanlış" value={String(summary.totalIncorrect)} tone="var(--color-bad)" />
         <Metric label="Yazım hatası" value={String(summary.totalTypos)} tone="var(--color-warn)" />
-        <Metric label="Tamamlanan gün" value={String(summary.completedDays)} />
-        <Metric label="Çalışılan gün" value={String(summary.studyDays)} />
+        <Metric label="Tamamlanan konu" value={`${summary.completedTopics}/${curriculumTopics.length}`} />
+        <Metric label="Çalışılan takvim günü" value={String(summary.studyDays)} />
         <Metric
           label="Bugün"
           value={`${Math.round(today.minutes)}/${today.targetMinutes} dk`}
@@ -73,9 +93,9 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
         ) : (
           <ol className="mt-4 flex flex-col gap-2">
             {topics.slice(0, 6).map((topic, index) => (
-              <li key={topic.topic} className="card flex items-center gap-4 px-4 py-3">
+              <li key={topic.topicId} className="card flex items-center gap-4 px-4 py-3">
                 <span className="numeral text-2xl text-ink-faint">{index + 1}</span>
-                <span className="flex-1 font-bold">{topic.topic}</span>
+                <span className="flex-1 font-bold">{topicTitle(topic.topicId)}</span>
                 <span className="text-sm text-ink-soft">
                   {topic.incorrect} yanlış · {topic.typo} yazım
                 </span>
@@ -87,31 +107,44 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
 
       <section className="mt-7 grid grid-cols-2 gap-3">
         <Metric label="Genel Tekrar — Çözülen" value={`${reviewAttempted}/${reviewBank.length}`} />
-        <Metric label="Tamamlanan gün" value={`${summary.completedDays}/${dayNumbers.length}`} />
+        <Metric label="Tamamlanan konu" value={`${summary.completedTopics}/${curriculumTopics.length}`} />
       </section>
 
       <section className="mt-10">
-        <h2 className="text-2xl">Gün gün</h2>
+        <h2 className="text-2xl">Konu konu ustalık</h2>
+        <p className="mt-1 text-[0.92rem] text-ink-soft">
+          Ustalık kavram bazlıdır (Genel Tekrar cevapları dahil); tamamlanma konunun kendi alıştırmalarıyla ölçülür.
+        </p>
         <div className="mt-4 flex flex-col gap-2">
-          {days.map((day) => {
-            const stats = getDayStats(progress, day.day, exercisesForDay(day.day));
+          {curriculumTopics.map((topic) => {
+            const stats = getTopicProgressStats(progress, topic.id, primaryExercisesForTopic(topic.id));
+            const score = mastery.get(topic.id)?.masteryScore ?? 0;
             return (
-              <div key={day.day} className="card flex items-center gap-4 px-4 py-3">
-                <span className="numeral w-8 text-2xl">{day.day}</span>
+              <div key={topic.id} className="card flex items-center gap-4 px-4 py-3">
+                <span className="w-44 flex-none truncate font-bold sm:w-56">
+                  <span aria-hidden="true">{topic.emoji} </span>
+                  {topic.title}
+                </span>
                 <div className="flex-1">
-                  <div className="rail h-2">
+                  <div
+                    className="rail h-2"
+                    role="progressbar"
+                    aria-label={`${topic.title} ustalığı`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(score * 100)}
+                  >
                     <div
                       className="rail-fill"
                       style={{
-                        width: `${Math.round(stats.completionPct * 100)}%`,
+                        width: `${Math.max(2, Math.round(score * 100))}%`,
                         background: stats.state === 'completed' ? 'var(--color-good)' : 'var(--color-brand)',
                       }}
                     />
                   </div>
                 </div>
-                <span className="w-28 text-right text-sm text-ink-soft">
-                  {stats.completed}/{stats.total} ·{' '}
-                  {stats.accuracy === null ? '—' : `%${Math.round(stats.accuracy * 100)}`}
+                <span className="w-32 flex-none text-right text-sm text-ink-soft">
+                  %{Math.round(score * 100)} · {stats.completed}/{stats.total}
                 </span>
               </div>
             );
@@ -280,36 +313,37 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
         <h2 className="text-2xl">Sıfırlama</h2>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <label className="text-[0.95rem] text-ink-soft" htmlFor="reset-day">
-            Tek bir günü sıfırla:
+          <label className="text-[0.95rem] text-ink-soft" htmlFor="reset-topic">
+            Tek bir konuyu sıfırla:
           </label>
           <select
-            id="reset-day"
+            id="reset-topic"
             className="rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
-            value={resetDay ?? ''}
-            onChange={(event) => setResetDay(event.target.value || null)}
+            value={resetTopic ?? ''}
+            onChange={(event) => setResetTopic(event.target.value || null)}
           >
-            <option value="">Gün seç</option>
-            {days.map((day) => (
-              <option key={day.day} value={String(day.day)}>
-                {day.day}. Gün
+            <option value="">Konu seç</option>
+            {curriculumTopics.map((topic) => (
+              <option key={topic.id} value={topic.id}>
+                {topic.title}
               </option>
             ))}
           </select>
           <button
             type="button"
             className="btn"
-            disabled={resetDay === null}
+            disabled={resetTopic === null}
             onClick={() => {
-              if (resetDay === null) return;
-              const d = Number(resetDay);
-              if (!window.confirm(`${d}. Gün ilerlemesi silinsin mi? Bu işlem geri alınamaz.`)) return;
-              update((current) => resetDayProgress(current, d));
-              setMessage(`${d}. Gün ilerlemesi sıfırlandı.`);
-              setResetDay(null);
+              if (resetTopic === null) return;
+              const title = topicTitle(resetTopic);
+              if (!window.confirm(`“${title}” konusunun ilerlemesi silinsin mi? Bu işlem geri alınamaz.`)) return;
+              const ids = primaryExercisesForTopic(resetTopic).map((exercise) => exercise.id);
+              update((current) => resetTopicProgress(current, resetTopic, ids));
+              setMessage(`“${title}” ilerlemesi sıfırlandı.`);
+              setResetTopic(null);
             }}
           >
-            Sadece bu günü sıfırla
+            Sadece bu konuyu sıfırla
           </button>
         </div>
 

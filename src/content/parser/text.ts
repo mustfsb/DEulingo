@@ -11,7 +11,7 @@ export function stableHash(input: string): string {
 }
 
 const EMOJI_PREFIX =
-  /^(?:[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}\u{2190}-\u{21FF}]\s*)+/u;
+  /^(?:[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}\u{200D}\u{20E3}\u{2190}-\u{21FF}]\s*)+/u;
 
 export function stripLeadingEmoji(text: string): string {
   return text.replace(EMOJI_PREFIX, '').trim();

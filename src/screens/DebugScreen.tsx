@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { allExercises, content, days, reviewBank, summaries } from '../lib/content';
+import { allExercises, content, exercisesForTopic, reviewBank, summaries, topics } from '../lib/content';
 import { auditExerciseContent } from '../lib/content-audit';
 import type { Difficulty, Skill } from '../content/types';
 
@@ -25,17 +25,17 @@ export function DebugScreen() {
   const errors = content.warnings.filter((warning) => warning.level === 'error');
   const warns = content.warnings.filter((warning) => warning.level === 'warn');
 
-  const perDay = useMemo(
+  const perTopic = useMemo(
     () =>
-      days.map((day) => {
-        const exercises = allExercises.filter((exercise) => exercise.day === day.day && !exercise.reviewOnly);
-        const coverage = (content.coverage ?? []).filter((item) => item.day === day.day);
+      topics.map((topic) => {
+        const exercises = exercisesForTopic(topic.id);
+        const coverage = (content.coverage ?? []).filter((item) => item.topicId === topic.id);
         const uncovered = coverage.filter((item) => !item.summaryCovered);
         const noPractice = coverage.filter(
           (item) => item.exercises.easy + item.exercises.medium + item.exercises.hard === 0,
         );
         return {
-          day,
+          topic,
           exercises,
           coverage,
           uncovered,
@@ -53,7 +53,7 @@ export function DebugScreen() {
       <h1 className="font-display text-3xl">İçerik Denetimi</h1>
       <p className="mt-2 text-ink-soft">
         {allExercises.length} alıştırma · {content.concepts.length} kavram ·{' '}
-        {summaries.reduce((total, day) => total + day.topics.length, 0)} özet konusu · sürüm{' '}
+        {topics.length} konu · {summaries.reduce((total, summary) => total + summary.sections.length, 0)} özet bölümü · sürüm{' '}
         {content.contentVersion}
       </p>
 
@@ -82,11 +82,13 @@ export function DebugScreen() {
         </ul>
       )}
 
-      {perDay.map(({ day, exercises, coverage, uncovered, noPractice, audit }) => (
-        <section key={day.day} className="mt-10">
+      {perTopic.map(({ topic, exercises, coverage, uncovered, noPractice, audit }) => (
+        <section key={topic.id} className="mt-10">
           <h2 className="font-display text-2xl">
-            {day.day}. Gün — {exercises.length} alıştırma
+            {topic.title} — {topic.exerciseIds.length} birincil + {topic.secondaryExerciseIds.length} bağlantılı ·{' '}
+            {topic.reviewExerciseIds.length} Genel Tekrar
           </h2>
+          <p className="text-ink-faint">{topic.id}</p>
 
           <div className="mt-2 grid gap-x-8 gap-y-1 sm:grid-cols-2">
             <div>

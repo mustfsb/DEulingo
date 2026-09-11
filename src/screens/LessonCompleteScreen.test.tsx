@@ -16,24 +16,22 @@ import { createEmptyProgress, type ActiveLesson, type LessonResult, type UserPro
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import { LessonCompleteScreen, pickPrimaryAction, resultHeadline } from './LessonCompleteScreen';
+import { T } from '../content/curriculum/topics';
 
 const doms: JSDOM[] = [];
-const dayPool = (day: number) => allExercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
-const day2 = dayPool(2);
-const day3 = dayPool(3);
-const day5 = dayPool(5);
-const day6 = dayPool(6);
-const day10 = dayPool(10);
+const topicPool = (topicId: string) => allExercises.filter((exercise) => exercise.topicId === topicId && !exercise.reviewOnly);
+const articles = topicPool(T.articles);
+const vocabulary = topicPool(T.vocabulary);
 
 afterEach(() => {
   for (const dom of doms.splice(0)) dom.window.close();
 });
 
-function resultFor(results: ActiveLesson['results'], day = 2): LessonResult {
+function resultFor(results: ActiveLesson['results'], topicId: string = T.articles, sessionMode: ActiveLesson['sessionMode'] = 'full'): LessonResult {
   const lesson: ActiveLesson = {
-    mode: 'day',
-    day,
-    sessionMode: 'full',
+    mode: 'topic',
+    topicId,
+    sessionMode,
     queue: results.map((item) => ({ exerciseId: item.exerciseId, presentationReason: 'primary' as const })),
     index: results.length,
     startedAt: '2026-08-17T09:00:00.000Z',
@@ -44,28 +42,6 @@ function resultFor(results: ActiveLesson['results'], day = 2): LessonResult {
   return buildLessonResult(lesson, {
     lookup: (id) => allExercises.find((exercise) => exercise.id === id),
     completedAt: '2026-08-17T09:25:00.000Z',
-  });
-}
-
-function setResultFor(day: 1 | 2 | 3, exerciseSetId: 'set-1' | 'set-2' | 'set-3'): LessonResult {
-  const exercises = allExercises
-    .filter((exercise) => exercise.day === day && exercise.exerciseSetId === exerciseSetId)
-    .slice(0, 3);
-  const lesson: ActiveLesson = {
-    mode: 'day',
-    day,
-    sessionMode: 'set',
-    exerciseSetId,
-    queue: exercises.map((exercise) => ({ exerciseId: exercise.id, presentationReason: 'primary' as const })),
-    index: exercises.length,
-    startedAt: '2026-08-18T09:00:00.000Z',
-    results: exercises.map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })),
-    retries: {},
-    streak: { current: 3, best: 3, firedMilestones: [] },
-  };
-  return buildLessonResult(lesson, {
-    lookup: (id) => allExercises.find((exercise) => exercise.id === id),
-    completedAt: '2026-08-18T09:25:00.000Z',
   });
 }
 
@@ -125,14 +101,14 @@ function mount(result: LessonResult) {
 }
 
 describe('sonuç başlığı ve eylem hiyerarşisi', () => {
-  const perfect = resultFor(day2.slice(0, 5).map((e) => ({ exerciseId: e.id, result: 'correct' as const })));
+  const perfect = resultFor(articles.slice(0, 5).map((e) => ({ exerciseId: e.id, result: 'correct' as const })));
   const nearPerfect = resultFor([
-    ...day2.slice(0, 9).map((e) => ({ exerciseId: e.id, result: 'correct' as const })),
-    { exerciseId: day2[9].id, result: 'minor-typo' },
+    ...articles.slice(0, 9).map((e) => ({ exerciseId: e.id, result: 'correct' as const })),
+    { exerciseId: articles[9].id, result: 'minor-typo' },
   ]);
   const weak = resultFor([
-    ...day2.slice(0, 4).map((e) => ({ exerciseId: e.id, result: 'incorrect' as const })),
-    ...day2.slice(4, 10).map((e) => ({ exerciseId: e.id, result: 'correct' as const })),
+    ...articles.slice(0, 4).map((e) => ({ exerciseId: e.id, result: 'incorrect' as const })),
+    ...articles.slice(4, 10).map((e) => ({ exerciseId: e.id, result: 'correct' as const })),
   ]);
 
   it('mükemmel dersi ayrı ama abartısız bir metinle kutlar', () => {
@@ -154,23 +130,26 @@ describe('sonuç başlığı ve eylem hiyerarşisi', () => {
   });
 
   it('birincil eylem sonuca göre değişir', () => {
-    const base = { challengeReady: true, nextDay: 3, isFollowUp: false, weakTopicPracticable: false };
+    const base = { challengeReady: true, nextTopicId: T.pronouns, isFollowUp: false, weakTopicPracticable: false };
     expect(pickPrimaryAction({ ...base, result: weak, accuracy: 60, canReview: true })).toBe('mistakes');
     expect(pickPrimaryAction({ ...base, result: nearPerfect, accuracy: 95, canReview: false })).toBe('challenge');
-    expect(pickPrimaryAction({ ...base, result: perfect, accuracy: 100, canReview: false })).toBe('next-day');
-    // Son günde "sonraki gün" birincil olamaz.
+    expect(pickPrimaryAction({ ...base, result: perfect, accuracy: 100, canReview: false })).toBe('next-topic');
+    // Haritanın son konusunda "sıradaki konu" birincil olamaz.
     expect(
-      pickPrimaryAction({ ...base, nextDay: undefined, result: perfect, accuracy: 100, canReview: false }),
+      pickPrimaryAction({ ...base, nextTopicId: undefined, result: perfect, accuracy: 100, canReview: false }),
     ).toBe('challenge');
+    // Zor Sorular oturumunun ardından tekrar "Zor Sorular" önerilmez.
+    const challengeResult = { ...nearPerfect, sessionMode: 'challenge' as const };
+    expect(pickPrimaryAction({ ...base, nextTopicId: undefined, result: challengeResult, accuracy: 95, canReview: false })).toBe('home');
   });
 });
 
 describe('ders sonucu eylemleri', () => {
   it('hatalar varken gercek bir hata tekrari oturumu kurar ve rotaya gecer', () => {
     const result = resultFor([
-      { exerciseId: day2[0].id, result: 'correct' },
-      { exerciseId: day2[1].id, result: 'incorrect' },
-      { exerciseId: day2[2].id, result: 'incorrect' },
+      { exerciseId: articles[0].id, result: 'correct' },
+      { exerciseId: articles[1].id, result: 'incorrect' },
+      { exerciseId: articles[2].id, result: 'incorrect' },
     ]);
     const view = mount(result);
 
@@ -179,73 +158,82 @@ describe('ders sonucu eylemleri', () => {
 
     const lesson = view.getProgress().activeLesson;
     expect(lesson?.mode).toBe('mistakes');
-    expect(lesson?.day).toBe(2);
+    expect(lesson?.topicId).toBeUndefined();
     expect(lesson?.index).toBe(0);
-    expect(lesson?.queue.map((item) => item.exerciseId)).toEqual([day2[1].id, day2[2].id]);
+    expect(lesson?.queue.map((item) => item.exerciseId)).toEqual([articles[1].id, articles[2].id]);
     expect(lesson?.sourceSessionId).toBe(result.sessionId);
-    expect(view.routes).toEqual([{ name: 'mistake-review', day: 2 }]);
+    expect(view.routes).toEqual([{ name: 'mistake-review' }]);
     act(() => view.root.unmount());
   });
 
-  it('Zor Sorular dogru gunun challenge oturumunu acar (gun tekrar sorulmaz)', () => {
+  it('Zor Sorular dogru konunun challenge oturumunu acar (konu tekrar sorulmaz)', () => {
     const view = mount(
       resultFor([
-        { exerciseId: day2[0].id, result: 'correct' },
-        { exerciseId: day2[1].id, result: 'correct' },
+        { exerciseId: articles[0].id, result: 'correct' },
+        { exerciseId: articles[1].id, result: 'correct' },
       ]),
     );
 
     view.click('Zor Sorular');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'challenge' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', topicId: T.articles, mode: 'challenge' }]);
     act(() => view.root.unmount());
   });
 
   it('hatasiz derste "Hataları Tekrarla" aktif bir eylem olarak sunulmaz', () => {
     const view = mount(
-      resultFor(day2.slice(0, 4).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const }))),
+      resultFor(articles.slice(0, 4).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const }))),
     );
 
     expect(view.find('Hataları Tekrarla')).toBeUndefined();
     expect(view.dom.window.document.body.textContent).toContain('Mükemmel');
-    // Mukemmel derste birincil oneri sonraki gundur.
-    expect(view.find('3. Güne Geç')?.className).toContain('btn-primary');
+    // Mukemmel derste birincil oneri haritadaki siradaki konudur.
+    expect(view.find('Sıradaki Konu: Zamirler ve İyelik')?.className).toContain('btn-primary');
+    expect(view.dom.window.document.body.textContent).toContain('Artikeller ve Olumsuzluk');
+    expect(view.dom.window.document.body.textContent).not.toMatch(/\d+\.\s*Gün/);
     act(() => view.root.unmount());
   });
 
-  it('gun bitince sonraki gercek gune ilerler (3→5, 5→6, 6→7)', () => {
-    for (const [day, nextDay, pool] of [[3, 5, day3], [5, 6, day5], [6, 7, day6]] as const) {
-      const view = mount(
-        resultFor(pool.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })), day),
-      );
-
-      expect(view.find(`${nextDay}. Güne Geç`)).toBeDefined();
-      view.click(`${nextDay}. Güne Geç`);
-      expect(view.routes).toEqual([{ name: 'day', day: nextDay }]);
+  it('konu bitince haritadaki siradaki konuya ilerler', () => {
+    for (const [topicId, next, nextTitle] of [
+      [T.greetings, T.personalInfo, 'Kişisel Bilgiler'],
+      [T.time, T.dailyRoutine, 'Mein Tag'],
+      [T.separableVerbs, T.modalVerbs, 'Modalverben'],
+    ] as const) {
+      const pool = topicPool(topicId);
+      const view = mount(resultFor(pool.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })), topicId));
+      view.click(`Sıradaki Konu: ${nextTitle}`);
+      expect(view.routes).toEqual([{ name: 'topic', topicId: next }]);
       act(() => view.root.unmount());
     }
   });
 
-  it('bir set bitince sıradaki ayrık sete geçer', () => {
-    const view = mount(setResultFor(2, 'set-1'));
-
-    expect(view.find('2. Sete Geç')).toBeDefined();
-    view.click('2. Sete Geç');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 2, mode: 'set', exerciseSetId: 'set-2' }]);
+  it('Tekrar Çalış ayni konu ve modu (bolum dahil) yeniden acar', () => {
+    const pool = topicPool(T.modalVerbs).filter((exercise) => exercise.sectionId === 'modal-verbs.duerfen');
+    const lesson: ActiveLesson = {
+      mode: 'topic',
+      topicId: T.modalVerbs,
+      sessionMode: 'section',
+      sectionId: 'modal-verbs.duerfen',
+      queue: pool.slice(0, 2).map((exercise) => ({ exerciseId: exercise.id, presentationReason: 'primary' as const })),
+      index: 2,
+      startedAt: '2026-08-17T10:00:00.000Z',
+      results: pool.slice(0, 2).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })),
+      retries: {},
+    };
+    const view = mount(buildLessonResult(lesson, { lookup: (id) => allExercises.find((exercise) => exercise.id === id) }));
+    view.click('Tekrar Çalış');
+    expect(view.routes).toEqual([{ name: 'lesson', topicId: T.modalVerbs, mode: 'section', sectionId: 'modal-verbs.duerfen' }]);
     act(() => view.root.unmount());
   });
 
-  it('son gunde (10) olu "Sonraki Gün" yerine gercek alternatifler gosterir', () => {
+  it('haritanin son konusunda olu "Sıradaki" yerine gercek alternatifler gosterir', () => {
     const view = mount(
-      resultFor(
-        day10.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })),
-        10,
-      ),
+      resultFor(vocabulary.slice(0, 3).map((exercise) => ({ exerciseId: exercise.id, result: 'correct' as const })), T.vocabulary),
     );
-
-    expect(view.find('Güne Geç')).toBeUndefined();
+    expect(view.find('Sıradaki Konu')).toBeUndefined();
     expect(view.find('Hızlı Tekrar')).toBeDefined();
     view.click('Hızlı Tekrar');
-    expect(view.routes).toEqual([{ name: 'lesson', day: 10, mode: 'quick' }]);
+    expect(view.routes).toEqual([{ name: 'lesson', topicId: T.vocabulary, mode: 'quick' }]);
     act(() => view.root.unmount());
   });
 
@@ -253,10 +241,10 @@ describe('ders sonucu eylemleri', () => {
     const lesson: ActiveLesson = {
       mode: 'review',
       sessionMode: 'gr-mixed',
-      queue: [{ exerciseId: day2[0].id, presentationReason: 'primary' }],
+      queue: [{ exerciseId: articles[0].id, presentationReason: 'primary' }],
       index: 1,
       startedAt: '2026-08-17T10:00:00.000Z',
-      results: [{ exerciseId: day2[0].id, result: 'correct' }],
+      results: [{ exerciseId: articles[0].id, result: 'correct' }],
       retries: {},
     };
     const view = mount(
@@ -271,8 +259,8 @@ describe('ders sonucu eylemleri', () => {
   it('ust uste tiklamada tek bir oturum kurar', () => {
     const view = mount(
       resultFor([
-        { exerciseId: day2[0].id, result: 'incorrect' },
-        { exerciseId: day2[1].id, result: 'correct' },
+        { exerciseId: articles[0].id, result: 'incorrect' },
+        { exerciseId: articles[1].id, result: 'correct' },
       ]),
     );
 
@@ -288,11 +276,10 @@ describe('ders sonucu eylemleri', () => {
   it('hata tekrari bittiginde sonsuz tekrar dongusu onerilmez', () => {
     const lesson: ActiveLesson = {
       mode: 'mistakes',
-      day: 2,
-      queue: [{ exerciseId: day2[1].id, presentationReason: 'primary' }],
+      queue: [{ exerciseId: articles[1].id, presentationReason: 'primary' }],
       index: 1,
       startedAt: '2026-08-17T10:00:00.000Z',
-      results: [{ exerciseId: day2[1].id, result: 'incorrect' }],
+      results: [{ exerciseId: articles[1].id, result: 'incorrect' }],
       retries: {},
     };
     const view = mount(
@@ -307,9 +294,9 @@ describe('ders sonucu eylemleri', () => {
 
   it('ekrandaki HER eylem gercekten bir sey yapar (olu buton yok)', () => {
     const results: ActiveLesson['results'] = [
-      { exerciseId: day2[0].id, result: 'incorrect' },
-      { exerciseId: day2[1].id, result: 'correct' },
-      { exerciseId: day2[2].id, result: 'minor-typo' },
+      { exerciseId: articles[0].id, result: 'incorrect' },
+      { exerciseId: articles[1].id, result: 'correct' },
+      { exerciseId: articles[2].id, result: 'minor-typo' },
     ];
 
     const probe = mount(resultFor(results));

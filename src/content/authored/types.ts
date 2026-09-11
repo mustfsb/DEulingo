@@ -1,13 +1,14 @@
 /**
  * Uygulama ici yazilmis alistirma katmani.
  *
- * Kaynak Obsidian dosyalari DEGISTIRILMEZ; havuzu genisletmek icin alistirmalar
- * burada tanimlanir. Her tanim yalnizca `concepts.ts` icindeki kavramlara
- * dayanabilir — boylece ogretilmemis bilgi sorulamaz.
+ * Her tanim yalnizca `concepts.ts` icindeki kavramlara dayanabilir — boylece
+ * ogretilmemis bilgi sorulamaz. Konu kimligi (`topicId`) kanonik konu
+ * kaydindan gelir (`curriculum/topics.ts`); gun numarasi yoktur.
  *
  * ID KURALI: elle yazilir, anlamlidir ve KONUMDAN BAGIMSIZDIR. Listenin
  * ortasina yeni alistirma eklemek mevcut hicbir ID'yi kaydirmaz, dolayisiyla
- * kayitli ilerleme bozulmaz.
+ * kayitli ilerleme bozulmaz. Eski ID'ler (`p7-…`) kalici ilerleme icin
+ * degistirilmeden korunur.
  */
 
 import type {
@@ -21,20 +22,28 @@ import type {
 } from '../types.ts';
 
 export interface AuthoredExercise {
-  /** Elle verilen kararli ID: `d2-konj-du-kommst-fill`. */
+  /** Elle verilen kararli ID: `mv-koennen-deutsch-wb`. */
   id: string;
-  day: number;
-  track?: import('../types.ts').LearningTrack;
+  /** Birincil kanonik konu: `topic.modal-verbs` (bkz. `T`). */
+  topicId: string;
   /**
-   * Genel Tekrar bankası üyesi. `true` ise alıştırma gün havuzlarına girmez;
-   * yalnızca kümülatif Genel Tekrar oturumlarında kullanılır.
+   * Alistirmanin ayrica calistirdigi konular. Kavramlardan ve bolum
+   * iliskilerinden otomatik turetilir; burada yalnizca ek etiket verilir.
+   */
+  secondaryTopicIds?: string[];
+  /** "Özeti aç" icin ozet bolumu; verilmezse ilk kavramin bolumu kullanilir. */
+  sectionId?: string;
+  /**
+   * Genel Tekrar bankası üyesi. `true` ise alıştırma konu ders havuzlarına
+   * girmez; kümülatif Genel Tekrar oturumlarında kullanılır.
    */
   reviewOnly?: boolean;
-  /** Bagli oldugu ozet konusu (`SUMMARY_TOPICS` ID'si). */
-  topicId: string;
+  /** Tarihî gün — YALNIZCA kaynak izi/denetim; hiçbir davranışı sürmez. */
+  legacyDay?: number;
   type: ExerciseType;
   difficulty: Difficulty;
   skill: Skill;
+  /** Alistirmanin gerektirdigi ve olctugu kavramlar (ilki birincil). */
   conceptIds: string[];
   /** Ayni kavrami farkli bicimde soranlar ayni aileyi paylasir. */
   familyId?: string;
@@ -65,20 +74,9 @@ export interface AuthoredExercise {
   masteryWeight?: number;
 }
 
-/** Kasa alistirmalarinin ustveri etiketi (tek müfredatta kasa alıştırması yok; tip korunur). */
-export interface VaultTag {
-  topicId: string;
-  difficulty: Difficulty;
-  skill: Skill;
-  conceptIds: string[];
-  familyId?: string;
-  /** Cevaptan sonra okunusu gosterilecek ek Almanca dizeler. */
-  pronounce?: string[];
-}
-
 /** Uygulama ici ek ozet aciklamasi (kaynak dosya degistirilmeden). */
 export interface SummaryAugmentation {
-  topicId: string;
+  sectionId: string;
   /** Bu ek notun ogrettigi kavramlar. */
   conceptIds: string[];
   title: string;

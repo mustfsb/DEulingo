@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSDOM } from 'jsdom';
@@ -32,8 +33,8 @@ function mountAnsweredWordBankExercise() {
       soundEffects: false,
     },
     activeLesson: {
-      mode: 'day',
-      day: exercise.day,
+      mode: 'topic',
+      topicId: exercise.topicId,
       sessionMode: 'normal',
       queue: [{ exerciseId: exercise.id, presentationReason: 'primary' }],
       index: 0,
@@ -57,8 +58,8 @@ function mountAnsweredWordBankExercise() {
   act(() => {
     root.render(
       createElement(LessonScreen, {
-        mode: 'day',
-        day: exercise.day,
+        mode: 'topic',
+        topicId: exercise.topicId,
         sessionMode: 'normal',
         api,
         navigate: () => undefined,
@@ -92,7 +93,8 @@ afterEach(() => {
 const CHOICE_EXERCISES = allExercises.filter(
   (exercise) =>
     exercise.type === 'multiple-choice' &&
-    exercise.day === 2 &&
+    exercise.topicId === 'topic.articles' &&
+    !exercise.reviewOnly &&
     Boolean(exercise.answer) &&
     !/[`*_]/.test(exercise.answer ?? '') &&
     (exercise.options ?? []).length > 1,
@@ -134,9 +136,9 @@ function mountLesson(lesson: ActiveLesson) {
       root.render(
         createElement(LessonScreen, {
           mode: lesson.mode,
-          day: lesson.day,
-          sessionMode: lesson.sessionMode,
           topicId: lesson.topicId,
+          sessionMode: lesson.sessionMode,
+          sectionId: lesson.sectionId,
           api,
           navigate: (route: Route) => routes.push(route),
         }),
@@ -164,10 +166,10 @@ function mountLesson(lesson: ActiveLesson) {
 }
 
 describe('ders akışı: seri, kutlama ve tamamlanma', () => {
-  it('kaldırılmış bir soru taşıyan yarım oturumu geçerli gün havuzuyla yeniden kurar', () => {
+  it('kaldırılmış bir soru taşıyan yarım oturumu geçerli konu havuzuyla yeniden kurar', () => {
     const view = mountLesson({
-      mode: 'day',
-      day: 2,
+      mode: 'topic',
+      topicId: 'topic.articles',
       sessionMode: 'normal',
       queue: [{ exerciseId: 'd2-hal-isimleri-mc', presentationReason: 'primary' }],
       index: 0,
@@ -182,6 +184,11 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
     const rebuilt = view.getProgress().activeLesson;
     expect(rebuilt?.queue.length).toBeGreaterThan(0);
     expect(rebuilt?.queue.every((item) => allExercises.some((exercise) => exercise.id === item.exerciseId))).toBe(true);
+    // Yeni kuyruk yalnızca aynı konunun (birincil ya da ikincil) alıştırmalarıdır.
+    for (const item of rebuilt?.queue ?? []) {
+      const exercise = allExercises.find((candidate) => candidate.id === item.exerciseId)!;
+      expect(exercise.topicId === 'topic.articles' || exercise.secondaryTopicIds?.includes('topic.articles')).toBe(true);
+    }
     expect(view.dom.window.document.body.textContent).not.toContain('Alıştırma bulunamadı');
     act(() => view.root.unmount());
   });
@@ -192,8 +199,8 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
       presentationReason: 'primary' as const,
     }));
     const view = mountLesson({
-      mode: 'day',
-      day: 2,
+      mode: 'topic',
+      topicId: 'topic.articles',
       sessionMode: 'full',
       queue,
       index: 2,
@@ -217,8 +224,8 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
   it('5. doğruda kutlama gösterir ve seriyi kalıcı duruma yazar', () => {
     const exercise = CHOICE_EXERCISES[0];
     const view = mountLesson({
-      mode: 'day',
-      day: 2,
+      mode: 'topic',
+      topicId: 'topic.articles',
       sessionMode: 'full',
       queue: [{ exerciseId: exercise.id, presentationReason: 'primary' }],
       index: 0,
@@ -238,8 +245,8 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
   it('yanlış cevapta seri sıfırlanır ve kutlama açılmaz', () => {
     const exercise = CHOICE_EXERCISES[0];
     const view = mountLesson({
-      mode: 'day',
-      day: 2,
+      mode: 'topic',
+      topicId: 'topic.articles',
       sessionMode: 'full',
       queue: [{ exerciseId: exercise.id, presentationReason: 'primary' }],
       index: 0,
@@ -259,8 +266,8 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
   it('ders bitince sonucu kalıcı yazar ve sonuç rotasına geçer', () => {
     const exercise = CHOICE_EXERCISES[1];
     const view = mountLesson({
-      mode: 'day',
-      day: 2,
+      mode: 'topic',
+      topicId: 'topic.articles',
       sessionMode: 'full',
       queue: [{ exerciseId: exercise.id, presentationReason: 'primary' }],
       index: 0,
@@ -280,11 +287,47 @@ describe('ders akışı: seri, kutlama ve tamamlanma', () => {
 
     const progress = view.getProgress();
     expect(progress.activeLesson).toBeUndefined();
-    expect(progress.lastResult?.day).toBe(2);
+    expect(progress.lastResult?.topicId).toBe('topic.articles');
     expect(progress.lastResult?.correctCount).toBe(1);
-    expect(progress.days[2].sessionsCompleted).toBe(1);
+    expect(progress.topics['topic.articles'].sessionsCompleted).toBe(1);
     expect(view.routes.at(-1)).toEqual({ name: 'complete' });
     act(() => view.root.unmount());
+  });
+});
+
+describe('konu dersi kurulumu ve etiketler', () => {
+  it('konu rotasından yeni oturum kurar; başlıkta gün değil konu adı görünür', () => {
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://localhost' });
+    doms.push(dom);
+    Object.assign(globalThis, {
+      window: dom.window,
+      document: dom.window.document,
+      HTMLElement: dom.window.HTMLElement,
+      localStorage: dom.window.localStorage,
+      IS_REACT_ACT_ENVIRONMENT: true,
+    });
+    const base = createEmptyProgress();
+    let progress: UserProgress = { ...base, settings: { ...base.settings, autoPronunciation: false, soundEffects: false } };
+    const api: ProgressApi = {
+      get progress() { return progress; },
+      update(updater) { progress = updater(progress); },
+      replace(next) { progress = next; },
+    };
+    const root = createRoot(dom.window.document.getElementById('root')!);
+    const render = () =>
+      act(() => {
+        root.render(createElement(LessonScreen, { mode: 'topic', topicId: 'topic.modal-verbs', sessionMode: 'normal', api, navigate: () => undefined }));
+      });
+    render();
+    render();
+    const lesson = progress.activeLesson!;
+    expect(lesson.mode).toBe('topic');
+    expect(lesson.topicId).toBe('topic.modal-verbs');
+    expect(lesson.queue.length).toBe(22);
+    const text = dom.window.document.body.textContent ?? '';
+    expect(text).toContain('Modalverben · Normal Çalışma');
+    expect(text).not.toMatch(/\d+\.\s*Gün/);
+    act(() => root.unmount());
   });
 });
 

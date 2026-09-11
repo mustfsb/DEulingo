@@ -28,11 +28,9 @@ function emptyTally(): ExerciseTally {
   return { correct: 0, typo: 0, incorrect: 0, skipped: 0, selfAssessed: 0 };
 }
 
-/** Oturum kimligi: ayni gun+mod tekrar calisilsa bile benzersizdir. */
+/** Oturum kimligi: ayni konu+mod tekrar calisilsa bile benzersizdir. */
 export function sessionIdFor(lesson: ActiveLesson): string {
-  return [lesson.mode, lesson.track ?? '-', lesson.day ?? '-', lesson.sessionMode ?? '-', lesson.topicId ?? '-', lesson.exerciseSetId ?? '-', lesson.startedAt].join(
-    '|',
-  );
+  return [lesson.mode, lesson.topicId ?? '-', lesson.sessionMode ?? '-', lesson.sectionId ?? '-', lesson.startedAt].join('|');
 }
 
 export function buildLessonResult(lesson: ActiveLesson, context: ResultContext): LessonResult {
@@ -101,12 +99,10 @@ export function buildLessonResult(lesson: ActiveLesson, context: ResultContext):
 
   return {
     sessionId: sessionIdFor(lesson),
-    track: lesson.track,
-    day: lesson.day,
     mode: lesson.mode,
     sessionMode: lesson.sessionMode,
-    topicId: lesson.topicId,
-    exerciseSetId: lesson.exerciseSetId,
+    ...(lesson.topicId ? { topicId: lesson.topicId } : {}),
+    ...(lesson.sectionId ? { sectionId: lesson.sectionId } : {}),
     exerciseIds: order,
     incorrectExerciseIds,
     unresolvedExerciseIds,
@@ -245,30 +241,30 @@ export function hasReviewableMistakes(result: LessonResult, options: MistakeQueu
 /* ------------------------------------------------------------------ */
 
 /**
- * Dersi kapatir: aktif oturumu temizler, gun sayacini artirir, gunluk hedefe
+ * Dersi kapatir: aktif oturumu temizler, konu sayacini artirir, gunluk hedefe
  * bir oturum yazar ve sonucu `lastResult` olarak saklar.
  *
- * Sonuc HER ZAMAN yenisiyle degistirilir: 3. Gun bitince 2. Gun'un sonucu
- * tamamlanma ekranini besleyemez (§15).
+ * Sonuc HER ZAMAN yenisiyle degistirilir: bir konu bitince onceki konunun
+ * sonucu tamamlanma ekranini besleyemez (§15).
  */
 export function completeLesson(
   progress: UserProgress,
   result: LessonResult,
   now = new Date(),
 ): UserProgress {
-  const day = result.day;
-  // Yalnızca gün dersleri (`mode === 'day'`) gün sayacını artırır.
-  // Genel Tekrar (`review`) ve hata tekrarı (`mistakes`) gün tamamlaması SAYILMAZ (§48).
+  const topicId = result.topicId;
+  // Yalnızca konu dersleri (`mode === 'topic'`) konu sayacını artırır.
+  // Genel Tekrar (`review`) ve hata tekrarı (`mistakes`) konu oturumu SAYILMAZ (§48).
   let nextProgress = progress;
-  if (day !== undefined && result.mode === 'day') {
-    const days = { ...progress.days };
-    const entry = days[day] ?? { day, sessionsCompleted: 0 };
-    days[day] = {
+  if (topicId && result.mode === 'topic') {
+    const topics = { ...progress.topics };
+    const entry = topics[topicId] ?? { topicId, sessionsCompleted: 0 };
+    topics[topicId] = {
       ...entry,
       sessionsCompleted: entry.sessionsCompleted + 1,
       lastCompletedAt: now.toISOString(),
     };
-    nextProgress = { ...progress, days };
+    nextProgress = { ...progress, topics };
   }
   return {
     ...nextProgress,

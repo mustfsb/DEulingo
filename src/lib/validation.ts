@@ -97,18 +97,46 @@ const FORM_GROUPS: string[][] = [
   ['wie', 'wo', 'woher', 'wer', 'was', 'wann'],
   ['guten morgen', 'guten tag', 'guten abend', 'gute nacht'],
   ['auf wiedersehen', 'auf wiederhören', 'auf wiederhoeren'],
-  ['dein', 'ihr', 'mein'],
+  // Belirsiz / olumsuz / iyelik artikelleri: hâl ve cinsiyet eki dilbilgisidir (ein → einen).
+  ['ein', 'eine', 'einen', 'einem', 'einer'],
+  ['kein', 'keine', 'keinen', 'keinem', 'keiner'],
+  ['mein', 'meine', 'meinen', 'meinem', 'meiner', 'dein', 'deine', 'deinen', 'sein', 'seine', 'seinen', 'ihr', 'ihre', 'ihren', 'unser', 'unsere', 'unseren', 'Ihr', 'Ihre', 'Ihren'],
+  // Modalverbler: kişi eki dilbilgisidir (kann ↔ kannst).
+  ['kann', 'kannst', 'können', 'könnt'],
+  ['möchte', 'möchtest', 'möchten', 'möchtet'],
+  ['will', 'willst', 'wollen', 'wollt'],
+  ['soll', 'sollst', 'sollen', 'sollt'],
+  ['darf', 'darfst', 'dürfen', 'dürft'],
+  ['mag', 'magst', 'mögen', 'mögt'],
+  ['muss', 'musst', 'müssen', 'müsst'],
+  ['weiß', 'weißt', 'wissen', 'wisst', 'weiss', 'weisst'],
 ];
 
-const GROUP_INDEX = new Map<string, number>();
+/** Bir biçim birden çok gruba ait olabilir (`sein` hem fiil hem iyelik, `ihr` hem zamir hem iyelik). */
+const GROUP_INDEX = new Map<string, Set<number>>();
 FORM_GROUPS.forEach((group, index) => {
-  for (const form of group) GROUP_INDEX.set(foldGerman(form), index);
+  for (const form of group) {
+    const key = foldGerman(form);
+    GROUP_INDEX.set(key, new Set([...(GROUP_INDEX.get(key) ?? []), index]));
+  }
 });
 
 function inSameFormGroup(a: string, b: string): boolean {
-  const groupA = GROUP_INDEX.get(foldGerman(a));
-  const groupB = GROUP_INDEX.get(foldGerman(b));
-  return groupA !== undefined && groupA === groupB;
+  const groupsA = GROUP_INDEX.get(foldGerman(a));
+  const groupsB = GROUP_INDEX.get(foldGerman(b));
+  if (!groupsA || !groupsB) return false;
+  return [...groupsA].some((group) => groupsB.has(group));
+}
+
+/** Aynı sayıda sözcükte, herhangi bir sözcük farkı dilbilgisi biçimi değişikliği mi? */
+function hasGrammarFormSwap(input: string, expected: string): boolean {
+  const inputTokens = input.split(' ');
+  const expectedTokens = expected.split(' ');
+  if (inputTokens.length !== expectedTokens.length) return false;
+  return expectedTokens.some((want, index) => {
+    const got = inputTokens[index];
+    return want !== got && (inSameFormGroup(want, got) || isConjugationVariant(want, got));
+  });
 }
 
 /** Buyuk harfi anlam tasiyan sozcukler (resmî `Sie`). */
@@ -253,7 +281,11 @@ function compareOne(input: string, expected: string, options: NormalizeOptions):
   if (options.keyboardTolerance && /[ßäöü]/.test(normalizedExpected)) {
     const foldedInput = foldSpecialChars(normalizedInput);
     const foldedExpected = foldSpecialChars(normalizedExpected);
-    if (foldedInput === foldedExpected || levenshtein(foldedInput, foldedExpected) <= 2) {
+    if (foldedInput === foldedExpected) {
+      return { status: 'correct', expected, normalizedInput };
+    }
+    // Küçük klavye farkı affedilir; ama `möchte` ↔ `möchtest` gibi biçim farkı asla.
+    if (levenshtein(foldedInput, foldedExpected) <= 2 && !hasGrammarFormSwap(foldedInput, foldedExpected)) {
       return { status: 'correct', expected, normalizedInput };
     }
   }

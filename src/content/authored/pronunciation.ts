@@ -36,7 +36,7 @@ interface LexiconEntry {
  * Anahtarlar kucuk harfe cevrilerek aranir.
  */
 const LEXICON: Record<string, LexiconEntry> = {
-  /* -- 1. Gün: telaffuz örnekleri -------------------------------- */
+  /* -- Telaffuz örnekleri -------------------------------- */
   nein: { tr: 'nayn' },
   wie: { tr: 'vii', note: '`ie` uzun bir "i" sesidir.' },
   schule: { tr: 'şuule' },
@@ -59,7 +59,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   heißen: { tr: 'haysen', note: NOTES.ss },
   heissen: { tr: 'haysen', note: NOTES.ss },
 
-  /* -- 1. Gün: selamlaşma / vedalaşma ---------------------------- */
+  /* -- Selamlaşma / vedalaşma ---------------------------- */
   hallo: { tr: 'halo' },
   hi: { tr: 'hay' },
   moin: { tr: 'moyn' },
@@ -77,7 +77,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   'bis montag': { tr: 'bis moontaak' },
   'bis nächste woche': { tr: 'bis nehste vohe' },
 
-  /* -- 2. Gün: zamirler ------------------------------------------ */
+  /* -- Zamirler ------------------------------------------ */
   du: { tr: 'du' },
   er: { tr: 'eea', note: NOTES.finalEr },
   sie: { tr: 'zii', note: NOTES.sVoiced },
@@ -85,7 +85,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   wir: { tr: 'viia' },
   ihr: { tr: 'iia' },
 
-  /* -- 2. Gün: düzenli fiiller ----------------------------------- */
+  /* -- Düzenli fiiller ----------------------------------- */
   kommen: { tr: 'komen' },
   komme: { tr: 'kome' },
   kommst: { tr: 'komst' },
@@ -105,7 +105,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   trinkst: { tr: 'trinkst' },
   trinkt: { tr: 'trinkt' },
 
-  /* -- 2. Gün: sein / haben -------------------------------------- */
+  /* -- Sein / haben -------------------------------------- */
   sein: { tr: 'zayn', note: NOTES.sVoiced },
   bin: { tr: 'bin' },
   bist: { tr: 'bist' },
@@ -118,7 +118,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   hat: { tr: 'hat' },
   habt: { tr: 'hapt' },
 
-  /* -- 2. Gün: artikel ve isimler -------------------------------- */
+  /* -- Artikel ve isimler -------------------------------- */
   der: { tr: 'dea', note: NOTES.finalEr },
   die: { tr: 'dii' },
   das: { tr: 'das' },
@@ -143,7 +143,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   und: { tr: 'unt' },
   nicht: { tr: 'niht', note: NOTES.chSoft },
 
-  /* -- 3. Gün: soru ve cevap kalıpları --------------------------- */
+  /* -- Soru ve cevap kalıpları --------------------------- */
   'wie heißt du': { tr: 'Vii hayst du' },
   'wie heißen sie': { tr: 'Vii haysen zii' },
   'wie ist dein name': { tr: 'Vii ist dayn naame' },
@@ -173,7 +173,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   'ich buchstabiere': { tr: 'İh buuhştabiire' },
   'mein vater ist lehrer': { tr: 'Mayn faata ist leera' },
 
-  /* -- 3. Gün: Nasılsın? cevapları ------------------------------- */
+  /* -- Nasılsın? cevapları ------------------------------- */
   super: { tr: 'zuupa', note: NOTES.finalEr },
   spitze: { tr: 'şpitse' },
   sehr: { tr: 'zea', note: NOTES.finalEr },
@@ -183,7 +183,7 @@ const LEXICON: Record<string, LexiconEntry> = {
   schlecht: { tr: 'şleht', note: NOTES.chSoft },
   fürchterlich: { tr: 'fürhtalih', note: NOTES.chSoft },
 
-  /* -- 3. Gün: sayılar ------------------------------------------- */
+  /* -- Sayılar ------------------------------------------- */
   null: { tr: 'nul' },
   eins: { tr: 'ayns' },
   zwei: { tr: 'tsvay', note: NOTES.z },

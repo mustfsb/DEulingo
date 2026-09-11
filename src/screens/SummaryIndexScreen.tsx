@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { searchSummaries, summaries } from '../lib/content';
+import {
+  getTopic,
+  reviewSectionsById,
+  reviewSummary,
+  searchSummaries,
+  sectionsById,
+  summaries,
+} from '../lib/content';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
@@ -15,23 +22,19 @@ export function SummaryIndexScreen({
   const hits = useMemo(() => searchSummaries(query), [query]);
   const bookmarks = progress.settings.bookmarks ?? [];
   const read = progress.settings.readSummaries ?? {};
-
-  /** 0. gün: kümülatif Genel Tekrar özeti (ders günü değildir). */
-  const generalSummary = useMemo(() => summaries.find((day) => day.day === 0), []);
-  const daySummaries = useMemo(() => summaries.filter((day) => day.day !== 0), []);
+  const searching = query.trim().length >= 2;
 
   const bookmarked = useMemo(
     () =>
-      daySummaries.flatMap((day) =>
-        day.topics.filter((topic) => bookmarks.includes(topic.id)).map((topic) => ({ day: day.day, topic })),
-      ),
-    [bookmarks, daySummaries],
+      bookmarks.flatMap((id) => {
+        const section = sectionsById.get(id);
+        if (section) return [{ id, title: section.title, route: { name: 'summary', topicId: section.topicId, sectionId: id } as Route }];
+        const review = reviewSectionsById.get(id);
+        if (review) return [{ id, title: `🔁 ${review.title}`, route: { name: 'review-summary', sectionId: id } as Route }];
+        return [];
+      }),
+    [bookmarks],
   );
-
-  const displayedHits = useMemo(() => {
-    if (query.trim().length < 2) return [];
-    return hits;
-  }, [hits, query]);
 
   return (
     <main className="mx-auto w-full max-w-[760px] px-5 pb-24 pt-6 sm:pt-10">
@@ -39,16 +42,16 @@ export function SummaryIndexScreen({
         <p className="eyebrow">Ders notların</p>
         <h1 className="mt-1 text-[2.5rem] sm:text-5xl">Özetler</h1>
         <p className="mt-3 text-lg text-ink-soft">
-          Alıştırmalarda karşına çıkan her konunun açıklaması burada.
+          Her konunun tek, kanonik özeti. Alıştırmalarda karşına çıkan her kural burada.
         </p>
       </header>
 
-      {generalSummary && query.trim().length < 2 && (
+      {reviewSummary && !searching && (
         <button
           type="button"
           className="card mt-7 flex w-full items-center justify-between gap-4 p-5 text-left anim-pop"
           style={{ borderColor: 'var(--color-brand)', boxShadow: '0 5px 0 0 var(--color-brand)' }}
-          onClick={() => navigate({ name: 'summary', day: 0 })}
+          onClick={() => navigate({ name: 'review-summary' })}
         >
           <span>
             <span className="eyebrow" style={{ color: 'var(--color-brand)' }}>
@@ -56,8 +59,7 @@ export function SummaryIndexScreen({
             </span>
             <span className="mt-1 block text-xl font-bold">🔁 Genel Tekrar</span>
             <span className="text-[0.95rem] text-ink-soft">
-              Bugüne kadar öğrendiğin her şey, konudan konuya tek özet (~
-              {generalSummary.estimatedReadingMinutes} dk)
+              Bugüne kadar öğrendiğin her konu, sıkıştırılmış tek özette (~{reviewSummary.estimatedReadingMinutes} dk)
             </span>
           </span>
           <span className="numeral text-2xl" aria-hidden="true">
@@ -74,27 +76,33 @@ export function SummaryIndexScreen({
           id="ozet-arama"
           type="search"
           className="field mt-1.5 w-full"
-          placeholder="sein, artikel, fiil çekimi, Wie geht…"
+          placeholder="können, artikel, fiil çekimi, Wie spät…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
       </div>
 
-      {query.trim().length >= 2 && (
+      {searching && (
         <section className="mt-5" aria-live="polite">
-          {displayedHits.length === 0 ? (
+          {hits.length === 0 ? (
             <p className="text-ink-soft">Sonuç bulunamadı.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {displayedHits.map((hit) => (
-                <li key={`${hit.day}-${hit.topic.id}`}>
+              {hits.map((hit) => (
+                <li key={`${hit.scope}-${hit.section.id}`}>
                   <button
                     type="button"
                     className="card w-full p-4 text-left"
-                    onClick={() => navigate({ name: 'summary', day: hit.day, topicId: hit.topic.id })}
+                    onClick={() =>
+                      navigate(
+                        hit.scope === 'review'
+                          ? { name: 'review-summary', sectionId: hit.section.id }
+                          : { name: 'summary', topicId: hit.scope, sectionId: hit.section.id },
+                      )
+                    }
                   >
                     <p className="eyebrow">
-                      {hit.day === 0 ? '🔁 Genel Tekrar' : `${hit.day}. Gün`} · {hit.topic.title}
+                      {hit.scope === 'review' ? '🔁 Genel Tekrar' : getTopic(hit.scope)?.title} · {hit.section.title}
                     </p>
                     <p className="mt-1 text-[0.95rem] leading-snug text-ink-soft">{hit.excerpt}</p>
                   </button>
@@ -105,19 +113,19 @@ export function SummaryIndexScreen({
         </section>
       )}
 
-      {bookmarked.length > 0 && query.trim().length < 2 && (
+      {bookmarked.length > 0 && !searching && (
         <section className="mt-9">
           <h2 className="eyebrow mb-3">Kaydedilenler</h2>
           <ul className="flex flex-wrap gap-2">
-            {bookmarked.map(({ day, topic }) => (
-              <li key={topic.id}>
+            {bookmarked.map((item) => (
+              <li key={item.id}>
                 <button
                   type="button"
                   className="badge"
                   style={{ background: 'var(--color-signal)', color: '#14141b' }}
-                  onClick={() => navigate({ name: 'summary', day, topicId: topic.id })}
+                  onClick={() => navigate(item.route)}
                 >
-                  ⭐ {topic.title}
+                  ⭐ {item.title}
                 </button>
               </li>
             ))}
@@ -126,54 +134,43 @@ export function SummaryIndexScreen({
       )}
 
       <section className="mt-9">
-        <h2 className="eyebrow mb-4">Günler</h2>
-        <ul className="flex flex-col gap-4">
-          {daySummaries.map((day) => {
-            const readCount = day.topics.filter((topic) => read[topic.id]).length;
-            const allRead = readCount === day.topics.length && day.topics.length > 0;
+        <h2 className="eyebrow mb-4">Konular</h2>
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {summaries.map((summary) => {
+            const topic = getTopic(summary.topicId);
+            const readCount = summary.sections.filter((section) => read[section.id]).length;
+            const allRead = readCount === summary.sections.length && summary.sections.length > 0;
 
             return (
-              <li key={day.day}>
+              <li key={summary.topicId}>
                 <button
                   type="button"
-                  className="day-tile w-full"
-                  onClick={() => navigate({ name: 'summary', day: day.day })}
+                  className="topic-tile h-full w-full"
+                  onClick={() => navigate({ name: 'summary', topicId: summary.topicId })}
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-2xl">{day.title}</h3>
-                    <span className="text-sm font-bold text-ink-faint">
-                      ~{day.estimatedReadingMinutes} dk
-                    </span>
+                    <h3 className="text-xl">
+                      <span aria-hidden="true">{topic?.emoji} </span>
+                      {summary.title}
+                    </h3>
+                    <span className="text-sm font-bold text-ink-faint">~{summary.estimatedReadingMinutes} dk</span>
                   </div>
-
-                  <ul className="mt-2 flex flex-col gap-1">
-                    {day.topics.map((topic) => (
-                      <li key={topic.id} className="flex items-center gap-2 text-[0.98rem] text-ink-soft">
-                        <span
-                          className="size-1.5 flex-none rounded-full"
-                          style={{ background: 'var(--color-signal)' }}
-                          aria-hidden="true"
-                        />
-                        {topic.title}
-                      </li>
-                    ))}
-                  </ul>
+                  {topic?.description && (
+                    <p className="mt-1.5 text-[0.93rem] leading-snug text-ink-soft">{topic.description}</p>
+                  )}
 
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {allRead ? (
-                      <span
-                        className="badge"
-                        style={{ background: 'var(--color-good-soft)', color: 'var(--color-good-deep)' }}
-                      >
+                      <span className="badge" style={{ background: 'var(--color-good-soft)', color: 'var(--color-good-deep)' }}>
                         ✓ Okundu
                       </span>
                     ) : readCount > 0 ? (
                       <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                        {readCount}/{day.topics.length} konu okundu
+                        {readCount}/{summary.sections.length} bölüm okundu
                       </span>
                     ) : (
                       <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                        Okunmadı
+                        {summary.sections.length} bölüm
                       </span>
                     )}
                     <span className="ml-auto font-bold" style={{ color: 'var(--color-brand)' }}>
@@ -185,9 +182,7 @@ export function SummaryIndexScreen({
             );
           })}
         </ul>
-        {daySummaries.length === 0 && (
-          <p className="mt-4 text-ink-soft">Henüz özet yok.</p>
-        )}
+        {summaries.length === 0 && <p className="mt-4 text-ink-soft">Henüz özet yok.</p>}
       </section>
     </main>
   );

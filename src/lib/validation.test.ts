@@ -10,16 +10,15 @@ import {
 
 const base: Exercise = {
   id: 'test',
-  day: 1,
   topic: 'Test',
-  topicId: 'day1.test',
+  topicId: 'topic.greetings',
   type: 'fill-blank',
   instruction: 'Test',
   difficulty: 'medium',
   skill: 'recall',
   conceptIds: [],
   origin: 'vault',
-  source: { file: 'test.md', day: 1, naturalKey: '1/1/1' },
+  source: { file: 'test.md', naturalKey: '1/1/1' },
 };
 
 describe('normalizeAnswer', () => {
@@ -226,5 +225,36 @@ describe('alistirma tipleri', () => {
         'Wo wohnst du?': 'Ich heiße Mustafa.',
       }).status,
     ).toBe('incorrect');
+  });
+});
+
+describe('Modalverben ve Akkusativ biçim farkları (yazım hatası sayılmaz)', () => {
+  const text = (answer: string, validation: Exercise['validation'] = {}) =>
+    ({ ...base, type: 'free-text', answer, validation }) as Exercise;
+
+  it('Modalverb çekim hatası küçük yazım hatası olarak affedilmez', () => {
+    expect(evaluateExercise(text('Ich kann gut kochen.'), 'Ich kannst gut kochen.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Du möchtest Kaffee trinken.'), 'Du möchte Kaffee trinken.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Er will ein Haus kaufen.'), 'Er willst ein Haus kaufen.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Hier darf man nicht parken.'), 'Hier darfst man nicht parken.').status).toBe('incorrect');
+  });
+
+  it('klavye toleransı açıkken de biçim değişikliği doğru sayılmaz', () => {
+    const tolerant = { keyboardTolerance: true };
+    expect(evaluateExercise(text('Du möchtest Kaffee trinken.', tolerant), 'Du moechte Kaffee trinken.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Ich möchte einen Kuchen kaufen.', tolerant), 'Ich möchte ein Kuchen kaufen.').status).toBe('incorrect');
+    // ASCII yazımı (oe, ss) biçim değişikliği değildir: tam doğru.
+    expect(evaluateExercise(text('Du möchtest Kaffee trinken.', tolerant), 'Du moechtest Kaffee trinken.').status).toBe('correct');
+    expect(evaluateExercise(text('Ich weiß es nicht.', tolerant), 'Ich weiss es nicht.').status).toBe('correct');
+  });
+
+  it('Akkusativ artikel hatası (ein/einen, mein/meinen, kein/keinen) yakalanır', () => {
+    expect(evaluateExercise(text('Ich möchte einen Apfel essen.'), 'Ich möchte ein Apfel essen.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Ich soll meinen Bruder anrufen.'), 'Ich soll mein Bruder anrufen.').status).toBe('incorrect');
+    expect(evaluateExercise(text('Ich möchte keinen Kaffee trinken.'), 'Ich möchte kein Kaffee trinken.').status).toBe('incorrect');
+  });
+
+  it('gerçek küçük yazım hatası hâlâ küçük hata olarak kabul edilir', () => {
+    expect(evaluateExercise(text('Ich kann Deutsch sprechen.'), 'Ich kann Deutsch sprechn.').status).toBe('minor-typo');
   });
 });

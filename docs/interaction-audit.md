@@ -5,7 +5,8 @@ durumunu kaydeder. Yeni bir ekran/aksiyon eklendiğinde buraya da eklenir.
 Otomatik koruma: `src/lib/interaction-audit.test.ts` (ölü buton taraması) ve
 `src/screens/LessonCompleteScreen.test.ts` (tamamlama eylemleri).
 
-Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu turda eklendi.
+Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu turda eklendi ·
+`TOPIC` konu tabanlı müfredata geçişte (v10) değişti.
 
 ## Ana sayfa (`#/`)
 
@@ -14,26 +15,33 @@ Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu tur
 | Devam Et kartı | Yarım kalan oturumun rotasına döner | OK |
 | Bugün önerilen kartı | Deterministik öneri motorunun rotasını açar | NEW |
 | Günlük hedef halkası | Bugünün dakikası / hedefi; hedef dolunca kutlama satırı | NEW |
-| Gün kartları (öğrenme yolu) | `#/gun/N` | OK |
-| Üst gezinme (Öğren / Özetler / Hatalarım / İstatistik) | Rota değişir | OK |
+| Konu kartı gövdesi | `#/konu/<konu>` (konu sayfası) | TOPIC |
+| Konu kartı → Çalış | `#/ders/<konu>/normal` | TOPIC |
+| Konu kartı → 📖 Özet | `#/ozet/<konu>` | TOPIC |
+| Üst gezinme (Dersler / Genel Tekrar / Özetler / Hatalarım / İstatistik) | Rota değişir | TOPIC |
 | Tema düğmesi | Açık ⇄ koyu, kalıcı ayara yazar | OK |
 | `içerik` (yalnız DEV) | Debug ekranı | OK |
 
-## Gün detayı (`#/gun/N`)
+## Konu sayfası (`#/konu/<konu>`)
+
+Eski `#/gun/N` bağlantısı o günün ana konusuna yönlenir.
 
 | Kontrol | Davranış | Durum |
 | --- | --- | --- |
-| ← Öğrenme yolu | Ana sayfa | OK |
-| Normal / Tam / Hızlı / Zor kartları | İlgili modda ders başlatır | OK |
-| Zor Sorular kartı | Havuz yetersizse kart devre dışı + gerekçe metni | FIX |
-| Konu ustalığı başlıkları | O konunun `topic` modunda dersi | OK |
-| Özeti Oku | `#/ozet/N` | OK |
+| ← Dersler | Ana sayfa | TOPIC |
+| Normal / Tam / Hızlı / Zor kartları | İlgili modda konu dersi başlatır | TOPIC |
+| Zor Sorular kartı | Havuz yetersizse kart devre dışı + gerekçe metni | OK |
+| Bölüm başlıkları | `#/ders/<konu>/bolum/<bölüm>` (bölüm pratiği) | TOPIC |
+| Bölüm → Özette aç | `#/ozet/<konu>/<bölüm>` | TOPIC |
+| Özeti Oku | `#/ozet/<konu>` | TOPIC |
+| Genel Tekrar'da çalış | Konunun Genel Tekrar oturumu (`gr-topic`) | TOPIC |
+| Bağlantılı konular | `#/konu/<diğer konu>` | TOPIC |
 
 ## Ders (`#/ders/...`, `#/tekrar/...`)
 
 | Kontrol | Davranış | Durum |
 | --- | --- | --- |
-| ← (çıkış) | Sesi durdurur, gün detayına/ana sayfaya döner | OK |
+| ← (çıkış) | Sesi durdurur, konu sayfasına / Genel Tekrar'a / ana sayfaya döner | TOPIC |
 | Kontrol Et / Devam | Cevabı değerlendirir, sıradakine geçer | OK |
 | Atla | Kaydeder ve geçer (artık "yanlış" sayılmaz, ayrı sayılır) | FIX |
 | Tamamladım (sesli görev) | Öz değerlendirme kaydı | OK |
@@ -51,11 +59,11 @@ Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu tur
 | Ekranın kendisi | Kalıcı `lastResult`'tan beslenir; yenilemeye dayanır | FIX |
 | Hataları Tekrarla | Bu oturumun hatalarından gerçek tekrar dersi kurar | FIX |
 | (hata yoksa) | Buton yok; "Mükemmel — tekrar gerekmiyor" satırı | FIX |
-| Zor Sorular | O günün zorluk havuzuyla challenge dersi açar | FIX |
-| Sonraki Güne Geç | N+1 varsa gün detayı; yoksa hiç gösterilmez | NEW |
-| Tekrar Çalış | Aynı gün + aynı mod yeni tohumla | NEW |
-| Özeti Oku | Gün özeti (özet varsa) | OK |
-| Zayıf konu → "konuyu çalış" | O konunun `topic` dersi | NEW |
+| Zor Sorular | Aynı konunun zorluk havuzuyla challenge dersi açar | TOPIC |
+| Sıradaki Konu: … | Haritada sıradaki konu varsa konu sayfası; yoksa gösterilmez | TOPIC |
+| Tekrar Çalış | Aynı konu + aynı mod (+ bölüm) yeni tohumla | TOPIC |
+| Özeti Oku | Konu özeti (bölüm pratiğinde ilgili bölüm) | TOPIC |
+| Zayıf konu → "konuyu çalış" | O konunun Hızlı Tekrar dersi | TOPIC |
 | Ana Sayfa | `#/` | OK |
 
 ## Hatalarım (`#/hatalarim`)
@@ -64,21 +72,31 @@ Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu tur
 | --- | --- | --- |
 | Hepsini Tekrar Çalış | Zayıflık sırasına göre tekrar oturumu | OK |
 | Grupla: Konu / Hata türü | Listeyi yeniden gruplar | OK |
-| Grup → Konuyu Çalış | O konunun `topic` dersi (yeni) | NEW |
+| Grup → Konuyu Çalış | O kanonik konunun Normal dersi | TOPIC |
 | Grup → Özeti Aç | Özet konusuna gider (etiket netleştirildi) | FIX |
 | Grup → Tekrar Çalış | Yalnızca o grubun hataları | OK |
 | Tekrar eden yazım hataları → Bunları çalış | Yalnızca o kayıtlar | OK |
 | Boş durum → Derse başla | Ana sayfa | OK |
 
-## Özetler (`#/ozet`, `#/ozet/N`)
+## Genel Tekrar (`#/genel-tekrar`)
+
+| Kontrol | Davranış | Durum |
+| --- | --- | --- |
+| Genel Tekrar Başlat | Konular arası karışık oturum (`gr-mixed`) | OK |
+| Kelime / Cümle Kurma / Writing / Dinleme / Hızlı / Zor | Konular arası mod oturumu | OK |
+| Hataları Tekrarla | Tüm konuların hatalarından tekrar | OK |
+| Konu kartı → Çalış | Kanonik konunun Genel Tekrar oturumu (ikinci taksonomi yok) | TOPIC |
+
+## Özetler (`#/ozet`, `#/ozet/<konu>`, `#/ozet/genel`)
 
 | Kontrol | Davranış | Durum |
 | --- | --- | --- |
 | Arama | Canlı sonuç listesi | OK |
-| Sonuç / gün / kaydedilen kartları | İlgili özete gider | OK |
+| Sonuç / konu / kaydedilen kartları | İlgili konu özetine / bölüme gider | TOPIC |
 | ⭐ kaydet | Yer imi ayarı | OK |
 | Konu gezinmesi (masaüstü) | Bölüme kaydırır | OK |
-| Bu Konuyu Çalış | `topic` dersi | OK |
+| Bu Konuyu Çalış | Konu dersi (Genel Tekrar özetinde: kanonik konunun tekrarı) | TOPIC |
+| Bu Bölümü Çalış | Bölüm pratiği | TOPIC |
 | Kendine sor | Cevabı açar/kapatır | OK |
 | 🔊 örnek/okunuş | Piper telaffuzu | OK |
 
@@ -91,7 +109,7 @@ Durum kodları: `OK` çalışıyor · `FIX` bu turda düzeltildi · `NEW` bu tur
 | Ses efektleri / Otomatik telaffuz / Okunuş | Kalıcı ayar | OK |
 | Telaffuz sesi / hızı | Kalıcı ayar | OK |
 | Dışa / İçe aktar | JSON indirir, doğrular, geri yükler | OK |
-| Günü sıfırla / Tümünü sıfırla | Onaylı sıfırlama | OK |
+| Konuyu sıfırla / Tümünü sıfırla | Onaylı sıfırlama | TOPIC |
 
 ## Debug (`#/icerik`, yalnız DEV)
 

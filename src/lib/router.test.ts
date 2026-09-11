@@ -1,41 +1,51 @@
 import { describe, expect, it } from 'vitest';
-import { hrefFor, parseHash } from './router';
+import { hrefFor, isLegacyHash, parseHash, type Route } from './router';
+import { T } from '../content/curriculum/topics';
 
-describe('tek mufredat rotalari', () => {
-  it('gun rotasini izleksiz uretir ve cozer', () => {
-    const route = { name: 'day' as const, day: 3 };
-    expect(hrefFor(route)).toBe('#/gun/3');
-    expect(parseHash('#/gun/3')).toEqual(route);
+describe('konu rotalari', () => {
+  it('konu sayfasini kararli slug ile uretir ve cozer', () => {
+    const route: Route = { name: 'topic', topicId: T.modalVerbs };
+    expect(hrefFor(route)).toBe('#/konu/modal-verbs');
+    expect(parseHash('#/konu/modal-verbs')).toEqual(route);
+    // Kanonik kimlik de kabul edilir.
+    expect(parseHash('#/konu/topic.modal-verbs')).toEqual(route);
   });
 
-  it('ders rotasini (normal calisma) izleksiz uretir ve cozer', () => {
-    const route = { name: 'lesson' as const, day: 3, mode: 'normal' as const };
-    expect(hrefFor(route)).toBe('#/ders/3/normal');
-    expect(parseHash('#/ders/3/normal')).toEqual(route);
+  it('bilinmeyen konu slugi ana sayfaya duser', () => {
+    expect(parseHash('#/konu/olmayan-konu')).toEqual({ name: 'home' });
   });
 
-  it('zor sorular (challenge) rotasini uretir ve cozer', () => {
-    const route = { name: 'lesson' as const, day: 10, mode: 'challenge' as const };
-    expect(hrefFor(route)).toBe('#/ders/10/zor');
-    expect(parseHash('#/ders/10/zor')).toEqual(route);
+  it('ders rotalarini (normal/tam/hizli/zor) uretir ve cozer', () => {
+    const cases: Array<[Route, string]> = [
+      [{ name: 'lesson', topicId: T.time, mode: 'normal' }, '#/ders/time/normal'],
+      [{ name: 'lesson', topicId: T.time, mode: 'full' }, '#/ders/time/tam'],
+      [{ name: 'lesson', topicId: T.separableVerbs, mode: 'quick' }, '#/ders/separable-verbs/hizli'],
+      [{ name: 'lesson', topicId: T.modalVerbs, mode: 'challenge' }, '#/ders/modal-verbs/zor'],
+    ];
+    for (const [route, href] of cases) {
+      expect(hrefFor(route)).toBe(href);
+      expect(parseHash(href)).toEqual(route);
+    }
   });
 
-  it('konu bazli calisma rotasini uretir ve cozer', () => {
-    const route = { name: 'lesson' as const, day: 2, mode: 'topic' as const, topicId: 'private.day2.artikel-kein-mein-dein' };
-    expect(hrefFor(route)).toBe(`#/ders/2/konu/${encodeURIComponent('private.day2.artikel-kein-mein-dein')}`);
+  it('bolum pratigi rotasini uretir ve cozer; baska konunun bolumu kabul edilmez', () => {
+    const route: Route = { name: 'lesson', topicId: T.modalVerbs, mode: 'section', sectionId: 'modal-verbs.duerfen' };
+    expect(hrefFor(route)).toBe('#/ders/modal-verbs/bolum/modal-verbs.duerfen');
     expect(parseHash(hrefFor(route))).toEqual(route);
+    expect(parseHash('#/ders/modal-verbs/bolum/time.um')).toEqual({ name: 'topic', topicId: T.modalVerbs });
   });
 
-  it('ozet rotasini uretir ve cozer', () => {
-    const route = { name: 'summary' as const, day: 2, topicId: 'private.day2.sorular' };
-    expect(hrefFor(route)).toBe('#/ozet/2/private.day2.sorular');
+  it('konu ozeti ve bolum capasi rotasini uretir ve cozer', () => {
+    const route: Route = { name: 'summary', topicId: T.modalVerbs, sectionId: 'modal-verbs.rule' };
+    expect(hrefFor(route)).toBe('#/ozet/modal-verbs/modal-verbs.rule');
     expect(parseHash(hrefFor(route))).toEqual(route);
+    expect(parseHash('#/ozet/modal-verbs')).toEqual({ name: 'summary', topicId: T.modalVerbs });
   });
 
-  it('genel ozet rotasini uretir ve cozer', () => {
-    expect(hrefFor({ name: 'summary', day: 0 })).toBe('#/ozet/genel');
-    expect(parseHash('#/ozet/genel')).toEqual({ name: 'summary', day: 0, topicId: undefined });
-    expect(parseHash('#/ozet/genel/genel.saat')).toEqual({ name: 'summary', day: 0, topicId: 'genel.saat' });
+  it('Genel Tekrar ozeti rotasini uretir ve cozer', () => {
+    expect(hrefFor({ name: 'review-summary' })).toBe('#/ozet/genel');
+    expect(parseHash('#/ozet/genel')).toEqual({ name: 'review-summary', sectionId: undefined });
+    expect(parseHash('#/ozet/genel/genel.saat')).toEqual({ name: 'review-summary', sectionId: 'genel.saat' });
   });
 
   it('genel tekrar ana rotasini uretir ve cozer', () => {
@@ -43,58 +53,76 @@ describe('tek mufredat rotalari', () => {
     expect(parseHash('#/genel-tekrar')).toEqual({ name: 'general-review' });
   });
 
-  it('hata tekrari rotasini gune ozel cozer', () => {
-    expect(parseHash('#/hata-tekrari/2')).toEqual({ name: 'mistake-review', day: 2 });
-    expect(parseHash('#/hata-tekrari')).toEqual({ name: 'mistake-review', day: undefined });
-  });
-});
-
-describe('gecmis izlekli baglantilar (uyumluluk)', () => {
-  it('eski private gun baglantisi kanonik gune duser', () => {
-    expect(parseHash('#/gun/private/3')).toEqual({ name: 'day', day: 3 });
-  });
-
-  it('eski normal gun baglantisi kanonik gune duser', () => {
-    expect(parseHash('#/gun/1')).toEqual({ name: 'day', day: 1 });
-  });
-
-  it('eski private ders baglantisi kanonik derse duser', () => {
-    expect(parseHash('#/ders/private/2/zor')).toEqual({ name: 'lesson', day: 2, mode: 'challenge' });
-  });
-
-  it('eski izlekli ozet baglantisi kanonik ozete duser', () => {
-    expect(parseHash('#/ozet/private/2')).toEqual({ name: 'summary', day: 2, topicId: undefined });
-  });
-
-  it('eski izlekli tekrar baglantilari calisir', () => {
-    expect(parseHash('#/tekrar/private')).toEqual({ name: 'review' });
-    expect(parseHash('#/hata-tekrari/private/2')).toEqual({ name: 'mistake-review', day: 2 });
-    expect(parseHash('#/hatalarim/private')).toEqual({ name: 'mistakes' });
-    expect(parseHash('#/istatistik/normal')).toEqual({ name: 'stats' });
-  });
-
-  it('uretilen URL hicbir izlek icermez', () => {
+  it('uretilen hicbir URL gun ya da izlek icermez', () => {
     const hrefs = [
-      hrefFor({ name: 'day', day: 3 }),
-      hrefFor({ name: 'lesson', day: 3, mode: 'full' }),
-      hrefFor({ name: 'summary', day: 3 }),
+      hrefFor({ name: 'topic', topicId: T.home }),
+      hrefFor({ name: 'lesson', topicId: T.home, mode: 'full' }),
+      hrefFor({ name: 'summary', topicId: T.home }),
+      hrefFor({ name: 'mistake-review' }),
       hrefFor({ name: 'general-review' }),
     ];
     for (const href of hrefs) {
+      expect(href).not.toMatch(/\/\d+(\/|$)/);
       expect(href).not.toContain('private');
-      expect(href).not.toContain('normal');
+      expect(href).not.toContain('gun');
     }
   });
 });
 
-describe('alistirma seti rotalari', () => {
-  it('set rotasını kayıpsız üretir ve çözer', () => {
-    const route = { name: 'lesson' as const, day: 2, mode: 'set' as const, exerciseSetId: 'set-2' as const };
-    expect(hrefFor(route)).toBe('#/ders/2/set/2');
-    expect(parseHash('#/ders/2/set/2')).toEqual(route);
+describe('gun tabanli eski baglantilar (yonlendirme)', () => {
+  it('eski gun sayfasi o gunun ana konusuna yonlenir', () => {
+    expect(parseHash('#/gun/10')).toEqual({ name: 'topic', topicId: T.separableVerbs });
+    expect(parseHash('#/gun/7')).toEqual({ name: 'topic', topicId: T.home });
+    expect(parseHash('#/gun/private/3')).toEqual({ name: 'topic', topicId: T.sentenceBuilding });
+    expect(parseHash('#/gun/99')).toEqual({ name: 'topic', topicId: T.greetings });
   });
 
-  it('geçersiz set numarasını kırık bir derse dönüştürmez', () => {
-    expect(parseHash('#/ders/2/set/99')).toEqual({ name: 'lesson', day: 2, mode: 'normal' });
+  it('eski ders baglantisi ayni modla konu dersine yonlenir', () => {
+    expect(parseHash('#/ders/10/zor')).toEqual({ name: 'lesson', topicId: T.separableVerbs, mode: 'challenge' });
+    expect(parseHash('#/ders/private/7/tam')).toEqual({ name: 'lesson', topicId: T.home, mode: 'full' });
+    // Kaldirilan set modu normal calismaya duser.
+    expect(parseHash('#/ders/1/set/2')).toEqual({ name: 'lesson', topicId: T.greetings, mode: 'normal' });
+  });
+
+  it('eski gun ici konu calismasi yeni bolum pratigine yonlenir', () => {
+    expect(parseHash(`#/ders/10/konu/${encodeURIComponent('private.day10.um-uhr')}`)).toEqual({
+      name: 'lesson',
+      topicId: T.time,
+      mode: 'section',
+      sectionId: 'time.um',
+    });
+  });
+
+  it('eski ozet baglantilari yeni konu ozetine ve bolumune yonlenir', () => {
+    expect(parseHash('#/ozet/3/private.day3.yer-yon')).toEqual({ name: 'summary', topicId: T.places, sectionId: 'places.prepositions' });
+    expect(parseHash('#/ozet/private/2/private.day2.sorular')).toEqual({
+      name: 'summary',
+      topicId: T.questions,
+      sectionId: 'questions.yes-no',
+    });
+    expect(parseHash('#/ozet/10')).toEqual({ name: 'summary', topicId: T.separableVerbs });
+  });
+
+  it('eski gune ozel hata tekrari genel hata tekrarina yonlenir', () => {
+    expect(parseHash('#/hata-tekrari/2')).toEqual({ name: 'mistake-review' });
+    expect(parseHash('#/hata-tekrari/private/2')).toEqual({ name: 'mistake-review' });
+  });
+
+  it('eski izlekli tekrar baglantilari calisir', () => {
+    expect(parseHash('#/tekrar/private')).toEqual({ name: 'review' });
+    expect(parseHash('#/hatalarim/private')).toEqual({ name: 'mistakes' });
+    expect(parseHash('#/istatistik/normal')).toEqual({ name: 'stats' });
+  });
+
+  it('yalnizca gun tabanli eski adresler yeniden yazilir', () => {
+    expect(isLegacyHash('#/gun/3')).toBe(true);
+    expect(isLegacyHash('#/ders/private/7/tam')).toBe(true);
+    expect(isLegacyHash('#/ozet/3/private.day3.yer-yon')).toBe(true);
+    expect(isLegacyHash('#/hata-tekrari/2')).toBe(true);
+    expect(isLegacyHash('#/konu/modal-verbs')).toBe(false);
+    expect(isLegacyHash('#/ders/modal-verbs/zor')).toBe(false);
+    expect(isLegacyHash('#/ozet/genel/genel.saat')).toBe(false);
+    // Yeni kanonik adres, yonlendirmeden sonra kendisiyle tutarlidir.
+    expect(isLegacyHash(hrefFor(parseHash('#/gun/10')))).toBe(false);
   });
 });

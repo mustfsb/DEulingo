@@ -14,12 +14,19 @@ import {
   type GermanVoiceId,
   type SpeechSpeed,
 } from './audio/tts';
-import type { ExerciseSetId, LearningTrack } from '../content/types';
+import type { LearningTrack } from '../content/types';
 import { isLearningTrack } from '../content/types';
+import {
+  LEGACY_CONCEPT_MAP,
+  LEGACY_REVIEW_GROUP_MAP,
+  LEGACY_SECTION_MAP,
+  RETIRED_LEGACY_EXERCISES,
+} from '../content/curriculum/legacy';
+import { SECTION_BY_ID, TOPIC_BY_ID } from '../content/curriculum/topics';
 
 export const STORAGE_KEY = 'almanca-alistirma:progress';
 export const BACKUP_KEY = 'almanca-alistirma:progress-backup';
-export const STORAGE_VERSION = 9;
+export const STORAGE_VERSION = 10;
 
 export type AttemptResult = 'correct' | 'minor-typo' | 'incorrect' | 'skipped' | 'self-assessed';
 
@@ -44,8 +51,8 @@ export interface ExerciseAttempt {
 
 export interface ExerciseProgress {
   exerciseId: string;
-  day: number;
-  track?: import('../content/types').LearningTrack;
+  /** Tarihî gün (v10 öncesi kayıtlardan) — yalnızca iz; hiçbir davranışı sürmez. */
+  legacyDay?: number;
   attempts: ExerciseAttempt[];
   firstSeenAt: string;
   lastSeenAt: string;
@@ -57,9 +64,12 @@ export interface ExerciseProgress {
 
 export interface MistakeRecord {
   exerciseId: string;
-  track?: import('../content/types').LearningTrack;
-  day: number;
+  /** Kanonik konu kimliği (`topic.modal-verbs`); içerikte bulunamazsa boş. */
+  topicId: string;
+  /** Konu başlığı (kayıt anındaki). */
   topic: string;
+  /** Tarihî gün (v10 öncesi kayıtlardan) — yalnızca iz. */
+  legacyDay?: number;
   prompt: string;
   userAnswer: string;
   expectedAnswer: string;
@@ -69,8 +79,16 @@ export interface MistakeRecord {
   type: MistakeType;
 }
 
+/** v9 öncesi gün sayacı — yalnızca göç ve `legacy` arşivi için. */
 export interface DayProgressState {
   day: number;
+  sessionsCompleted: number;
+  lastCompletedAt?: string;
+}
+
+/** v10: konu başına tamamlanan oturum sayacı (tohum ve bilgi için). */
+export interface TopicProgressState {
+  topicId: string;
   sessionsCompleted: number;
   lastCompletedAt?: string;
 }
@@ -89,11 +107,11 @@ export interface SessionPresentation {
 
 /**
  * Bir oturumun turu.
- * - `day`: gunun calisma modlarindan biri (normal/tam/hizli/zor/konu)
- * - `review`: Hatalarim ekranindan kurulan genel tekrar
- * - `mistakes`: BITEN BIR DERSIN hatalarindan kurulan hedefli tekrar (§5)
+ * - `topic`: bir konunun calisma modlarindan biri (normal/tam/hizli/zor/bolum)
+ * - `review`: Genel Tekrar ya da Hatalarim ekranindan kurulan tekrar
+ * - `mistakes`: BITEN BIR DERSIN hatalarindan kurulan hedefli tekrar
  */
-export type LessonKind = 'day' | 'review' | 'mistakes';
+export type LessonKind = 'topic' | 'review' | 'mistakes';
 
 /** Ders ici ardisik dogru serisi — yenilemeye dayanmasi icin oturumda saklanir. */
 export interface StreakState {
@@ -104,11 +122,13 @@ export interface StreakState {
 }
 
 export interface ActiveLesson {
-  /** Gunluk ders icin gun numarasi; tekrar oturumunda `review` / `mistakes`. */
   mode: LessonKind;
-  /** Tarihî izlek işareti (v9 öncesi). Tek müfredatta yoksayılır. */
-  track?: LearningTrack;
-  day?: number;
+  /** Kanonik konu (`topic` oturumu ya da Genel Tekrar konu filtresi). */
+  topicId?: string;
+  /** Bölüm pratiği (`section` modu) için özet bölümü. */
+  sectionId?: string;
+  /** v10 öncesinden devralınan yarım gün dersinin tarihî günü (yalnızca etiket). */
+  legacyDay?: number;
   queue: SessionPresentation[];
   index: number;
   startedAt: string;
@@ -121,12 +141,8 @@ export interface ActiveLesson {
   }>;
   /** Alistirma basina bu oturumdaki tekrar sayisi. */
   retries: Record<string, number>;
-  /** v2: hangi calisma modu (normal / tam / hizli / zor / konu). */
+  /** Hangi calisma modu (normal / tam / hizli / zor / bolum / Genel Tekrar modlari). */
   sessionMode?: SessionMode;
-  /** v2: `topic` modunda calisilan ozet konusu. */
-  topicId?: string;
-  /** İlk üç gündeki bağımsız alıştırma seti. */
-  exerciseSetId?: ExerciseSetId;
   /** v7: ders ici dogru serisi. */
   streak?: StreakState;
   /** v7: `mistakes` modunda hangi oturumun hatalarindan kuruldugu. */
@@ -138,8 +154,7 @@ export type SessionMode =
   | 'full'
   | 'quick'
   | 'challenge'
-  | 'topic'
-  | 'set'
+  | 'section'
   | 'gr-mixed'
   | 'gr-vocab'
   | 'gr-sentence'
@@ -158,12 +173,11 @@ export type SessionMode =
  */
 export interface LessonResult {
   sessionId: string;
-  track?: LearningTrack;
-  day?: number;
   mode: LessonKind;
   sessionMode?: SessionMode;
+  /** Kanonik konu (konu oturumu ya da Genel Tekrar konu filtresi). */
   topicId?: string;
-  exerciseSetId?: ExerciseSetId;
+  sectionId?: string;
   /** Oturumda gorulen benzersiz alistirmalar. */
   exerciseIds: string[];
   /** Oturumda en az bir kez yanlis cevaplananlar (istatistik icin). */
@@ -240,16 +254,24 @@ export interface GlobalStats {
   studyDates: string[];
 }
 
+/** v10 göçünün arşivi: eski gün sayaçları ve göçte düşülen kayıtlar. Hiçbir davranışı sürmez. */
+export interface LegacyArchive {
+  days?: Record<number, DayProgressState>;
+  /** Çözülemeyen (emekli alıştırmaya ait) hata kayıtları. */
+  droppedMistakeIds?: string[];
+  migratedFromVersion?: number;
+}
+
 export interface UserProgress {
   version: number;
   createdAt: string;
   updatedAt: string;
-  /** Tek müfredat: gün → sayaç. İzlek ayrımı yok. */
-  days: Record<number, DayProgressState>;
-  /**
-   * v8 artığı: eski kayıtlarda `tracks.normal/private` bulunabilir.
-   * `migrate` bunu tek `days` haritasına indirir ve anahtarı siler.
-   */
+  /** v10: konu → oturum sayacı. */
+  topics: Record<string, TopicProgressState>;
+  /** v10 öncesi gün tabanlı durumun salt okunur arşivi. */
+  legacy?: LegacyArchive;
+  /** v9 öncesi artıklar — yalnızca göç sırasında okunur. */
+  days?: Record<number, DayProgressState>;
   tracks?: Record<string, { days: Record<number, DayProgressState> }>;
   exercises: Record<string, ExerciseProgress>;
   mistakes: Record<string, MistakeRecord>;
@@ -264,9 +286,9 @@ export interface UserProgress {
   daily: Record<string, DailyActivity>;
 }
 
-/** Tek müfredat: gün sayaçları doğrudan `progress.days` içindedir. */
-export function getDayEntry(progress: UserProgress, day: number): DayProgressState | undefined {
-  return progress.days[day];
+/** Konu oturum sayacı. */
+export function getTopicEntry(progress: UserProgress, topicId: string): TopicProgressState | undefined {
+  return progress.topics[topicId];
 }
 
 export function createEmptyProgress(): UserProgress {
@@ -275,7 +297,7 @@ export function createEmptyProgress(): UserProgress {
     version: STORAGE_VERSION,
     createdAt: now,
     updatedAt: now,
-    days: {},
+    topics: {},
     exercises: {},
     mistakes: {},
     daily: {},
@@ -432,18 +454,8 @@ function migrateV7ToV8(progress: UserProgress): UserProgress {
       version: 8,
       days: validatedTracks.normal.days,
       tracks: validatedTracks,
-      activeLesson: progress.activeLesson
-        ? {
-            ...progress.activeLesson,
-            track: isLearningTrack((progress.activeLesson as unknown as { track?: unknown }).track) ? (progress.activeLesson as unknown as { track: LearningTrack }).track : undefined,
-          }
-        : undefined,
-      lastResult: progress.lastResult
-        ? {
-            ...progress.lastResult,
-            track: isLearningTrack((progress.lastResult as unknown as { track?: unknown }).track) ? (progress.lastResult as unknown as { track: LearningTrack }).track : undefined,
-          }
-        : undefined,
+      activeLesson: withLegacyTrack(progress.activeLesson),
+      lastResult: withLegacyTrack(progress.lastResult),
     };
   }
   const days = isDailyMap(progress.days) ? (progress.days as Record<number, DayProgressState>) : {};
@@ -456,19 +468,16 @@ function migrateV7ToV8(progress: UserProgress): UserProgress {
       normal: { days },
       private: { days: {} },
     },
-    activeLesson: progress.activeLesson
-      ? {
-          ...progress.activeLesson,
-          track: isLearningTrack((progress.activeLesson as unknown as { track?: unknown }).track) ? (progress.activeLesson as unknown as { track: LearningTrack }).track : undefined,
-        }
-      : undefined,
-    lastResult: progress.lastResult
-      ? {
-          ...progress.lastResult,
-          track: isLearningTrack((progress.lastResult as unknown as { track?: unknown }).track) ? (progress.lastResult as unknown as { track: LearningTrack }).track : undefined,
-        }
-      : undefined,
+    activeLesson: withLegacyTrack(progress.activeLesson),
+    lastResult: withLegacyTrack(progress.lastResult),
   };
+}
+
+/** v8 kayıtlarındaki izlek alanını doğrular (v9 göçü onu okuyup siler). */
+function withLegacyTrack<T extends object>(value: T | undefined): T | undefined {
+  if (!value) return undefined;
+  const track = (value as { track?: unknown }).track;
+  return { ...value, track: isLearningTrack(track) ? (track as LearningTrack) : undefined } as T;
 }
 
 /**
@@ -497,11 +506,11 @@ function migrateV8ToV9(progress: UserProgress): UserProgress {
 
   const exercises: Record<string, ExerciseProgress> = {};
   for (const [id, entry] of Object.entries(progress.exercises ?? {})) {
-    if ((entry as ExerciseProgress).track === 'private') exercises[id] = entry as ExerciseProgress;
+    if ((entry as { track?: unknown }).track === 'private') exercises[id] = entry as ExerciseProgress;
   }
   const mistakes: Record<string, MistakeRecord> = {};
   for (const [id, record] of Object.entries(progress.mistakes ?? {})) {
-    if ((record as MistakeRecord).track === 'private') mistakes[id] = record as MistakeRecord;
+    if ((record as { track?: unknown }).track === 'private') mistakes[id] = record as MistakeRecord;
   }
 
   let totalAttempts = 0;
@@ -518,7 +527,7 @@ function migrateV8ToV9(progress: UserProgress): UserProgress {
   }
 
   const activeLesson =
-    progress.activeLesson && (progress.activeLesson.track as string | undefined) === 'normal'
+    progress.activeLesson && (progress.activeLesson as unknown as { track?: unknown }).track === 'normal'
       ? undefined
       : progress.activeLesson;
 
@@ -542,12 +551,207 @@ function migrateV8ToV9(progress: UserProgress): UserProgress {
   return next;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* v9 → v10: gün tabanlı durum → konu tabanlı durum                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Göçün içerikten ihtiyaç duyduğu tek bilgi: alıştırma kimliği → birincil
+ * kanonik konu. Verilmezse hata kayıtlarının konusu ekranda çözülür.
+ */
+export interface MigrationContext {
+  topicOfExercise(exerciseId: string): { topicId: string; title: string } | undefined;
+}
+
+const legacySectionTarget = (id: string | undefined) => {
+  if (!id) return undefined;
+  const mapped = LEGACY_SECTION_MAP[id];
+  if (!mapped) return undefined;
+  const section = SECTION_BY_ID.get(mapped);
+  return section ? { sectionId: section.id, topicId: section.topicId } : undefined;
+};
+
+const topicLabel = (topicId: string | undefined) => (topicId ? TOPIC_BY_ID.get(topicId)?.title : undefined);
+
+/** Eski "konu" kimliği (gün bölümü ya da Genel Tekrar grubu) → kanonik konu. */
+function mapLegacyTopicRef(id: string | undefined): { topicId?: string; sectionId?: string } {
+  if (!id) return {};
+  if (TOPIC_BY_ID.has(id)) return { topicId: id };
+  const section = legacySectionTarget(id);
+  if (section) return section;
+  if (SECTION_BY_ID.has(id)) return { sectionId: id, topicId: SECTION_BY_ID.get(id)!.topicId };
+  const review = LEGACY_REVIEW_GROUP_MAP[id];
+  return review ? { topicId: review } : {};
+}
+
+function mapSessionMode(mode: unknown, hasSection: boolean): SessionMode | undefined {
+  if (mode === 'topic') return hasSection ? 'section' : 'normal';
+  if (mode === 'set') return 'normal';
+  return typeof mode === 'string' ? (mode as SessionMode) : undefined;
+}
+
+function mapConceptIds(ids: unknown): string[] {
+  if (!Array.isArray(ids)) return [];
+  return [...new Set(ids.map((id) => (typeof id === 'string' ? (LEGACY_CONCEPT_MAP[id] ?? (id.startsWith('private.') ? '' : id)) : '')).filter(Boolean))];
+}
+
+/** Okundu/yer imi anahtarlarını eski bölüm kimliklerinden yenilerine taşır. */
+function mapSummaryKey(id: string): string | undefined {
+  if (id.startsWith('genel.') || SECTION_BY_ID.has(id)) return id;
+  const target = legacySectionTarget(id);
+  return target?.sectionId;
+}
+
+/**
+ * v9 → v10 göçü. DETERMINISTIKTIR ve kayıp üretmez:
+ *
+ * - Deneme geçmişi (`exercises`) alıştırma kimliğiyle aynen kalır; ustalık,
+ *   tamamlanma ve istatistik bu geçmişten konu bazında yeniden türetilir.
+ *   Gün numarası yalnızca `legacyDay` izi olarak saklanır.
+ * - Hata kayıtları kanonik konuya bağlanır; emekli alıştırmalara ait
+ *   (çalışılamayan) kayıtlar düşer ve `legacy.droppedMistakeIds`e yazılır.
+ * - Gün sayaçları `legacy.days` arşivine taşınır; konu sayaçları sıfırdan başlar.
+ * - Yarım gün dersi, kuyruğu ve cevaplarıyla bir tekrar oturumu olarak sürer.
+ * - Son ders sonucu, okundu işaretleri ve yer imleri yeni kimliklere taşınır.
+ */
+function migrateV9ToV10(progress: UserProgress, context?: MigrationContext): UserProgress {
+  const exercises: Record<string, ExerciseProgress> = {};
+  for (const [id, raw] of Object.entries(progress.exercises ?? {})) {
+    const entry = { ...(raw as ExerciseProgress & { day?: unknown; track?: unknown }) };
+    if (typeof entry.day === 'number' && entry.legacyDay === undefined) entry.legacyDay = entry.day;
+    delete entry.day;
+    delete entry.track;
+    exercises[id] = entry as ExerciseProgress;
+  }
+
+  const mistakes: Record<string, MistakeRecord> = {};
+  const droppedMistakeIds: string[] = [];
+  for (const [id, raw] of Object.entries(progress.mistakes ?? {})) {
+    const record = { ...(raw as MistakeRecord & { day?: unknown; track?: unknown }) };
+    if (typeof record.day === 'number' && record.legacyDay === undefined) record.legacyDay = record.day;
+    delete record.day;
+    delete record.track;
+    if (RETIRED_LEGACY_EXERCISES[id]) {
+      droppedMistakeIds.push(id);
+      continue;
+    }
+    const topic = context?.topicOfExercise(id);
+    if (context && !topic) {
+      droppedMistakeIds.push(id);
+      continue;
+    }
+    record.topicId = topic?.topicId ?? (TOPIC_BY_ID.has(record.topicId) ? record.topicId : '');
+    record.topic = topic?.title ?? topicLabel(record.topicId) ?? record.topic ?? '';
+    mistakes[id] = record as MistakeRecord;
+  }
+
+  let activeLesson = progress.activeLesson ? { ...progress.activeLesson } as ActiveLesson & Record<string, unknown> : undefined;
+  if (activeLesson) {
+    const rawMode = activeLesson.mode as string;
+    const ref = mapLegacyTopicRef(activeLesson.topicId);
+    const legacyDay = typeof activeLesson.day === 'number' ? activeLesson.day : undefined;
+    if (rawMode === 'day') {
+      if ((activeLesson.sessionMode as string | undefined) === 'topic' && ref.sectionId && ref.topicId) {
+        activeLesson = { ...activeLesson, mode: 'topic', topicId: ref.topicId, sectionId: ref.sectionId, sessionMode: 'section' };
+      } else {
+        // Günün karma kuyruğu tek bir konuya ait değildir: aynı sorular ve
+        // verilen cevaplarla bir tekrar oturumu olarak sürer.
+        activeLesson = { ...activeLesson, mode: 'review', topicId: undefined, sessionMode: undefined, legacyDay };
+      }
+    } else if (rawMode === 'review') {
+      activeLesson = { ...activeLesson, topicId: ref.topicId, sessionMode: mapSessionMode(activeLesson.sessionMode, false) };
+    } else {
+      activeLesson = { ...activeLesson, topicId: ref.topicId, sessionMode: mapSessionMode(activeLesson.sessionMode, Boolean(ref.sectionId)) };
+    }
+    // Emekli alıştırmalar kuyruktan çıkar; konum buna göre kayar.
+    const queue = Array.isArray(activeLesson.queue) ? activeLesson.queue : [];
+    const keep = (item: SessionPresentation) => !RETIRED_LEGACY_EXERCISES[item.exerciseId];
+    const removedBefore = queue.slice(0, activeLesson.index ?? 0).filter((item) => !keep(item)).length;
+    activeLesson.queue = queue.filter(keep);
+    activeLesson.index = Math.max(0, (activeLesson.index ?? 0) - removedBefore);
+    delete activeLesson.day;
+    delete activeLesson.track;
+    delete activeLesson.exerciseSetId;
+    if (activeLesson.topicId === undefined) delete activeLesson.topicId;
+    if (activeLesson.sessionMode === undefined) delete activeLesson.sessionMode;
+    if (!activeLesson.queue.length) activeLesson = undefined;
+  }
+
+  let lastResult = progress.lastResult ? { ...progress.lastResult } as LessonResult & Record<string, unknown> : undefined;
+  if (lastResult) {
+    const rawMode = lastResult.mode as string;
+    const ref = mapLegacyTopicRef(lastResult.topicId);
+    const sectionSession = (lastResult.sessionMode as string | undefined) === 'topic' && Boolean(ref.sectionId);
+    const mode: LessonKind = rawMode === 'day' ? (sectionSession ? 'topic' : 'review') : (rawMode as LessonKind);
+    const topicMap = new Map<string, { topicId: string; title: string; correct: number; total: number }>();
+    for (const item of Array.isArray(lastResult.topics) ? lastResult.topics : []) {
+      const target = mapLegacyTopicRef(item.topicId).topicId ?? (TOPIC_BY_ID.has(item.topicId) ? item.topicId : undefined);
+      if (!target) continue;
+      const entry = topicMap.get(target) ?? { topicId: target, title: topicLabel(target) ?? item.title, correct: 0, total: 0 };
+      entry.correct += item.correct ?? 0;
+      entry.total += item.total ?? 0;
+      topicMap.set(target, entry);
+    }
+    lastResult = {
+      ...lastResult,
+      mode,
+      topicId: rawMode === 'day' && !sectionSession ? undefined : ref.topicId,
+      ...(sectionSession && ref.sectionId ? { sectionId: ref.sectionId } : {}),
+      sessionMode: rawMode === 'day' && !sectionSession ? undefined : mapSessionMode(lastResult.sessionMode, sectionSession),
+      topics: [...topicMap.values()].sort((a, b) => b.correct / Math.max(1, b.total) - a.correct / Math.max(1, a.total)),
+      strongestConceptIds: mapConceptIds(lastResult.strongestConceptIds),
+      weakestConceptIds: mapConceptIds(lastResult.weakestConceptIds),
+    };
+    delete lastResult.day;
+    delete lastResult.track;
+    delete lastResult.exerciseSetId;
+    if (lastResult.topicId === undefined) delete lastResult.topicId;
+    if (lastResult.sessionMode === undefined) delete lastResult.sessionMode;
+  }
+
+  const readSummaries: Record<string, string> = {};
+  for (const [key, date] of Object.entries(progress.settings?.readSummaries ?? {})) {
+    const mapped = mapSummaryKey(key);
+    if (!mapped) continue;
+    // Birden çok eski bölüm aynı yeni bölüme düşerse en erken tarih korunur.
+    if (!readSummaries[mapped] || date < readSummaries[mapped]) readSummaries[mapped] = date;
+  }
+  const bookmarks = [...new Set((progress.settings?.bookmarks ?? []).map(mapSummaryKey).filter((id): id is string => Boolean(id)))];
+
+  const legacyDays = isDayMap(progress.days) ? progress.days : {};
+  const next: UserProgress = {
+    ...progress,
+    version: 10,
+    topics: isTopicMap(progress.topics) ? progress.topics : {},
+    exercises,
+    mistakes,
+    activeLesson: activeLesson as ActiveLesson | undefined,
+    lastResult: lastResult as LessonResult | undefined,
+    settings: { ...progress.settings, readSummaries, bookmarks },
+    legacy: {
+      ...(progress.legacy ?? {}),
+      ...(Object.keys(legacyDays).length ? { days: legacyDays } : {}),
+      ...(droppedMistakeIds.length ? { droppedMistakeIds: droppedMistakeIds.sort() } : {}),
+      migratedFromVersion: 9,
+    },
+  };
+  delete next.days;
+  delete next.tracks;
+  if (!next.activeLesson) delete next.activeLesson;
+  if (!next.lastResult) delete next.lastResult;
+  return next;
+}
+
+function isTopicMap(value: unknown): value is Record<string, TopicProgressState> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function isDayMap(value: unknown): value is Record<number, DayProgressState> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function migrateV6ToV7(progress: UserProgress): UserProgress {
-
   const daily = isDailyMap(progress.daily) ? progress.daily : {};
   return {
     ...progress,
@@ -557,14 +761,15 @@ function migrateV6ToV7(progress: UserProgress): UserProgress {
     activeLesson: progress.activeLesson
       ? {
         ...progress.activeLesson,
-        mode: isLessonKind(progress.activeLesson.mode) ? progress.activeLesson.mode : 'day',
+        mode: (isLessonKind(progress.activeLesson.mode) ? progress.activeLesson.mode : 'day') as LessonKind,
       }
       : undefined,
   };
 }
 
-function isLessonKind(value: unknown): value is LessonKind {
-  return value === 'day' || value === 'review' || value === 'mistakes';
+/** v10 öncesi kayıtlarda `day` de geçerli bir tür idi; göç onu dönüştürür. */
+function isLessonKind(value: unknown): value is LessonKind | 'day' {
+  return value === 'topic' || value === 'day' || value === 'review' || value === 'mistakes';
 }
 
 function isDailyMap(value: unknown): value is Record<string, DailyActivity> {
@@ -586,7 +791,7 @@ export function isLessonResult(value: unknown): value is LessonResult {
   );
 }
 
-export function migrate(raw: unknown): UserProgress | null {
+export function migrate(raw: unknown, context?: MigrationContext): UserProgress | null {
   if (!raw || typeof raw !== 'object') return null;
   const data = raw as Partial<UserProgress> & { version?: number };
   if (typeof data.version !== 'number') return null;
@@ -595,7 +800,8 @@ export function migrate(raw: unknown): UserProgress | null {
   let progress: UserProgress = {
     ...createEmptyProgress(),
     ...data,
-    days: data.days ?? {},
+    ...(data.version < 10 ? { days: data.days ?? {} } : {}),
+    topics: data.topics ?? {},
     exercises: data.exercises ?? {},
     mistakes: data.mistakes ?? {},
     daily: data.daily ?? {},
@@ -612,6 +818,7 @@ export function migrate(raw: unknown): UserProgress | null {
   if (progress.version === 6) progress = migrateV6ToV7(progress);
   if (progress.version === 7) progress = migrateV7ToV8(progress);
   if (progress.version === 8) progress = migrateV8ToV9(progress);
+  if (progress.version === 9) progress = migrateV9ToV10(progress, context);
 
   if (!isGermanVoiceId(progress.settings.speechVoice)) {
     progress = {
@@ -626,9 +833,10 @@ export function migrate(raw: unknown): UserProgress | null {
     };
   }
 
-  // v9: tek müfredat — `tracks` anahtarı taşınmaz, gün haritası tektir.
+  // v10: konu tabanlı — gün haritası ve izlek artıkları taşınmaz.
   delete (progress as unknown as { tracks?: unknown }).tracks;
-  if (!isDayMap(progress.days)) progress = { ...progress, days: {} };
+  delete (progress as unknown as { days?: unknown }).days;
+  if (!isTopicMap(progress.topics)) progress = { ...progress, topics: {} };
   progress.version = STORAGE_VERSION;
   return progress;
 }
@@ -649,7 +857,7 @@ export function isValidProgress(value: unknown): value is UserProgress {
 /* Okuma / yazma                                                       */
 /* ------------------------------------------------------------------ */
 
-export function loadProgress(storage: Storage = localStorage): UserProgress {
+export function loadProgress(storage: Storage = localStorage, context?: MigrationContext): UserProgress {
   let raw: string | null = null;
   try {
     raw = storage.getItem(STORAGE_KEY);
@@ -659,7 +867,7 @@ export function loadProgress(storage: Storage = localStorage): UserProgress {
   if (!raw) return createEmptyProgress();
 
   try {
-    const migrated = migrate(JSON.parse(raw));
+    const migrated = migrate(JSON.parse(raw), context);
     if (migrated) return migrated;
     // Tanimsiz surum: veriyi silme, yedekle.
     storage.setItem(BACKUP_KEY, raw);
@@ -692,7 +900,7 @@ export interface ImportResult {
   error?: string;
 }
 
-export function parseImportedProgress(text: string): ImportResult {
+export function parseImportedProgress(text: string, context?: MigrationContext): ImportResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -702,7 +910,7 @@ export function parseImportedProgress(text: string): ImportResult {
   if (!isValidProgress(parsed)) {
     return { ok: false, error: 'Dosya bir ilerleme yedeği gibi görünmüyor.' };
   }
-  const migrated = migrate(parsed);
+  const migrated = migrate(parsed, context);
   if (!migrated) {
     return { ok: false, error: 'Yedek, bu sürümden daha yeni bir şemayla oluşturulmuş.' };
   }

@@ -6,18 +6,25 @@ import {
   buildSessionPlan,
   challengeReadiness,
   CHALLENGE_MAX_RECOGNITION_RATIO,
+  familyCap,
   isProductionTask,
   MIN_CHALLENGE_SIZE,
   scoreExercise,
+  sessionSize,
   spaceFamilies,
   SCORE,
+  SESSION_CLOSING_TASKS,
+  SESSION_SIZE_OVERRIDES,
 } from './session';
 import { createEmptyProgress, type UserProgress } from './storage';
 import { recordAttempt } from './progress';
+import { T } from '../content/curriculum/topics';
 
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
-const forDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
-const beforeDay = (day: number) => bundle.exercises.filter((exercise) => exercise.day < day && !exercise.reviewOnly);
+const lesson = bundle.exercises.filter((exercise) => !exercise.reviewOnly);
+/** Konu havuzu: birincil + ikincil etiketli ders alıştırmaları. */
+const forTopic = (topicId: string) =>
+  lesson.filter((exercise) => exercise.topicId === topicId || exercise.secondaryTopicIds?.includes(topicId));
 
 function answer(
   progress: UserProgress,
@@ -28,48 +35,41 @@ function answer(
 }
 
 describe('oturum secimi', () => {
-  const pool = forDay(2);
+  const topicId = T.articles;
+  const pool = forTopic(topicId);
 
   it('normal mod havuzdan daha kucuk bir secki uretir', () => {
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 's' });
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 's' });
     expect(queue.length).toBeGreaterThanOrEqual(15);
     expect(queue.length).toBeLessThanOrEqual(25);
     expect(queue.length).toBeLessThan(pool.length);
   });
 
   it('hizli tekrar kisa bir oturum uretir', () => {
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'quick', seed: 's' });
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'quick', topicId, seed: 's' });
     expect(queue.length).toBeGreaterThanOrEqual(5);
     expect(queue.length).toBeLessThanOrEqual(10);
   });
 
   it('ayni tohum ayni sirayi uretir (deterministik)', () => {
-    const options = { pool, progress: createEmptyProgress(), mode: 'normal' as const, seed: 'sabit' };
+    const options = { pool, progress: createEmptyProgress(), mode: 'normal' as const, topicId, seed: 'sabit' };
     expect(buildSession(options)).toEqual(buildSession(options));
   });
 
   it('farkli tohum farkli sira uretir (tekrar yorgunlugu olmaz)', () => {
-    const base = { pool, progress: createEmptyProgress(), mode: 'normal' as const };
-    const first = buildSession({ ...base, seed: 'a' });
-    const second = buildSession({ ...base, seed: 'b' });
-    expect(first).not.toEqual(second);
+    const base = { pool, progress: createEmptyProgress(), mode: 'normal' as const, topicId };
+    expect(buildSession({ ...base, seed: 'a' })).not.toEqual(buildSession({ ...base, seed: 'b' }));
   });
 
   it('ayni alistirmayi bir oturumda iki kez sormaz', () => {
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 's' });
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 's' });
     expect(new Set(queue).size).toBe(queue.length);
   });
 
   it('tum modlarda birincil sunumlari peşinen benzersiz ve gerekçeli kurar', () => {
     for (const mode of ['normal', 'full', 'quick', 'challenge'] as const) {
       for (let seed = 0; seed < 50; seed += 1) {
-        const plan = buildSessionPlan({
-          pool,
-          previous: beforeDay(2),
-          progress: createEmptyProgress(),
-          mode,
-          seed: `${mode}-${seed}`,
-        });
+        const plan = buildSessionPlan({ pool, progress: createEmptyProgress(), mode, topicId, seed: `${mode}-${seed}` });
         const ids = plan.primaryQueue.map((item) => item.exerciseId);
         expect(new Set(ids).size, `${mode}/${seed}`).toBe(ids.length);
         expect(plan.primaryQueue.every((item) => item.presentationReason === 'primary')).toBe(true);
@@ -79,74 +79,65 @@ describe('oturum secimi', () => {
   });
 
   it('requested capacity is capped to unique eligible primaries instead of padding with copies', () => {
-    const smallPool = pool.slice(0, 9);
-    const plan = buildSessionPlan({
-      pool: smallPool,
-      progress: createEmptyProgress(),
-      mode: 'normal',
-      size: 15,
-      seed: 'small-pool',
-    });
+    const plan = buildSessionPlan({ pool: pool.slice(0, 9), progress: createEmptyProgress(), mode: 'normal', size: 15, seed: 'small-pool' });
     expect(plan.primaryQueue).toHaveLength(9);
     expect(new Set(plan.primaryQueue.map((item) => item.exerciseId)).size).toBe(9);
   });
 
-  it('yalnizca istenen gunun havuzundan secer', () => {
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 's' });
+  it('yalnizca verilen konu havuzundan secer (onceki-gun karisimi yok)', () => {
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', topicId, seed: 's' });
     const ids = new Set(pool.map((exercise) => exercise.id));
-    const previousIds = new Set(beforeDay(2).map((exercise) => exercise.id));
-    for (const id of queue) expect(ids.has(id) || previousIds.has(id)).toBe(true);
+    for (const id of queue) expect(ids.has(id)).toBe(true);
   });
 
-  it('set oturumu yalnızca seçilen ayrık seti tamamen ve rastgele sırada gösterir', () => {
-    const setPool = forDay(2).filter(
-      (exercise) => (exercise as Exercise & { exerciseSetId?: string }).exerciseSetId === 'set-1',
-    );
-    const options = {
-      pool: forDay(2),
-      progress: createEmptyProgress(),
-      mode: 'set' as const,
-      exerciseSetId: 'set-1' as const,
-    };
-    const first = buildSession({ ...options, seed: 'set-a' });
-    const second = buildSession({ ...options, seed: 'set-b' });
+  it('bolum modu yalnizca secilen ozet bolumunun alistirmalarini gosterir', () => {
+    const sectionId = 'articles.negation';
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'section', topicId, sectionId, seed: 's' });
+    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
+    expect(queue.length).toBeGreaterThan(0);
+    for (const id of queue) expect(byId.get(id)?.sectionId).toBe(sectionId);
+    expect(buildSession({ pool, progress: createEmptyProgress(), mode: 'section', topicId, seed: 's' })).toEqual([]);
+  });
+});
 
-    expect(first).toHaveLength(setPool.length);
-    expect(new Set(first)).toEqual(new Set(setPool.map((exercise) => exercise.id)));
-    expect(second).not.toEqual(first);
+describe('konu onceligi ve boyut', () => {
+  it('konunun birincil alistirmalari esit puanda ikincil etiketlilerin onune gecer', () => {
+    const topicId = T.sentenceBuilding;
+    const pool = forTopic(topicId);
+    const primaryShare = pool.filter((exercise) => exercise.topicId === topicId).length / pool.length;
+    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
+    const ids = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 'oncelik' });
+    const share = ids.filter((id) => byId.get(id)?.topicId === topicId).length / ids.length;
+    // Havuzun yalnizca ~%32'si birincil; oturumda birincil pay belirgin bicimde yuksektir.
+    expect(primaryShare).toBeLessThan(0.4);
+    expect(share).toBeGreaterThan(primaryShare + 0.2);
   });
 
-  it('ilk üç gündeki her set 50 farklı tohumda eksiksiz, tekrarsız ve değişen sırayla gelir', () => {
-    for (const day of [1, 2, 3]) {
-      const pool = forDay(day);
-      for (const exerciseSetId of ['set-1', 'set-2', 'set-3'] as const) {
-        const expected = pool.filter((exercise) => exercise.exerciseSetId === exerciseSetId);
-        const orders = new Set<string>();
-        for (let seed = 0; seed < 50; seed += 1) {
-          const plan = buildSessionPlan({
-            pool,
-            previous: beforeDay(day),
-            progress: createEmptyProgress(),
-            mode: 'set',
-            exerciseSetId,
-            seed: `set:${day}:${exerciseSetId}:${seed}`,
-          });
-          const ids = plan.primaryQueue.map((item) => item.exerciseId);
-          expect(new Set(ids).size, `${day}/${exerciseSetId}/${seed}`).toBe(ids.length);
-          expect(new Set(ids), `${day}/${exerciseSetId}/${seed}`).toEqual(new Set(expected.map((exercise) => exercise.id)));
-          expect(plan.primaryQueue.every((item) => item.presentationReason === 'primary')).toBe(true);
-          orders.add(ids.join('|'));
-        }
-        expect(orders.size, `${day}/${exerciseSetId}`).toBeGreaterThan(1);
-      }
+  it('konu istisnalari yalnizca konu modlarini etkiler', () => {
+    expect(SESSION_SIZE_OVERRIDES[T.modalVerbs]?.normal).toBe(22);
+    expect(sessionSize('normal', 500, T.modalVerbs)).toBe(22);
+    expect(sessionSize('normal', 500, T.greetings)).toBe(18);
+    expect(sessionSize('gr-mixed', 500, T.modalVerbs)).toBe(28);
+    for (const key of [...Object.keys(SESSION_SIZE_OVERRIDES), ...Object.keys(SESSION_CLOSING_TASKS)]) {
+      expect(key).toMatch(/^topic\./);
     }
+  });
+
+  it('kapanis gorevi kayitli konu ve modda en sona konur', () => {
+    const topicId = T.modalVerbs;
+    const pool = forTopic(topicId);
+    const ids = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', topicId, seed: 'kapanis' });
+    expect(ids.at(-1)).toBe('mv-free-morgen');
+    const normal = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 'kapanis' });
+    expect(normal.at(-1)).not.toBe('mv-free-morgen');
   });
 });
 
 describe('zorluk dagilimi', () => {
   it('normal oturum agirlikli olarak orta seviyedir', () => {
-    const pool = forDay(2);
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 's' });
+    const topicId = T.articles;
+    const pool = forTopic(topicId);
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 's' });
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
     const counts: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0 };
     for (const id of queue) {
@@ -159,24 +150,20 @@ describe('zorluk dagilimi', () => {
   });
 
   it('zor mod kolay soru icermez', () => {
-    const pool = forDay(3);
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'challenge', seed: 's' });
+    const topicId = T.sentenceBuilding;
+    const pool = forTopic(topicId);
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'challenge', topicId, seed: 's' });
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
     expect(queue.length).toBeGreaterThan(0);
     for (const id of queue) expect(byId.get(id)?.difficulty).not.toBe('easy');
   });
 
   it('zor mod uretim agirliklidir: coktan secmeli oturuma donusmez', () => {
-    for (const day of [1, 2, 3]) {
-      const pool = forDay(day);
+    for (const topicId of [T.greetings, T.articles, T.sentenceBuilding, T.modalVerbs]) {
+      const pool = forTopic(topicId);
       const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
       for (let seed = 0; seed < 12; seed += 1) {
-        const queue = buildSession({
-          pool,
-          progress: createEmptyProgress(),
-          mode: 'challenge',
-          seed: `zor:${day}:${seed}`,
-        });
+        const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'challenge', topicId, seed: `zor:${topicId}:${seed}` });
         const chosen = queue.map((id) => byId.get(id)!);
         expect(chosen.length).toBeGreaterThanOrEqual(MIN_CHALLENGE_SIZE);
         expect(new Set(queue).size).toBe(queue.length);
@@ -190,7 +177,7 @@ describe('zorluk dagilimi', () => {
   });
 
   it('zor havuz yetersizse en guclu orta uretimle tamamlanir', () => {
-    const pool = forDay(2);
+    const pool = forTopic(T.articles);
     const thin = [
       ...pool.filter((exercise) => exercise.difficulty === 'hard').slice(0, 2),
       ...pool.filter((exercise) => exercise.difficulty === 'medium').slice(0, 10),
@@ -201,195 +188,99 @@ describe('zorluk dagilimi', () => {
   });
 
   it('gercekten dar bir havuzda challenge hazir sayilmaz', () => {
-    const pool = forDay(1);
+    const pool = forTopic(T.greetings);
     const tiny = pool.filter((exercise) => exercise.difficulty !== 'easy').slice(0, 3);
     expect(challengeReadiness(tiny).ready).toBe(false);
     expect(challengeReadiness(pool).ready).toBe(true);
   });
 
   it('tam calisma 30–50 benzersiz birincili sınırlar ve kapasiteyi dürüst gösterir', () => {
-    const pool = forDay(1);
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', seed: 's' });
+    const topicId = T.personalInfo;
+    const queue = buildSession({ pool: forTopic(topicId), progress: createEmptyProgress(), mode: 'full', topicId, seed: 's' });
     expect(queue.length).toBeGreaterThanOrEqual(30);
     expect(queue.length).toBeLessThanOrEqual(50);
     expect(new Set(queue).size).toBe(queue.length);
   });
 
-  it('tam calisma ana gun konularini kapsar ve sinirli onceki-gun tekrarini karistirir', () => {
-    const pool = forDay(2);
-    const queue = buildSession({
-      pool,
-      previous: beforeDay(2),
-      progress: createEmptyProgress(),
-      mode: 'full',
-      seed: 's',
-    });
-    const current = new Set(pool.map((exercise) => exercise.id));
-    const previous = new Set(beforeDay(2).map((exercise) => exercise.id));
-    const review = queue.filter((id) => previous.has(id));
-    expect(queue).toHaveLength(45);
-    expect(queue.filter((id) => current.has(id)).length).toBeGreaterThan(0);
-    expect(review.length).toBeGreaterThan(0);
-    expect(review.length / queue.length).toBeLessThanOrEqual(0.25);
-    const byId = new Map([...pool, ...beforeDay(2)].map((exercise) => [exercise.id, exercise]));
-    const coveredTopics = new Set(queue.map((id) => byId.get(id)?.topicId));
-    for (const topicId of new Set(pool.map((exercise) => exercise.topicId))) {
-      expect(coveredTopics.has(topicId)).toBe(true);
-    }
+  it('tam calisma konunun bolumlerini kapsar', () => {
+    const topicId = T.articles;
+    const pool = forTopic(topicId);
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', topicId, seed: 's' });
+    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
+    const covered = new Set(queue.map((id) => byId.get(id)?.sectionId));
+    const ownSections = new Set(pool.filter((exercise) => exercise.topicId === topicId).map((exercise) => exercise.sectionId));
+    for (const sectionId of ownSections) expect(covered.has(sectionId), sectionId).toBe(true);
   });
 
   it('tam calisma da yapilandirilmis akisi kullanir (kolay baslar)', () => {
-    const pool = forDay(2);
+    const topicId = T.articles;
+    const pool = forTopic(topicId);
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', seed: 's' });
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', topicId, seed: 's' });
     expect(byId.get(queue[0])?.difficulty).toBe('easy');
   });
 });
 
 describe('tam calismada kelime-bankası çevirileri', () => {
   it('havuzda varsa iki yonu de oturumlara tasir (baskin olmadan)', () => {
-    for (const day of [1, 2, 3]) {
-      const pool = forDay(day);
+    for (const topicId of [T.modalVerbs, T.time]) {
+      const pool = forTopic(topicId);
+      const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
       const seenDirections = new Set<string>();
       let translationSessions = 0;
       for (let seed = 0; seed < 10; seed += 1) {
-        const queue = buildSession({
-          pool,
-          previous: beforeDay(day),
-          progress: createEmptyProgress(),
-          mode: 'full',
-          seed: `wb-${day}-${seed}`,
-        });
-        const all = new Map([...pool, ...beforeDay(day)].map((exercise) => [exercise.id, exercise]));
-        const translations = queue
-          .map((id) => all.get(id))
-          .filter((exercise) => exercise?.type === 'word-bank-translation');
+        const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'full', topicId, seed: `wb-${topicId}-${seed}` });
+        const translations = queue.map((id) => byId.get(id)).filter((exercise) => exercise?.type === 'word-bank-translation');
         expect(translations.length / queue.length).toBeLessThanOrEqual(0.5);
         if (translations.length) translationSessions += 1;
-        for (const t of translations) {
-          if (t?.wordBank) seenDirections.add(t.wordBank.direction);
-        }
+        for (const item of translations) if (item?.wordBank) seenDirections.add(item.wordBank.direction);
       }
-      expect(translationSessions).toBeGreaterThan(0);
-      expect(seenDirections.has('de-to-tr')).toBe(true);
-      expect(seenDirections.has('tr-to-de')).toBe(true);
+      expect(translationSessions, topicId).toBeGreaterThan(0);
+      expect(seenDirections.has('de-to-tr'), topicId).toBe(true);
+      expect(seenDirections.has('tr-to-de'), topicId).toBe(true);
     }
   });
 
   it('normal modda kelime-bankaları baskın değildir', () => {
-    const pool = forDay(3);
+    const topicId = T.separableVerbs;
+    const pool = forTopic(topicId);
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 'normal-wb' });
+    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: 'normal-wb' });
     const translations = queue.filter((id) => byId.get(id)?.type === 'word-bank-translation');
     expect(translations.length / queue.length).toBeLessThan(0.4);
   });
 });
 
-describe('konu ve karma tekrar', () => {
-  it('konu modu yalnizca o konunun alistirmalarini verir', () => {
-    const pool = forDay(2);
-    const topicId = 'private.day2.haben-sein';
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'topic', topicId, seed: 's' });
-    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
-    expect(queue.length).toBeGreaterThan(0);
-    for (const id of queue) expect(byId.get(id)?.topicId).toBe(topicId);
-  });
-
-  it('2. gunden itibaren onceki gunlerden alistirma karistirir', () => {
-    const queue = buildSession({
-      pool: forDay(2),
-      previous: beforeDay(2),
-      progress: createEmptyProgress(),
-      mode: 'normal',
-      seed: 's',
-    });
-    const previousIds = new Set(beforeDay(2).map((exercise) => exercise.id));
-    const mixed = queue.filter((id) => previousIds.has(id));
-    expect(mixed.length).toBeGreaterThan(0);
-    // ~%20 civari, yarisindan fazlasi olmamali.
-    expect(mixed.length).toBeLessThan(queue.length / 2);
-  });
-
-  it('Gün 5–7 normal ve tam çalışmada %80–85 güncel, yalnızca geçmişten tekrar içerir', () => {
-    for (const day of [5, 6, 7]) {
-      const currentPool = forDay(day);
-      const previousPool = beforeDay(day);
-      const currentIds = new Set(currentPool.map((exercise) => exercise.id));
-      const previousById = new Map(previousPool.map((exercise) => [exercise.id, exercise]));
-
-      for (const mode of ['normal', 'full'] as const) {
-        for (let seed = 0; seed < 50; seed += 1) {
-          const plan = buildSessionPlan({
-            pool: currentPool,
-            previous: previousPool,
-            progress: createEmptyProgress(),
-            mode,
-            seed: `review:${day}:${mode}:${seed}`,
-          });
-          const ids = plan.primaryQueue.map((item) => item.exerciseId);
-          const reviewIds = ids.filter((id) => !currentIds.has(id));
-          const currentRatio = (ids.length - reviewIds.length) / ids.length;
-
-          expect(currentRatio, `${day}/${mode}/${seed}`).toBeGreaterThanOrEqual(0.8);
-          expect(currentRatio, `${day}/${mode}/${seed}`).toBeLessThanOrEqual(0.85);
-          expect(reviewIds.every((id) => (previousById.get(id)?.day ?? day) < day), `${day}/${mode}/${seed}`).toBe(true);
-        }
-      }
-    }
-  });
-
-  it('1. gunde onceki gun olmadigi icin karma tekrar bos kalir', () => {
-    const queue = buildSession({
-      pool: forDay(1),
-      previous: beforeDay(1),
-      progress: createEmptyProgress(),
-      mode: 'normal',
-      seed: 's',
-    });
-    const ids = new Set(forDay(1).map((exercise) => exercise.id));
-    for (const id of queue) expect(ids.has(id)).toBe(true);
-  });
-});
-
 describe('puanlama', () => {
-  const [exercise] = forDay(2);
+  const [exercise] = forTopic(T.articles);
 
   it('hic gorulmemis alistirma yuksek puan alir', () => {
-    const score = scoreExercise(exercise, createEmptyProgress(), new Map());
-    expect(score).toBeGreaterThanOrEqual(SCORE.unseen);
+    expect(scoreExercise(exercise, createEmptyProgress(), new Map())).toBeGreaterThanOrEqual(SCORE.unseen);
   });
 
   it('yanlis cevaplanan, dogru cevaplanandan once gelir', () => {
     const wrong = answer(createEmptyProgress(), exercise, 'incorrect');
     const right = answer(createEmptyProgress(), exercise, 'correct');
-    expect(scoreExercise(exercise, wrong, new Map())).toBeGreaterThan(
-      scoreExercise(exercise, right, new Map()),
-    );
+    expect(scoreExercise(exercise, wrong, new Map())).toBeGreaterThan(scoreExercise(exercise, right, new Map()));
   });
 
   it('tekrar eden hata ek oncelik alir', () => {
-    let once = answer(createEmptyProgress(), exercise, 'incorrect');
-    let twice = answer(once, exercise, 'incorrect');
-    expect(scoreExercise(exercise, twice, new Map())).toBeGreaterThan(
-      scoreExercise(exercise, once, new Map()),
-    );
+    const once = answer(createEmptyProgress(), exercise, 'incorrect');
+    const twice = answer(once, exercise, 'incorrect');
+    expect(scoreExercise(exercise, twice, new Map())).toBeGreaterThan(scoreExercise(exercise, once, new Map()));
   });
 
   it('kucuk yazim hatasi kucuk bir oncelik ekler', () => {
     const typo = answer(createEmptyProgress(), exercise, 'minor-typo');
     const clean = answer(createEmptyProgress(), exercise, 'correct');
-    expect(scoreExercise(exercise, typo, new Map())).toBeGreaterThan(
-      scoreExercise(exercise, clean, new Map()),
-    );
+    expect(scoreExercise(exercise, typo, new Map())).toBeGreaterThan(scoreExercise(exercise, clean, new Map()));
   });
 
   it('zayif kavram onceligi artirir', () => {
     const weak = new Map(exercise.conceptIds.map((id) => [id, 0.1] as const));
     const strong = new Map(exercise.conceptIds.map((id) => [id, 0.95] as const));
     const progress = createEmptyProgress();
-    expect(scoreExercise(exercise, progress, weak)).toBeGreaterThan(
-      scoreExercise(exercise, progress, strong),
-    );
+    expect(scoreExercise(exercise, progress, weak)).toBeGreaterThan(scoreExercise(exercise, progress, strong));
   });
 });
 
@@ -398,66 +289,59 @@ describe('aile araligi', () => {
     ({
       id,
       familyId,
-      day: 1,
       topic: 't',
-      topicId: 'day1.t',
+      topicId: T.greetings,
       type: 'fill-blank',
       instruction: 'x',
       difficulty: 'easy',
       skill: 'recall',
       conceptIds: [],
       origin: 'authored',
-      source: { file: 'a', day: 1, naturalKey: id },
+      source: { file: 'a', naturalKey: id },
     }) as Exercise;
 
   it('ayni aileden sorulari arka arkaya gostermez', () => {
-    const items = [
-      make('1', 'f'),
-      make('2', 'f'),
-      make('3', 'f'),
-      make('4', 'g'),
-      make('5', 'h'),
-      make('6', 'i'),
-      make('7', 'j'),
-    ];
+    const items = [make('1', 'f'), make('2', 'f'), make('3', 'f'), make('4', 'g'), make('5', 'h'), make('6', 'i'), make('7', 'j')];
     const spaced = spaceFamilies(items);
     const families = spaced.map((item) => item.familyId);
-    for (let i = 1; i < families.length; i++) {
-      expect(families[i]).not.toBe(families[i - 1]);
-    }
+    for (let i = 1; i < families.length; i++) expect(families[i]).not.toBe(families[i - 1]);
     expect(spaced).toHaveLength(items.length);
   });
 
   it('hicbir alistirmayi kaybetmez ya da cogaltmaz', () => {
-    const items = [make('1', 'f'), make('2', 'f'), make('3', 'f')];
-    const spaced = spaceFamilies(items);
+    const spaced = spaceFamilies([make('1', 'f'), make('2', 'f'), make('3', 'f')]);
     expect(spaced.map((item) => item.id).sort()).toEqual(['1', '2', '3']);
   });
 
-  it('gercek oturumda ayni aile arka arkaya gelmez', () => {
-    const pool = forDay(2);
-    const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', seed: 'x' });
+  it('kucuk konu havuzunda tek aile oturumu doldurmaz (aile siniri)', () => {
+    const topicId = T.greetings;
+    const pool = forTopic(topicId);
     const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
-    for (let i = 1; i < queue.length; i++) {
-      const current = byId.get(queue[i])?.familyId;
-      const previous = byId.get(queue[i - 1])?.familyId;
-      if (current && previous) expect(current).not.toBe(previous);
+    for (let seed = 0; seed < 50; seed += 1) {
+      const queue = buildSession({ pool, progress: createEmptyProgress(), mode: 'normal', topicId, seed: `aile:${seed}` });
+      const counts = new Map<string, number>();
+      for (const id of queue) {
+        const family = byId.get(id)?.familyId;
+        if (family) counts.set(family, (counts.get(family) ?? 0) + 1);
+      }
+      for (const [family, count] of counts) expect(count, `${family}#${seed}`).toBeLessThanOrEqual(familyCap(queue.length));
     }
   });
 
-  it('gec yerleştirme durumunda da alternatif aile varken ayni aileyi bitiştirmez', () => {
-    const pool = forDay(1);
-    const queue = buildSession({
-      pool,
-      progress: createEmptyProgress(),
-      mode: 'normal',
-      seed: 'audit:1:normal:17',
-    });
-    const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
-    for (let index = 1; index < queue.length; index += 1) {
-      const previous = byId.get(queue[index - 1])?.familyId;
-      const current = byId.get(queue[index])?.familyId;
-      expect(previous && current ? previous === current : false, `${queue[index - 1]} → ${queue[index]}`).toBe(false);
+  it('gercek oturumlarda ayni aile arka arkaya gelmez', () => {
+    for (const topicId of [T.greetings, T.questions, T.articles, T.modalVerbs]) {
+      const pool = forTopic(topicId);
+      const byId = new Map(pool.map((exercise) => [exercise.id, exercise]));
+      for (const mode of ['normal', 'quick'] as const) {
+        for (let seed = 0; seed < 50; seed += 1) {
+          const queue = buildSession({ pool, progress: createEmptyProgress(), mode, topicId, seed: `bitisik:${topicId}:${mode}:${seed}` });
+          for (let index = 1; index < queue.length; index += 1) {
+            const previous = byId.get(queue[index - 1])?.familyId;
+            const current = byId.get(queue[index])?.familyId;
+            expect(previous && current ? previous === current : false, `${queue[index - 1]} → ${queue[index]}`).toBe(false);
+          }
+        }
+      }
     }
   });
 });

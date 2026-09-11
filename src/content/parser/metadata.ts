@@ -1,13 +1,12 @@
 /**
- * v2 ustverisinin varsayilanlari ve yazilmis alistirmalarin donusumu.
+ * Yazılmış alıştırmaların tam `Exercise`e dönüşümü ve okunuş bağlama.
  */
 
 import type { Exercise } from '../types.ts';
 import type { AuthoredExercise } from '../authored/types.ts';
 import { approximate } from '../authored/pronunciation.ts';
-import { refineDraft } from './refine.ts';
+import { refineDraft, type DraftExercise } from './refine.ts';
 import { SECONDS_BY_TYPE } from './defaults.ts';
-import type { DraftExercise } from './extract.ts';
 
 /**
  * Alistirmaya okunus verisi ekler.
@@ -74,12 +73,9 @@ function implicitPronounceTargets(exercise: Exercise): string[] {
   return [answer];
 }
 
-/** Yazilmis tanimi tam bir `Exercise`e cevirir. */
+/** Yazilmis tanimi tam bir `Exercise`e cevirir (konu başlığı ve türetilmiş etiketler paket aşamasında eklenir). */
 export function buildAuthoredExercise(item: AuthoredExercise): Exercise {
   const draft: DraftExercise = {
-    itemKey: item.id,
-    day: item.day,
-    topic: item.topicId,
     type: item.type,
     instruction: item.instruction,
     prompt: item.prompt,
@@ -103,8 +99,7 @@ export function buildAuthoredExercise(item: AuthoredExercise): Exercise {
 
   const exercise: Exercise = {
     id: item.id,
-    day: item.day,
-    track: (item.track as import('../types.ts').LearningTrack) ?? 'normal',
+    topicId: item.topicId,
     topic: item.topicId,
     type: item.type,
     instruction: draft.instruction,
@@ -112,17 +107,18 @@ export function buildAuthoredExercise(item: AuthoredExercise): Exercise {
     skill: item.skill,
     conceptIds: item.conceptIds,
     origin: 'authored',
-    topicId: item.topicId,
     estimatedSeconds: item.estimatedSeconds ?? SECONDS_BY_TYPE[item.type],
     source: {
       file: 'authored',
-      day: item.day,
       section: item.topicId,
       itemKey: item.id,
       naturalKey: `authored/${item.id}`,
     },
   };
 
+  if (item.sectionId) exercise.sectionId = item.sectionId;
+  if (item.secondaryTopicIds?.length) exercise.secondaryTopicIds = [...item.secondaryTopicIds];
+  if (item.legacyDay !== undefined) exercise.legacyDay = item.legacyDay;
   if (draft.prompt) exercise.prompt = draft.prompt;
   if (draft.audioText) exercise.audioText = draft.audioText;
   if (draft.answer) exercise.answer = draft.answer;

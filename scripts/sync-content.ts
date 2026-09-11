@@ -13,7 +13,7 @@ import { readFile, readdir, writeFile, mkdir, stat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseContent, type SourceFile } from '../src/content/parser/index.ts';
-import { AUTHORED_LAYER, TOPIC_TITLES } from '../src/content/authored/index.ts';
+import { AUTHORED_LAYER } from '../src/content/authored/index.ts';
 import type { ContentBundle } from '../src/content/types.ts';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -108,10 +108,7 @@ export async function syncContent({ quiet = false } = {}): Promise<ContentBundle
     });
   }
 
-  const bundle = parseContent(files, {
-    authored: AUTHORED_LAYER,
-    topicTitles: TOPIC_TITLES,
-  });
+  const bundle = parseContent(files, { authored: AUTHORED_LAYER });
   assertNoContentErrors(bundle);
   const outPath = join(projectRoot, config.output);
   await mkdir(dirname(outPath), { recursive: true });
@@ -122,8 +119,12 @@ export async function syncContent({ quiet = false } = {}): Promise<ContentBundle
 }
 
 function report(bundle: ContentBundle, output: string): void {
-  const byDay = bundle.days
-    .map((day) => `  ${day.day}. Gün → ${day.exerciseIds.length} alıştırma`)
+  const byTopic = bundle.topics
+    .map(
+      (topic) =>
+        `  ${topic.emoji} ${topic.title} → ${topic.exerciseIds.length} birincil` +
+        ` · +${topic.secondaryExerciseIds.length} ikincil · ${topic.reviewExerciseIds.length} Genel Tekrar`,
+    )
     .join('\n');
   const types = new Map<string, number>();
   for (const exercise of bundle.exercises) {
@@ -131,7 +132,7 @@ function report(bundle: ContentBundle, output: string): void {
   }
 
   console.log(`\n[sync] ${bundle.exercises.length} alıştırma → ${output}`);
-  console.log(byDay);
+  console.log(byTopic);
   console.log(
     `  Tipler: ${[...types.entries()].map(([type, count]) => `${type}=${count}`).join(', ')}`,
   );

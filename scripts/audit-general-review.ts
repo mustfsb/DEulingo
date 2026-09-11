@@ -2,95 +2,89 @@
 /**
  * Genel Tekrar kapsam denetimi.
  *
- * LEARNED_SO_FAR (özel müfredat kavramları) ile üç tekrar yapıtını
- * karşılaştırır: Genel Tekrar Özet (paketteki 0. gün), Genel Tekrar
- * Alıştırma.md (çalışma kağıdı) ve uygulama bankası (reviewOnly).
+ * Kanonik konu haritasını üç tekrar yapıtıyla karşılaştırır: Genel Tekrar
+ * Özeti (paketteki `reviewSummary`), `Genel Tekrar Alıştırma.md` (çalışma
+ * kağıdı) ve uygulama bankası (`reviewOnly`). Genel Tekrar ikinci bir
+ * taksonomi kullanmaz: her bölüm ve her soru kanonik bir `topic.*` taşır.
  *
  * Kullanım: npx tsx scripts/audit-general-review.ts [--quiet]
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ContentBundle } from '../src/content/types.ts';
-import { REVIEW_GROUPS } from '../src/lib/general-review.ts';
+import { reviewPoolFor, MIN_TOPIC_POOL, type ReviewMode } from '../src/lib/general-review.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const bundle = JSON.parse(readFileSync(join(root, 'generated/exercises.json'), 'utf8')) as ContentBundle;
+const config = JSON.parse(readFileSync(join(root, 'content.config.json'), 'utf8')) as { vaultPath: string };
+const worksheetPath = join(config.vaultPath, 'Genel Tekrar Alıştırma.md');
+const worksheet = existsSync(worksheetPath) ? readFileSync(worksheetPath, 'utf8').normalize('NFC') : '';
 
-const VAULT = '/Users/mustafa/Library/Mobile Documents/iCloud~md~obsidian/Documents/almanca';
-const worksheet = readFileSync(join(VAULT, 'Genel Tekrar Alıştırma.md'), 'utf8').normalize('NFC');
+const topicIds = new Set(bundle.topics.map((topic) => topic.id));
+const lessonBank = bundle.exercises.filter((exercise) => !exercise.reviewOnly);
+const bank = bundle.exercises.filter((exercise) => exercise.reviewOnly);
+const touches = (topicId: string) => (exercise: { topicId: string; secondaryTopicIds?: string[] }) =>
+  exercise.topicId === topicId || Boolean(exercise.secondaryTopicIds?.includes(topicId));
 
-const dayPool = bundle.exercises.filter((e) => !e.reviewOnly);
-const bank = bundle.exercises.filter((e) => e.reviewOnly);
-const generalSummary = bundle.summaries.find((s) => s.day === 0);
-const summaryText = (generalSummary?.topics ?? [])
-  .map((t) => [t.title, ...t.blocks.map((b) => JSON.stringify(b)), ...t.warnings, ...t.examples.map((e) => e.german)].join('\n'))
-  .join('\n')
-  .toLocaleLowerCase('tr');
+const norm = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('tr');
 
-const norm = (s: string) =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('tr');
+/* 1) Tek taksonomi: bankadaki her soru ve özetin her konu bölümü kanonik konu taşır. */
+const foreignTopic = bank.filter((exercise) => !topicIds.has(exercise.topicId));
+const sections = bundle.reviewSummary?.sections ?? [];
+const foreignSection = sections.filter((section) => section.topicId && !topicIds.has(section.topicId));
 
-/* --- 1) kavram grupları (konu başlığı düzeyi) --- */
-/* `*.hedef` konuları ders-hedef bildirimidir (öğretilebilir içerik değil). */
-const TEACHABLE = (topicId: string) => !/^private\.day\d+\.hedef$/.test(topicId);
-const dayTopics = [...new Set(dayPool.map((e) => e.topicId))].filter(TEACHABLE).sort();
-const bankTopics = new Set(bank.map((e) => e.topicId));
-const bankConcepts = new Set(bank.flatMap((e) => e.conceptIds));
-const topicConceptCovered = (topicId: string) =>
-  bundle.concepts.some((c) => c.topicId === topicId && bankConcepts.has(c.id));
-
-let topicCovered = 0;
-const topicMissing: string[] = [];
-for (const topicId of dayTopics) {
-  if (bankTopics.has(topicId) || topicConceptCovered(topicId)) topicCovered += 1;
-  else topicMissing.push(topicId);
-}
-
-/* --- 2) özet kapsamı: her gün konusunun çekirdek kelimesi genel özette mi --- */
-const summaryTopics = new Set((generalSummary?.topics ?? []).map((t) => t.id));
-const summaryHits = dayTopics.filter((t) => {
-  const core = t.split('.').slice(-1)[0].replace(/-/g, ' ');
-  return norm(summaryText).includes(norm(core.split(' ')[0]));
-});
-
-/* --- 3) çalışma kağıdı: bölüm sayısı + soru sayısı --- */
-const worksheetSections = (worksheet.match(/^## \d+\. /gm) ?? []).length;
-const worksheetQuestions = (worksheet.match(/^\d+\. .*(→|______|\?)/gm) ?? []).length;
-
-/* --- 4) kelime envanteri: gün havuzundaki Almanca cevaplar bankada/özette mi --- */
-const germanWords = new Set<string>();
-for (const e of dayPool) {
-  for (const text of [e.answer ?? '', ...(e.options ?? [])]) {
-    for (const m of text.matchAll(/\b([A-ZÄÖÜ][a-zäöüß]{2,})\b/g)) germanWords.add(m[1]);
-  }
-}
-const bankGerman = bank.map((e) => [e.answer ?? '', e.prompt ?? '', ...(e.options ?? [])].join('\n')).join('\n').toLocaleLowerCase('de');
-const summaryGerman = summaryText;
-let vocabCovered = 0;
-for (const w of germanWords) {
-  if (bankGerman.includes(w.toLocaleLowerCase('de')) || summaryGerman.includes(w.toLocaleLowerCase('tr'))) vocabCovered += 1;
-}
-
-/* --- 5) grup havuzları --- */
-const groupSizes = REVIEW_GROUPS.map((g) => ({
-  id: g.id,
-  size: bank.filter((e) => g.topicIds.includes(e.topicId)).length,
+/* 2) Konu kapsamı: her konu hem özette hem bankada temsil ediliyor mu? */
+const summaryTopics = new Set(sections.map((section) => section.topicId).filter(Boolean));
+const rows = bundle.topics.map((topic) => ({
+  id: topic.id,
+  title: topic.title,
+  inSummary: summaryTopics.has(topic.id),
+  bank: bank.filter(touches(topic.id)).length,
+  topicPool: reviewPoolFor(bank, 'topic', topic.id, lessonBank).length,
 }));
 
-/* --- 6) kopya: gün/banka normalize çift kesişimi --- */
-const pair = (p: string, a: string) => `${norm(p)}|${norm(a)}`;
-const dayPairs = new Set(dayPool.filter((e) => e.prompt && e.answer).map((e) => pair(e.prompt!, e.answer!)));
-const copies = bank.filter((e) => e.prompt && e.answer && dayPairs.has(pair(e.prompt!, e.answer!)));
+/* 3) Modalverben: konular arası modlarda (Cümle Kurma, Writing) var mı? */
+const modeCounts = (['sentence', 'writing', 'vocab', 'listening', 'mixed'] as ReviewMode[]).map((mode) => ({
+  mode,
+  total: reviewPoolFor(bank, mode).length,
+  modal: reviewPoolFor(bank, mode).filter(touches('topic.modal-verbs')).length,
+}));
+
+/* 4) Çalışma kağıdı. */
+const worksheetSections = (worksheet.match(/^## .+$/gm) ?? []).length;
+const worksheetModal = norm(worksheet).includes('modalverb');
+
+/* 5) Kopya: ders/banka normalize soru+cevap çifti kesişimi. */
+const pair = (prompt: string, answer: string) => `${norm(prompt)}|${norm(answer)}`;
+const lessonPairs = new Set(lessonBank.filter((e) => e.prompt && e.answer).map((e) => pair(e.prompt!, e.answer!)));
+const copies = bank.filter((e) => e.prompt && e.answer && lessonPairs.has(pair(e.prompt!, e.answer!)));
 
 const quiet = process.argv.includes('--quiet');
-const line = (s: string) => { if (!quiet) console.log(s); };
-line(`kavram-üstü konular: ${dayTopics.length} | banka-kapsanan: ${topicCovered} (${Math.round((topicCovered / dayTopics.length) * 100)}%)`);
-if (topicMissing.length) line(`  eksik: ${topicMissing.join(', ')}`);
-line(`özet konu girişi: ${summaryTopics.size} | gün-konu çekirdek eşleşme: ${summaryHits.length}/${dayTopics.length}`);
-line(`çalışma kağıdı: ${worksheetSections} bölüm, ~${worksheetQuestions} soru`);
-line(`kelime envanteri: ${germanWords.size} tekil Almanca ad | kapsanan: ${vocabCovered} (${Math.round((vocabCovered / germanWords.size) * 100)}%)`);
-line(`banka: ${bank.length} | kopya çift: ${copies.length}${copies.length ? ' ' + copies.map((e) => e.id).join(', ') : ''}`);
-line(`grup havuzları: ${groupSizes.map((g) => `${g.id}=${g.size}`).join(' ')}`);
+const line = (text: string) => {
+  if (!quiet) console.log(text);
+};
+line(`banka: ${bank.length} soru | kanonik olmayan konu etiketi: ${foreignTopic.length}`);
+line(`özet: ${sections.length} bölüm | kanonik olmayan bölüm konusu: ${foreignSection.length}`);
+line('konu kapsamı (özet / banka / konu kartı havuzu):');
+for (const row of rows) {
+  line(`  ${row.title.padEnd(26)} ${row.inSummary ? '✓' : '✕'}  ${String(row.bank).padStart(3)}  ${String(row.topicPool).padStart(4)}${row.topicPool < MIN_TOPIC_POOL ? '  (kart kapalı)' : ''}`);
+}
+line(`Modalverben modlarda: ${modeCounts.map((item) => `${item.mode} ${item.modal}/${item.total}`).join(' · ')}`);
+line(`çalışma kağıdı: ${worksheetSections} H2 bölüm · Modalverben ${worksheetModal ? 'var' : 'YOK'}`);
+line(`ders/banka kopya çift: ${copies.length}${copies.length ? ' ' + copies.map((e) => e.id).join(', ') : ''}`);
 
-if (copies.length > 0 || topicCovered < dayTopics.length) process.exitCode = 1;
+const missingSummary = rows.filter((row) => !row.inSummary);
+const closedCards = rows.filter((row) => row.topicPool < MIN_TOPIC_POOL);
+const modalMissing = modeCounts.filter((item) => (item.mode === 'sentence' || item.mode === 'writing') && item.modal === 0);
+if (
+  foreignTopic.length ||
+  foreignSection.length ||
+  missingSummary.length ||
+  closedCards.length ||
+  modalMissing.length ||
+  copies.length ||
+  (worksheet && !worksheetModal)
+) {
+  process.exitCode = 1;
+}

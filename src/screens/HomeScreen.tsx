@@ -1,5 +1,7 @@
-import { days, exercisesForDay, dayExercises } from '../lib/content';
-import { getDayStats, getGlobalSummary } from '../lib/progress';
+import { useMemo } from 'react';
+import { allExercises, lessonExercises, primaryExercisesForTopic, topicMasteryDefs, topics } from '../lib/content';
+import { getGlobalSummary, getTopicProgressStats } from '../lib/progress';
+import { computeTopicMastery } from '../lib/mastery';
 import { goalProgress } from '../lib/daily-goal';
 import { recommendNext } from '../lib/recommendation';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -17,22 +19,26 @@ function greeting(date = new Date()) {
   return GREETINGS.find((entry) => hour < entry.until) ?? GREETINGS[0];
 }
 
+function masteryColor(score: number): string {
+  return score >= 0.75 ? 'var(--color-good)' : score >= 0.4 ? 'var(--color-brand)' : 'var(--color-signal)';
+}
+
 export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (route: Route) => void }) {
   const { progress } = api;
   const hello = greeting();
 
-  const dayNumbers = days.map((day) => day.day);
-  const recommendation = recommendNext({
-    progress,
-    dayNumbers,
-    exercisesForDay: (day: number) => exercisesForDay(day),
-  });
+  const recommendation = recommendNext({ progress, topics, exercisesForTopic: primaryExercisesForTopic });
   const goal = goalProgress(progress);
-  const overall = getGlobalSummary(progress, dayExercises, dayNumbers);
+  const overall = getGlobalSummary(progress, lessonExercises);
   const totalMistakes = Object.keys(progress.mistakes).length;
+  // Ustalık kavram bazlıdır: Genel Tekrar'daki cevaplar da konunun ustalığına sayılır.
+  const mastery = useMemo(
+    () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
+    [progress],
+  );
 
   return (
-    <main className="mx-auto w-full max-w-[820px] px-5 pb-24 pt-6 sm:pt-10">
+    <main className="mx-auto w-full max-w-[980px] px-5 pb-24 pt-6 sm:pt-10">
       <section className="anim-pop">
         <p className="eyebrow">{hello.tr}</p>
         <h1 className="mt-1 text-[2.5rem] sm:text-6xl" lang="de">
@@ -89,7 +95,8 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
       <section className="mt-8">
         <h2 className="eyebrow mb-3">Son durum</h2>
         <div className="flex flex-wrap gap-3">
-          <MiniStat label="Ders günü" value={String(days.length)} />
+          <MiniStat label="Konu" value={String(topics.length)} />
+          <MiniStat label="Tamamlanan konu" value={`${overall.completedTopics}/${topics.length}`} />
           <MiniStat
             label="Doğruluk"
             value={overall.accuracy === null ? '—' : `%${Math.round(overall.accuracy * 100)}`}
@@ -98,121 +105,111 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
         </div>
       </section>
 
-      <section className="mt-10">
-        <div className="flex items-center gap-2 mb-5">
-          <h2 className="eyebrow">Öğrenme yolu</h2>
+      <section className="mt-10" aria-labelledby="konular-baslik">
+        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="konular-baslik" className="eyebrow">Konular</h2>
+          <p className="text-sm text-ink-faint">Her konu yaşayan bir modüldür; istediğin sırayla çalışabilirsin.</p>
         </div>
-        <ol className="relative flex flex-col gap-4">
-          {days.map((day, index) => {
-            const exercises = exercisesForDay(day.day);
-            const stats = getDayStats(progress, day.day, exercises);
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {topics.map((topic) => {
+            const stats = getTopicProgressStats(progress, topic.id, primaryExercisesForTopic(topic.id));
+            const topicMastery = mastery.get(topic.id)?.masteryScore ?? 0;
+            const masteryPct = Math.round(topicMastery * 100);
             const accuracy = stats.accuracy === null ? null : Math.round(stats.accuracy * 100);
 
             return (
-              <li key={day.day} className="relative flex gap-4">
-                <div className="relative flex w-10 flex-none justify-center">
-                  <div
-                    className="spine absolute inset-y-0 w-[9px]"
-                    style={{ opacity: index === days.length - 1 ? 0.35 : 1 }}
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="numeral relative z-10 mt-4 grid size-10 place-items-center rounded-2xl text-lg"
-                    style={{
-                      background:
-                        stats.state === 'completed'
-                          ? 'var(--color-good)'
-                          : stats.state === 'in-progress'
-                            ? 'var(--color-brand)'
-                            : 'var(--color-sunk)',
-                      color: stats.state === 'not-started' ? 'var(--color-ink-faint)' : '#fff',
-                    }}
-                    aria-hidden="true"
-                  >
-                    {day.day}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  className="day-tile flex-1"
+              <li key={topic.id}>
+                <div
+                  className="topic-tile flex h-full flex-col"
                   data-state={stats.state}
                   data-review={stats.reviewRecommended}
-                  onClick={() => navigate({ name: 'day', day: day.day })}
                 >
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-2xl">{day.day}. Gün</h3>
-                    <span className="text-sm font-bold text-ink-faint">
-                      {stats.completed}/{stats.total} alıştırma
-                    </span>
-                  </div>
-
-                  <p className="mt-1.5 text-[0.95rem] leading-snug text-ink-soft">
-                    {day.topics.join(' • ')}
-                  </p>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    {stats.state === 'not-started' && (
-                      <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                        Hazır
+                  <button
+                    type="button"
+                    className="topic-tile-main flex-1"
+                    aria-label={`${topic.title} konusunu aç`}
+                    onClick={() => navigate({ name: 'topic', topicId: topic.id })}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl leading-none" aria-hidden="true">
+                        {topic.emoji}
                       </span>
-                    )}
-                    {stats.state === 'in-progress' && (
-                      <span
-                        className="badge"
-                        style={{ background: 'var(--color-brand-soft)', color: 'var(--color-brand)' }}
-                      >
-                        Devam ediyor
-                      </span>
-                    )}
-                    {stats.state === 'completed' && (
-                      <span
-                        className="badge"
-                        style={{ background: 'var(--color-good-soft)', color: 'var(--color-good-deep)' }}
-                      >
-                        ✓ Tamamlandı
-                      </span>
-                    )}
-                    {accuracy !== null && (
-                      <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                        Doğruluk %{accuracy}
-                      </span>
-                    )}
-                    {stats.mistakeCount > 0 && (
-                      <span
-                        className="badge"
-                        style={{ background: 'var(--color-bad-soft)', color: 'var(--color-bad-deep)' }}
-                      >
-                        {stats.mistakeCount} hata
-                      </span>
-                    )}
-                    {stats.reviewRecommended && (
-                      <span
-                        className="badge"
-                        style={{ background: 'var(--color-warn-soft)', color: 'var(--color-warn)' }}
-                      >
-                        ⚠ Tekrar öneriliyor
-                      </span>
-                    )}
-                  </div>
-
-                  {stats.completionPct > 0 && (
-                    <div className="rail mt-4 h-2">
-                      <div
-                        className="rail-fill"
-                        style={{
-                          width: `${Math.round(stats.completionPct * 100)}%`,
-                          background:
-                            stats.state === 'completed' ? 'var(--color-good)' : 'var(--color-brand)',
-                        }}
-                      />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xl leading-tight">{topic.title}</h3>
+                        <p className="mt-1 text-[0.92rem] leading-snug text-ink-soft">{topic.description}</p>
+                      </div>
                     </div>
-                  )}
-                </button>
+
+                    <div className="mt-4">
+                      <div className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="font-bold text-ink-soft">Ustalık</span>
+                        <span className="numeral text-ink-faint">%{masteryPct}</span>
+                      </div>
+                      <div
+                        className="rail mt-1 h-2"
+                        role="progressbar"
+                        aria-label={`${topic.title} ustalığı`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={masteryPct}
+                      >
+                        <div
+                          className="rail-fill"
+                          style={{ width: `${Math.max(2, masteryPct)}%`, background: masteryColor(topicMastery) }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="badge" style={{ background: 'var(--color-sunk)' }}>
+                        {stats.completed}/{stats.total} alıştırma
+                      </span>
+                      {stats.state === 'completed' && (
+                        <span className="badge" style={{ background: 'var(--color-good-soft)', color: 'var(--color-good-deep)' }}>
+                          ✓ Tamamlandı
+                        </span>
+                      )}
+                      {accuracy !== null && (
+                        <span className="badge" style={{ background: 'var(--color-sunk)' }}>
+                          Doğruluk %{accuracy}
+                        </span>
+                      )}
+                      {stats.mistakeCount > 0 && (
+                        <span className="badge" style={{ background: 'var(--color-bad-soft)', color: 'var(--color-bad-deep)' }}>
+                          {stats.mistakeCount} hata
+                        </span>
+                      )}
+                      {stats.reviewRecommended && (
+                        <span className="badge" style={{ background: 'var(--color-warn-soft)', color: 'var(--color-warn)' }}>
+                          ⚠ Tekrar öneriliyor
+                        </span>
+                      )}
+                    </div>
+                  </button>
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary flex-1"
+                      aria-label={`${topic.title} — Çalış`}
+                      onClick={() => navigate({ name: 'lesson', topicId: topic.id, mode: 'normal' })}
+                    >
+                      Çalış
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-quiet"
+                      aria-label={`${topic.title} özetini aç`}
+                      onClick={() => navigate({ name: 'summary', topicId: topic.id })}
+                    >
+                      📖 Özet
+                    </button>
+                  </div>
+                </div>
               </li>
             );
           })}
-        </ol>
+        </ul>
       </section>
     </main>
   );

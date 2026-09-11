@@ -6,11 +6,11 @@ import { AudioButton } from '../components/AudioButton';
 import { Markup } from '../components/Markup';
 import { ComboIndicator, StreakCelebration } from '../components/StreakCelebration';
 import {
-  exercisesBeforeDay,
   exercisesById,
-  exercisesForDay,
-  summaryTopicForExercise,
-  topicDay,
+  exercisesForSection,
+  exercisesForTopic,
+  summarySectionForExercise,
+  topicTitle,
 } from '../lib/content';
 import { buildSessionPlan } from '../lib/session';
 import { cancelScheduledRetry, scheduleRetry } from '../lib/lesson';
@@ -20,17 +20,18 @@ import { recordAttempt } from '../lib/progress';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { ActiveLesson, AttemptResult, LessonKind, SessionMode } from '../lib/storage';
-import type { Exercise, ExerciseSetId } from '../content/types';
+import type { Exercise } from '../content/types';
 import { evaluateExercise, type ExerciseInput, type ValidationResult } from '../lib/validation';
 import { shouldAutoplayPrompt } from '../lib/audio/tts';
 import { audioController, type SoundEffect } from '../lib/audio/playback';
 
 export interface LessonScreenProps {
   mode: LessonKind;
-  day?: number;
-  sessionMode?: SessionMode;
+  /** Konu dersi için kanonik konu. */
   topicId?: string;
-  exerciseSetId?: ExerciseSetId;
+  sessionMode?: SessionMode;
+  /** Bölüm pratiği (`section`) için özet bölümü. */
+  sectionId?: string;
   api: ProgressApi;
   navigate: (route: Route) => void;
 }
@@ -40,8 +41,7 @@ const MODE_LABEL: Record<SessionMode, string> = {
   full: 'Tam Çalışma',
   quick: 'Hızlı Tekrar',
   challenge: 'Zor Sorular',
-  topic: 'Konu Çalışması',
-  set: 'Alıştırma Seti',
+  section: 'Bölüm Çalışması',
   'gr-mixed': 'Genel Tekrar',
   'gr-vocab': 'Kelime Çalışması',
   'gr-sentence': 'Cümle Kurma',
@@ -49,12 +49,12 @@ const MODE_LABEL: Record<SessionMode, string> = {
   'gr-listening': 'Dinleme',
   'gr-quick': 'Hızlı Tekrar',
   'gr-challenge': 'Zor Sorular',
-  'gr-topic': 'Konu Çalışması',
+  'gr-topic': 'Konu Tekrarı',
 };
 
 /**
  * Ders yasam dongusu (§12):
- *   gun → oturum kurulumu → aktif ders → SONUC ROTASI (#/sonuc)
+ *   konu → oturum kurulumu → aktif ders → SONUC ROTASI (#/sonuc)
  *
  * Tamamlanma artik bu bilesenin yerel state'i DEGILDIR. Ders bitince yapili
  * sonuc kalici ilerlemeye yazilir ve ayri bir rotaya gecilir; boylece
@@ -63,10 +63,9 @@ const MODE_LABEL: Record<SessionMode, string> = {
  */
 export function LessonScreen({
   mode,
-  day,
-  sessionMode = 'normal',
   topicId,
-  exerciseSetId,
+  sessionMode = 'normal',
+  sectionId,
   api,
   navigate,
 }: LessonScreenProps) {
@@ -75,19 +74,16 @@ export function LessonScreen({
   // İçerik güncellemesi bir soruyu kaldırmış olabilir. Böyle bir yarım ders
   // ekranda takılmak yerine güncel havuzdan güvenle yeniden kurulur.
   const hasRemovedExercise = active?.queue.some((item) => !exercisesById.has(item.exerciseId)) ?? false;
-  // Yarim kalan oturum ancak AYNI tur + AYNI gun + AYNI mod + AYNI konu ise surdurulur.
+  // Yarim kalan oturum ancak AYNI tur + AYNI konu + AYNI mod (+ AYNI bolum) ise surdurulur.
   const matches =
     active &&
     !hasRemovedExercise &&
     active.mode === mode &&
-    (mode === 'day'
-      ? active.day === day &&
+    (mode === 'topic'
+      ? active.topicId === topicId &&
         (active.sessionMode ?? 'normal') === sessionMode &&
-        active.topicId === topicId &&
-        active.exerciseSetId === exerciseSetId
-      : mode === 'mistakes'
-        ? active.day === day
-        : true);
+        (sessionMode !== 'section' || active.sectionId === sectionId)
+      : true);
 
   // Ders bittikten sonra bu ekran kisa bir sure daha monte kalir (hash degisimi
   // asenkrondur). Bayrak olmadan asagidaki kurulum etkisi "aktif ders yok"
@@ -105,36 +101,34 @@ export function LessonScreen({
     [navigate, update],
   );
 
-  // Oturum yoksa (ya da baska bir gune aitse) yeni kuyruk kur.
+  // Oturum yoksa (ya da baska bir konuya aitse) yeni kuyruk kur.
   useEffect(() => {
     if (matches || finishing.current) return;
-    if (mode === 'day' && day !== undefined) {
-      const pool = exercisesForDay(day);
+    if (mode === 'topic' && topicId) {
+      const pool = sessionMode === 'section' && sectionId ? exercisesForSection(sectionId) : exercisesForTopic(topicId);
       // Birincil sıra ders başlamadan tamamen kurulur: ID'ler benzersizdir ve
       // hata tekrarları bu sıra yerine ayrı, gerekçeli sunumlar olarak eklenir.
       const plan = buildSessionPlan({
         pool,
-        previous: exercisesBeforeDay(day),
         progress,
         mode: sessionMode,
         topicId,
-        exerciseSetId,
+        sectionId,
         // Her oturumda değişen ama tekrar üretilebilir tohum.
-        seed: `${day}:${sessionMode}:${topicId ?? ''}:${exerciseSetId ?? ''}:${progress.days[day]?.sessionsCompleted ?? 0}`,
+        seed: `${topicId}:${sessionMode}:${sectionId ?? ''}:${progress.topics[topicId]?.sessionsCompleted ?? 0}`,
       });
 
       if (!plan.primaryQueue.length) {
-        navigate({ name: 'day', day });
+        navigate({ name: 'topic', topicId });
         return;
       }
       update((current) => ({
         ...current,
         activeLesson: {
-          mode: 'day',
-          day,
-          sessionMode,
+          mode: 'topic',
           topicId,
-          exerciseSetId,
+          sessionMode,
+          ...(sectionId && sessionMode === 'section' ? { sectionId } : {}),
           queue: plan.primaryQueue,
           index: 0,
           startedAt: new Date().toISOString(),
@@ -143,12 +137,14 @@ export function LessonScreen({
           streak: { current: 0, best: 0, firedMilestones: [] },
         },
       }));
-    } else if (mode !== 'day') {
+    } else if (mode === 'topic') {
+      navigate({ name: 'home' });
+    } else {
       // Tekrar oturumlari her zaman ONCEDEN kurulur (sonuc ekrani, Hatalarim
       // ya da Genel Tekrar tarafindan). Dogrudan URL ile gelindiyse listeye don.
       navigate(mode === 'mistakes' ? { name: 'mistakes' } : { name: 'general-review' });
     }
-  }, [matches, mode, day, sessionMode, topicId, exerciseSetId, progress, update, navigate]);
+  }, [matches, mode, sessionMode, topicId, sectionId, progress, update, navigate]);
 
   if (!active || !matches) {
     return <div className="p-10 text-center text-ink-soft">Ders hazırlanıyor…</div>;
@@ -264,8 +260,16 @@ function LessonRunner({
       speechVoice={api.progress.settings.speechVoice}
       onCommit={commit}
       onAdvance={advance}
-      onExit={() => navigate(lesson.day ? { name: 'day', day: lesson.day } : { name: 'home' })}
-      onOpenSummary={(topicId, day) => navigate({ name: 'summary', day, topicId })}
+      onExit={() =>
+        navigate(
+          lesson.mode === 'topic' && lesson.topicId
+            ? { name: 'topic', topicId: lesson.topicId }
+            : lesson.mode === 'review' && !lesson.legacyDay
+              ? { name: 'general-review' }
+              : { name: 'home' },
+        )
+      }
+      onOpenSummary={(topicId, sectionId) => navigate({ name: 'summary', topicId, sectionId })}
     />
   );
 }
@@ -282,7 +286,7 @@ interface ExerciseStepProps {
   ) => number | undefined;
   onAdvance: () => void;
   onExit: () => void;
-  onOpenSummary: (topicId: string, day: number) => void;
+  onOpenSummary: (topicId: string, sectionId: string) => void;
   showPronunciation: boolean;
   soundEffects: boolean;
   autoPronunciation: boolean;
@@ -412,13 +416,13 @@ function ExerciseStep({
   const position = lesson.index + 1;
   const label =
     lesson.mode === 'mistakes'
-      ? `${lesson.day ? `${lesson.day}. Gün · ` : ''}Hata Tekrarı`
+      ? 'Hata Tekrarı'
       : lesson.mode === 'review'
-        ? (lesson.sessionMode ? MODE_LABEL[lesson.sessionMode] : 'Tekrar')
-        : lesson.sessionMode === 'set' && lesson.exerciseSetId
-          ? `${lesson.day}. Gün · ${lesson.exerciseSetId.replace('set-', '')}. Set`
-          : `${lesson.day}. Gün · ${MODE_LABEL[lesson.sessionMode ?? 'normal']}`;
-  const summaryTopic = summaryTopicForExercise(exercise);
+        ? `${lesson.sessionMode ? MODE_LABEL[lesson.sessionMode] : 'Tekrar'}${
+          lesson.topicId ? ` · ${topicTitle(lesson.topicId)}` : ''
+        }`
+        : `${topicTitle(lesson.topicId)} · ${MODE_LABEL[lesson.sessionMode ?? 'normal']}`;
+  const summarySection = summarySectionForExercise(exercise);
   const canCheck = exercise.type === 'spoken' || hasInput(exercise, input);
   const showPromptAbove = exercise.type === 'multiple-choice' && Boolean(exercise.prompt);
   const streak = lesson.streak?.current ?? 0;
@@ -474,13 +478,13 @@ function ExerciseStep({
         <div className={result?.status === 'incorrect' ? 'anim-shake' : 'anim-pop'}>
           <p className="eyebrow mb-3 flex flex-wrap items-center gap-2">
             <span>{exercise.topic}</span>
-            {lesson.mode === 'day' && lesson.day !== undefined && exercise.day !== lesson.day && (
+            {lesson.mode === 'topic' && lesson.topicId && exercise.topicId !== lesson.topicId && (
               <span
                 className="badge"
                 style={{ background: 'var(--color-brand-soft)', color: 'var(--color-brand)' }}
-                title={`Bu soru ${exercise.day}. Günden karma tekrar olarak geldi — hata değil.`}
+                title={`Bu soru ${exercise.topic} konusundan; ${topicTitle(lesson.topicId)} konusunu da çalıştırıyor.`}
               >
-                🔁 {exercise.day}. Gün tekrarı
+                🔗 {topicTitle(lesson.topicId)} ile bağlantılı
               </span>
             )}
             {exercise.difficulty === 'hard' && (
@@ -554,13 +558,12 @@ function ExerciseStep({
                 audioContextId={audioContextId}
                 milestoneEffect={milestoneEffect}
                 onSelfOverride={result.status === 'incorrect' ? selfOverride : undefined}
-                summaryLabel={summaryTopic?.title}
+                summaryLabel={summarySection?.title}
                 onOpenSummary={
-                  summaryTopic
-                    ? // Karma tekrarda konu onceki bir gune ait olabilir.
-                      () => {
+                  summarySection
+                    ? () => {
                         stopAudio();
-                        onOpenSummary(summaryTopic.id, topicDay.get(summaryTopic.id) ?? exercise.day);
+                        onOpenSummary(summarySection.topicId, summarySection.id);
                       }
                     : undefined
                 }

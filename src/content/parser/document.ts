@@ -1,6 +1,14 @@
 /**
- * Markdown belgesini gun / bolum / cevap-anahtari yapisina ayirir.
- * Icerik tabanli degil, yapi tabanli calisir; formatlama degisikliklerine karsi savunmacidir.
+ * Markdown belgesini KONU / bölüm / cevap-anahtarı yapısına ayırır.
+ *
+ *   # Konu (H1)            → konu bloğu (kanonik konu kaydıyla eşleşir)
+ *   > giriş                → konunun kısa açıklaması
+ *   ## Bölüm (H2)          → özet bölümü
+ *   ### Alt başlık (H3)    → bölümün parçası ("⚠️ Dikkat" → uyarı)
+ *   <details>…</details>   → cevap grupları ("Kendine Sor" cevapları)
+ *
+ * İçerik tabanlı değil, yapı tabanlı çalışır; formatlama değişikliklerine
+ * karşı savunmacıdır. Gün başlığı kavramı yoktur.
  */
 
 import { collapseSpaces, plain, stripLeadingEmoji } from './text.ts';
@@ -26,18 +34,24 @@ export interface AnswerGroup {
   items: Map<string, string>;
 }
 
-export interface RawDay {
-  day: number;
+export interface RawBlock {
   sections: RawSection[];
   answerGroups: AnswerGroup[];
 }
 
-export interface RawDocument {
-  file: string;
-  days: RawDay[];
+export interface RawTopicBlock extends RawBlock {
+  rawTitle: string;
+  /** Emoji ayıklanmış H1 başlığı. */
+  title: string;
+  /** Başlığın hemen altındaki blockquote satırları (işaretsiz). */
+  intro: string[];
 }
 
-const DAY_HEADING = /^#{1,3}\s+(?:[^\d#\n]*?)(\d+)\s*\.\s*G[üu]n\s*$/u;
+export interface RawTopicDocument {
+  topics: RawTopicBlock[];
+}
+
+const H1 = /^#\s+(.*)$/;
 const HEADING = /^(#{2,4})\s+(.*)$/;
 
 /** "🔤 1. Hızlı Hatırlama" → { number: 1, title: "Hızlı Hatırlama" } */
@@ -65,8 +79,8 @@ function* walkLines(lines: string[]): Generator<{ line: string; inFence: boolean
 }
 
 /**
- * `<details>` bloklarini gun icerigenden ayirir; icerideki
- * `**1. Bölüm Adı**` bloklarini cevap gruplarina donusturur.
+ * `<details>` bloklarini icerikten ayirir; icerideki `**1. Bölüm Adı**`
+ * bloklarini (ya da basliksiz numarali listeyi) cevap gruplarina donusturur.
  */
 function extractAnswerGroups(lines: string[]): { body: string[]; groups: AnswerGroup[] } {
   const body: string[] = [];
@@ -84,7 +98,7 @@ function extractAnswerGroups(lines: string[]): { body: string[]; groups: AnswerG
       continue;
     }
     if (current) {
-      if (/^\s*<\/?summary>/i.test(line)) continue;
+      if (/^\s*<\/?summary>/i.test(line) || /^\s*<summary>.*<\/summary>\s*$/i.test(line)) continue;
       current.push(line);
     } else {
       body.push(line);
@@ -99,7 +113,6 @@ function extractAnswerGroups(lines: string[]): { body: string[]; groups: AnswerG
     for (const line of block) {
       if (/^\s*```/.test(line)) inFence = !inFence;
       // Grup basligi: "**2. Nasıl Okursun?**" — basliktan sonra aciklama gelebilir.
-      // Yalnizca numarali baslik ya da satiri tamamen kaplayan kalin metin sayilir.
       const header = !inFence && line.match(/^\*\*(.+?)\*\*(.*)$/);
       if (header && (/^\d+\s*[.)]/.test(header[1]) || !header[2].trim())) {
         if (group) groups.push(group);
@@ -110,7 +123,7 @@ function extractAnswerGroups(lines: string[]): { body: string[]; groups: AnswerG
       }
       if (group) group.lines.push(line);
       else if (line.trim()) {
-        // Basliksiz cevap blogu (orn. Ozet dosyasindaki "1. Gün cevapları").
+        // Basliksiz cevap blogu ("Kendine Sor" cevaplari).
         group = { title: '', lines: [line], items: new Map() };
       }
     }
@@ -152,47 +165,8 @@ export function indexAnswerItems(lines: string[]): Map<string, string> {
   return items;
 }
 
-export function parseDocument(file: string, markdown: string): RawDocument {
-  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
-  const days: RawDay[] = [];
-
-  let currentDayLines: string[] | null = null;
-  let currentDayNumber = 0;
-
-  const flush = () => {
-    if (currentDayLines === null) return;
-    days.push(buildDay(currentDayNumber, currentDayLines));
-    currentDayLines = null;
-  };
-
-  for (const { line, inFence } of walkLines(lines)) {
-    if (!inFence) {
-      const dayMatch = line.match(DAY_HEADING);
-      if (dayMatch) {
-        flush();
-        currentDayNumber = Number(dayMatch[1]);
-        currentDayLines = [];
-        continue;
-      }
-    }
-    if (currentDayLines) currentDayLines.push(line);
-  }
-  flush();
-
-  days.sort((a, b) => a.day - b.day);
-  return { file, days };
-}
-
-/**
- * Gün başlığı taşımayan (kümülatif) özet dosyası: tüm H2 bölümlerini
- * 0. günün konuları sayar. `Genel Tekrar Özet.md` bu yolla pakete girer.
- */
-export function parseGeneralDay(markdown: string): RawDay {
-  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
-  return buildDay(0, lines);
-}
-
-function buildDay(day: number, lines: string[]): RawDay {
+/** Bir bloğu (konu gövdesi) H2–H4 bölümlerine ve cevap gruplarına ayırır. */
+export function parseBlock(lines: string[]): RawBlock {
   const { body, groups } = extractAnswerGroups(lines);
   const sections: RawSection[] = [];
   let current: RawSection | null = null;
@@ -219,17 +193,45 @@ function buildDay(day: number, lines: string[]): RawDay {
   }
   if (current) sections.push(current);
 
-  return { day, sections, answerGroups: groups };
+  return { sections, answerGroups: groups };
 }
 
-/** Bolum numarasina (yoksa basligina) gore eslesen cevap grubunu bulur. */
-export function findAnswerGroup(day: RawDay, section: RawSection): AnswerGroup | undefined {
-  if (section.number !== undefined) {
-    const byNumber = day.answerGroups.find((group) => group.number === section.number);
-    if (byNumber) return byNumber;
+/** Belgeyi H1 konu bloklarına böler (kod blokları içindeki `#` yok sayılır). */
+export function parseTopicDocument(markdown: string): RawTopicDocument {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const chunks: Array<{ rawTitle: string; lines: string[] }> = [];
+  let current: { rawTitle: string; lines: string[] } | null = null;
+
+  for (const { line, inFence } of walkLines(lines)) {
+    if (!inFence) {
+      const h1 = line.match(H1);
+      if (h1) {
+        current = { rawTitle: h1[1].trim(), lines: [] };
+        chunks.push(current);
+        continue;
+      }
+    }
+    current?.lines.push(line);
   }
-  const target = section.title.toLocaleLowerCase('tr');
-  return day.answerGroups.find(
-    (group) => group.title && target.startsWith(group.title.toLocaleLowerCase('tr')),
-  );
+
+  return {
+    topics: chunks.map((chunk) => {
+      const intro: string[] = [];
+      for (const line of chunk.lines) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          if (intro.length) break;
+          continue;
+        }
+        if (!trimmed.startsWith('>')) break;
+        intro.push(collapseSpaces(trimmed.replace(/^>\s*/, '')));
+      }
+      return {
+        rawTitle: chunk.rawTitle,
+        title: collapseSpaces(plain(stripLeadingEmoji(chunk.rawTitle))),
+        intro: intro.filter(Boolean),
+        ...parseBlock(chunk.lines),
+      };
+    }),
+  };
 }

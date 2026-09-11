@@ -1,20 +1,23 @@
 /**
  * Oturum kurucusu.
  *
- * Havuz (35–55 alistirma) ile OTURUM (5–25 alistirma) ayri kavramlardir:
- * her calisma havuzdan farkli ama yapili bir secki uretir.
+ * Havuz (bir KONUNUN birincil + ikincil etiketli alistirmalari) ile OTURUM
+ * (5–25 alistirma) ayri kavramlardir: her calisma havuzdan farkli ama yapili
+ * bir secki uretir.
  *
  * Tasarim:
- *   - Puanlama (§33) neyin secilecegini belirler.
- *   - Asama plani (§31) sirayi belirler: kolay ısınma → orta → zor → hata tekrari → kapanis.
+ *   - Puanlama (§33) neyin secilecegini belirler; konunun BIRINCIL
+ *     alistirmalari esit puanda ikincil etiketlilerin onune gecer.
+ *   - Asama plani (§31) sirayi belirler: kolay ısınma → orta → zor → kapanis.
  *   - Aile araligi (§32) ayni kavramin varyantlarini arka arkaya gostermez.
- *   - Karma tekrar (§48) 2. gunden itibaren onceki gunlerden ~%20 ekler.
+ *   - Konular arasi karma tekrar Genel Tekrar'in isidir; konu oturumu
+ *     yalnizca kendi havuzundan secer.
  *
  * `seed` verildigi surece cikti DETERMINISTIKTIR (test edilebilir), ama
  * uygulamada seed her oturumda degistigi icin sira tekrar etmez.
  */
 
-import type { Difficulty, Exercise, ExerciseSetId } from '../content/types';
+import type { Difficulty, Exercise } from '../content/types';
 import type { SessionPresentation, UserProgress } from './storage';
 import { computeConceptProgress } from './mastery';
 
@@ -23,8 +26,7 @@ export type SessionMode =
   | 'full'
   | 'quick'
   | 'challenge'
-  | 'topic'
-  | 'set'
+  | 'section'
   | 'gr-mixed'
   | 'gr-vocab'
   | 'gr-sentence'
@@ -37,93 +39,83 @@ export type SessionMode =
 interface ModeConfig {
   size: number;
   difficulties?: Difficulty[];
-  /** Onceki gunlerden gelecek oran. */
-  previousDayRatio: number;
   /** Zorluk sablonu: kolay / orta / zor oranlari. */
   mix: { easy: number; medium: number; hard: number };
 }
 
 const MODE_CONFIG: Record<SessionMode, ModeConfig> = {
-  normal: { size: 18, previousDayRatio: 0.2, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
-  // Tam çalışma o günün havuzunun tamamını + yaklaşık %20 önceki gün tekrarını içerir.
-  // `current / (current + current * .25)` = %80 güncel, %20 kümülatif tekrar.
-  full: { size: 45, previousDayRatio: 0.2, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
-  quick: { size: 8, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  normal: { size: 18, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  // Tam çalışma: konunun geniş bir kesiti; her bölüm temsil edilir.
+  full: { size: 45, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  quick: { size: 8, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
   challenge: {
     size: 12,
     difficulties: ['medium', 'hard'],
-    previousDayRatio: 0,
     mix: { easy: 0, medium: 0.35, hard: 0.65 },
   },
-  topic: { size: 12, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
-  // Set modunda seçilen havuzun tamamı, pedagojik sıra dayatılmadan karışır.
-  set: { size: Number.MAX_SAFE_INTEGER, previousDayRatio: 0, mix: { easy: 0, medium: 0, hard: 0 } },
-  // Genel Tekrar: havuz zaten kümülatiftir, önceki-gün katkısı yoktur.
-  'gr-mixed': { size: 28, previousDayRatio: 0, mix: { easy: 0.25, medium: 0.5, hard: 0.25 } },
-  'gr-vocab': { size: 24, previousDayRatio: 0, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
-  'gr-sentence': { size: 24, previousDayRatio: 0, mix: { easy: 0.15, medium: 0.45, hard: 0.4 } },
-  'gr-writing': { size: 7, previousDayRatio: 0, mix: { easy: 0.2, medium: 0.5, hard: 0.3 } },
-  'gr-listening': { size: 16, previousDayRatio: 0, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
-  'gr-quick': { size: 12, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  // Bölüm pratiği: tek bir özet bölümünün alıştırmaları.
+  section: { size: 12, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  // Genel Tekrar: havuz zaten konular arası ve kümülatiftir.
+  'gr-mixed': { size: 28, mix: { easy: 0.25, medium: 0.5, hard: 0.25 } },
+  'gr-vocab': { size: 24, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
+  'gr-sentence': { size: 24, mix: { easy: 0.15, medium: 0.45, hard: 0.4 } },
+  'gr-writing': { size: 7, mix: { easy: 0.2, medium: 0.5, hard: 0.3 } },
+  'gr-listening': { size: 16, mix: { easy: 0.35, medium: 0.45, hard: 0.2 } },
+  'gr-quick': { size: 12, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
   'gr-challenge': {
     size: 22,
     difficulties: ['medium', 'hard'],
-    previousDayRatio: 0,
     mix: { easy: 0, medium: 0.35, hard: 0.65 },
   },
-  'gr-topic': { size: 20, previousDayRatio: 0, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
+  'gr-topic': { size: 20, mix: { easy: 0.3, medium: 0.5, hard: 0.2 } },
 };
 
 /**
- * Gun/izlek bazli oturum boyu istisnalari.
+ * Konu bazli oturum boyu istisnalari (kanonik konu kimligiyle).
  *
- * Varsayilan `MODE_CONFIG` boyutlari TUM gunler icin gecerlidir; burada
- * yalnizca havuzu belirgin sekilde daha buyuk olan gunler icin daha genis
- * bir oturum tanimlanir. Kayitli olmayan her gun varsayilanla calisir,
- * bu yuzden onceki gunlerin davranisi degismez. Genel Tekrar havuzu
- * (`reviewOnly`) bu tablodan etkilenmez.
+ * Varsayilan `MODE_CONFIG` boyutlari TUM konular icin gecerlidir; burada
+ * yalnizca havuzu belirgin sekilde daha buyuk olan konular icin daha genis
+ * bir oturum tanimlanir. Genel Tekrar modlari bu tablodan etkilenmez.
  */
 export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, number>>> = {
-  // 7. Gün: 139 alistirmalik kelime agirlikli havuz.
-  'private:7': { normal: 22, full: 50, quick: 10, challenge: 16 },
-  // 10. Gün: 120 alistirmalik uretim agirlikli havuz.
-  'private:10': { normal: 22, full: 52, quick: 10, challenge: 18 },
+  // ~145 alistirmalik, uretim agirlikli havuz.
+  'topic.modal-verbs': { normal: 22, full: 52, quick: 10, challenge: 18 },
+  // ~105 alistirmalik havuz (Mein Tag ve Modalverben ile ortak cumleler dahil).
+  'topic.separable-verbs': { normal: 20, full: 50, challenge: 16 },
 };
 
-function sizeKey(pool: Exercise[]): string | undefined {
-  const first = pool[0];
-  if (!first) return undefined;
-  if (first.reviewOnly) return undefined;
-  return `${first.track ?? 'private'}:${first.day}`;
-}
+const LESSON_MODES = new Set<SessionMode>(['normal', 'full', 'quick', 'challenge']);
 
-function modeSize(mode: SessionMode, pool: Exercise[]): number {
-  const key = sizeKey(pool);
-  return (key ? SESSION_SIZE_OVERRIDES[key]?.[mode] : undefined) ?? MODE_CONFIG[mode].size;
+function modeSize(mode: SessionMode, topicId: string | undefined): number {
+  const override = topicId && LESSON_MODES.has(mode) ? SESSION_SIZE_OVERRIDES[topicId]?.[mode] : undefined;
+  return override ?? MODE_CONFIG[mode].size;
 }
 
 /**
- * Gunun kapanis uretim gorevleri.
+ * Konunun kapanis uretim gorevleri.
  *
- * Bazi gunlerin pedagojik hedefi tek bir uretim gorevinde toplanir
- * (Ozel Ders 7. Gun: "Evini Almanca anlat"). Bu gorev, sans eseri secilmeye
- * birakilmaz: kayitli oldugu modda oturuma HER ZAMAN girer ve EN SONA konur.
- * Kayitli olmayan gun/izlek/mod icin liste bostur, davranis degismez.
+ * Bazi konularin pedagojik hedefi tek bir uretim gorevinde toplanir
+ * ("Evini Almanca anlat", "Gününü anlat", "Yarın ne yapmak istiyorsun?").
+ * Bu gorev sans eseri secilmeye birakilmaz: kayitli oldugu modda oturuma HER
+ * ZAMAN girer ve EN SONA konur. Kayitli olmayan konu/mod icin liste bostur.
  */
 export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, string[]>>> = {
-  'private:7': {
+  'topic.home': {
     full: ['p7-evim-free-tam-anlatim'],
     challenge: ['p7-evim-free-tam-anlatim'],
   },
-  'private:10': {
+  'topic.daily-routine': {
     full: ['p10-meintag-free-tam-anlatim'],
     challenge: ['p10-meintag-free-tam-anlatim'],
   },
+  'topic.modal-verbs': {
+    full: ['mv-free-morgen'],
+    challenge: ['mv-free-morgen'],
+  },
 };
 
-function closingTasks(mode: SessionMode, pool: Exercise[], candidates: Exercise[]): Exercise[] {
-  const key = sizeKey(pool);
-  const ids = key ? (SESSION_CLOSING_TASKS[key]?.[mode] ?? []) : [];
+function closingTasks(mode: SessionMode, topicId: string | undefined, candidates: Exercise[]): Exercise[] {
+  const ids = topicId && LESSON_MODES.has(mode) ? (SESSION_CLOSING_TASKS[topicId]?.[mode] ?? []) : [];
   return ids
     .map((id) => candidates.find((exercise) => exercise.id === id))
     .filter((exercise): exercise is Exercise => Boolean(exercise));
@@ -229,6 +221,8 @@ export function selectChallenge(
 /* ------------------------------------------------------------------ */
 
 export const SCORE = {
+  /** Konu oturumunda, alistirmanin BIRINCIL konusu oturumun konusuysa. */
+  primaryTopic: 2,
   unseen: 5,
   incorrectBefore: 5,
   repeatedMistake: 3,
@@ -290,16 +284,17 @@ function tieBreaker(id: string, seed: string): number {
 /* ------------------------------------------------------------------ */
 
 export interface SessionInput {
-  /** Bu gunun tam havuzu. */
+  /** Konunun (ya da Genel Tekrar modunun) tam havuzu. */
   pool: Exercise[];
-  /** Onceki gunlerin havuzu (karma tekrar icin). Bos olabilir. */
-  previous?: Exercise[];
   progress: UserProgress;
   mode: SessionMode;
-  /** `topic` modunda zorunlu. */
+  /**
+   * Oturumun kanonik konusu. Konu modlarinda boyut istisnasi, kapanis
+   * gorevi ve birincil-konu onceligi bununla belirlenir.
+   */
   topicId?: string;
-  /** `set` modunda zorunlu: ilk üç günün ayrık soru seti. */
-  exerciseSetId?: ExerciseSetId;
+  /** `section` modunda zorunlu: yalnizca bu ozet bolumunun alistirmalari. */
+  sectionId?: string;
   seed: string;
   /** Test icin oturum boyutunu ezmek amaciyla. */
   size?: number;
@@ -317,23 +312,17 @@ export interface SessionPlan {
  * `retryQueue` özellikle boş döner: doğru cevaplar asla buraya girmez.
  */
 export function buildSessionPlan(input: SessionInput): SessionPlan {
-  const { pool, progress, mode, topicId, exerciseSetId, seed } = input;
+  const { pool, progress, mode, topicId, sectionId, seed } = input;
   const config = MODE_CONFIG[mode];
-  const allKnown = uniqueExercises([...pool, ...(input.previous ?? [])]);
   const conceptScores = new Map(
-    [...computeConceptProgress(progress, allKnown)].map(
+    [...computeConceptProgress(progress, uniqueExercises(pool))].map(
       ([id, item]) => [id, item.masteryScore] as const,
     ),
   );
 
   let candidates = uniqueExercises(pool);
-  if (mode === 'topic') {
-    candidates = candidates.filter((exercise) => exercise.topicId === topicId);
-  }
-  if (mode === 'set') {
-    candidates = exerciseSetId
-      ? candidates.filter((exercise) => exercise.exerciseSetId === exerciseSetId)
-      : [];
+  if (mode === 'section') {
+    candidates = sectionId ? candidates.filter((exercise) => exercise.sectionId === sectionId) : [];
   }
   if (mode === 'challenge' || mode === 'gr-challenge') {
     candidates = challengeCandidates(candidates);
@@ -354,48 +343,44 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
   }
   if (!candidates.length) return { primaryQueue: [], retryQueue: [] };
 
-  // Setler baştan sona tek bir rastgele sıra taşır: kolay/orta/zor dizisi,
-  // konu kapanışı ya da önceki gün tekrarı yoktur. Aynı seed testte tekrar
-  // üretilebilir, uygulamada ise her yeni oturumda seed değişir.
-  if (mode === 'set') {
-    return {
-      primaryQueue: randomize(candidates, seed).map((exercise) => ({
-        exerciseId: exercise.id,
-        presentationReason: 'primary' as const,
-      })),
-      retryQueue: [],
-    };
-  }
-
+  // Konu oturumunda konunun kendi (birincil) alistirmalari esit durumda
+  // one gecer; ikincil etiketliler havuzu zenginlestirir ama baskin olmaz.
+  // Genel Tekrar konu kartinda ise Genel Tekrar bankasi sorulari one gecer.
+  const primaryBonus = (exercise: Exercise) => {
+    if (topicId && LESSON_MODES.has(mode)) return exercise.topicId === topicId ? SCORE.primaryTopic : 0;
+    if (mode === 'gr-topic') return exercise.reviewOnly ? SCORE.primaryTopic : 0;
+    return 0;
+  };
   const scored = new Map(
-    candidates.map((exercise) => [exercise.id, scoreExercise(exercise, progress, conceptScores)]),
+    candidates.map((exercise) => [
+      exercise.id,
+      scoreExercise(exercise, progress, conceptScores) + primaryBonus(exercise),
+    ]),
   );
 
   const rank = (a: Exercise, b: Exercise) =>
     (scored.get(b.id) ?? 0) - (scored.get(a.id) ?? 0) ||
     tieBreaker(a.id, seed) - tieBreaker(b.id, seed);
 
-  const uniquePrevious = uniqueExercises(input.previous ?? []).filter(
-    (exercise) => !candidates.some((candidate) => candidate.id === exercise.id),
-  );
-  const requestedSize = input.size ?? modeSize(mode, pool);
-  const capacity = Math.min(requestedSize, candidates.length + uniquePrevious.length);
-  // 18 soruluk normal oturumda `round(.2)` dört tekrar (%22,2) yapar;
-  // bu da güncel günün %80–85 hedefinin altına düşer. Aşağı yuvarlama,
-  // 3/18 (%16,7) ve 9/45 (%20) ile hedef bandını korur.
-  const requestedReviewCount = Math.floor(capacity * config.previousDayRatio);
-  const reviewCount = Math.min(requestedReviewCount, uniquePrevious.length);
-  const primaryCount = Math.min(candidates.length, capacity - reviewCount);
-  const actualReviewCount = Math.min(uniquePrevious.length, capacity - primaryCount);
+  const requestedSize = input.size ?? modeSize(mode, topicId);
+  const primaryCount = Math.min(requestedSize, candidates.length);
 
   let selected =
     mode === 'challenge' || mode === 'gr-challenge'
       ? selectChallenge(candidates, primaryCount, rank)
       : selectByMix(candidates, primaryCount, config.mix, rank);
-  if (mode === 'full') selected = ensureTopicCoverage(selected, candidates, primaryCount, rank);
+  if (mode === 'full') selected = ensureSectionCoverage(selected, candidates, primaryCount, rank);
+  // Kucuk konu havuzlarinda tek bir aile oturumu doldurmasin: aralik (§32)
+  // ancak ailenin payi sinirliysa korunabilir.
+  // Zor oturumda degisim uretim/tanima dengesini bozmaz (§10).
+  const sameKind =
+    mode === 'challenge' || mode === 'gr-challenge'
+      ? (a: Exercise, b: Exercise) => isProductionTask(a) === isProductionTask(b)
+      : undefined;
+  selected = limitFamilies(selected, candidates, rank, familyCap(primaryCount), sameKind);
 
   // Kapanis gorevi secime kalmaz: yoksa eklenir, varsa yerinde birakilir.
-  const closing = closingTasks(mode, pool, candidates);
+  const closing = closingTasks(mode, topicId, candidates);
   const missingClosing = closing.filter((task) => !selected.some((item) => item.id === task.id));
   if (missingClosing.length && primaryCount > 0) {
     const keep = selected.filter((item) => !closing.some((task) => task.id === item.id));
@@ -403,9 +388,8 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
     selected = [...trimmed, ...closing];
   }
 
-  const review = uniquePrevious.sort(rank).slice(0, actualReviewCount);
   const closingIds = new Set(closing.map((task) => task.id));
-  const arranged = spaceFamilies(arrange(selected, review, seed));
+  const arranged = spaceFamilies(arrange(selected, seed));
   const ordered = closingIds.size
     ? [...arranged.filter((item) => !closingIds.has(item.id)), ...arranged.filter((item) => closingIds.has(item.id))]
     : arranged;
@@ -433,44 +417,76 @@ function uniqueExercises(exercises: Exercise[]): Exercise[] {
   });
 }
 
-/** Fisher–Yates: tüm sorular aynı olasılıkla farklı sırada gelir. */
-function randomize(exercises: Exercise[], seed: string): Exercise[] {
-  let state = hash(seed) || 1;
-  const next = () => {
-    state ^= state << 13;
-    state ^= state >>> 17;
-    state ^= state << 5;
-    return (state >>> 0) / 0x1_0000_0000;
-  };
-  const shuffled = [...exercises];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const other = Math.floor(next() * (index + 1));
-    [shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]];
-  }
-  return shuffled;
+/** Bir oturumda ayni aileden en fazla kac alistirma olabilir. */
+export function familyCap(size: number): number {
+  return Math.max(2, Math.ceil(size / (FAMILY_GAP * 2)));
 }
 
-/** Tam çalışmada günün her ana konusu, kapasite el verdiği sürece temsil edilir. */
-function ensureTopicCoverage(
+/**
+ * Sinirini asan ailenin en dusuk oncelikli uyelerini, siniri asmayan en
+ * yuksek oncelikli adaylarla degistirir. Yeterli aday yoksa secim oldugu
+ * gibi kalir (oturum kisalmaz).
+ */
+function limitFamilies(
+  selected: Exercise[],
+  candidates: Exercise[],
+  rank: (a: Exercise, b: Exercise) => number,
+  cap: number,
+  compatible: (removed: Exercise, replacement: Exercise) => boolean = () => true,
+): Exercise[] {
+  const count = new Map<string, number>();
+  for (const item of selected) if (item.familyId) count.set(item.familyId, (count.get(item.familyId) ?? 0) + 1);
+  if (![...count.values()].some((value) => value > cap)) return selected;
+
+  const chosen = new Set(selected.map((item) => item.id));
+  const replacements = candidates
+    .filter((item) => !chosen.has(item.id))
+    .sort(rank);
+  const next = [...selected];
+  for (let index = next.length - 1; index >= 0; index -= 1) {
+    const family = next[index].familyId;
+    if (!family || (count.get(family) ?? 0) <= cap) continue;
+    const removed = next[index];
+    const replacementIndex = replacements.findIndex(
+      (item) => (!item.familyId || (count.get(item.familyId) ?? 0) < cap) && compatible(removed, item),
+    );
+    if (replacementIndex === -1) continue;
+    const [replacement] = replacements.splice(replacementIndex, 1);
+    count.set(family, (count.get(family) ?? 0) - 1);
+    if (replacement.familyId) count.set(replacement.familyId, (count.get(replacement.familyId) ?? 0) + 1);
+    next[index] = replacement;
+  }
+  return next;
+}
+
+/** Tam çalışmada konunun her özet bölümü, kapasite el verdiği sürece temsil edilir. */
+function ensureSectionCoverage(
   selected: Exercise[],
   candidates: Exercise[],
   size: number,
   rank: (a: Exercise, b: Exercise) => number,
 ): Exercise[] {
   if (size === 0) return [];
+  const sectionOf = (item: Exercise) => item.sectionId ?? item.topicId;
   const next = [...selected];
-  const seenTopics = new Set(next.map((item) => item.topicId));
-  const topics = [...new Set(candidates.map((item) => item.topicId))];
-  for (const topicId of topics) {
-    if (seenTopics.has(topicId)) continue;
-    const representative = candidates.filter((item) => item.topicId === topicId).sort(rank)[0];
+  const seenSections = new Set(next.map(sectionOf));
+  const sections = [...new Set(candidates.map(sectionOf))];
+  for (const sectionId of sections) {
+    if (seenSections.has(sectionId)) continue;
+    const representative = candidates.filter((item) => sectionOf(item) === sectionId).sort(rank)[0];
     if (!representative) continue;
-    const duplicateIndex = next.findIndex(
-      (item) => item.topicId !== topicId && next.filter((other) => other.topicId === item.topicId).length > 1,
-    );
+    // En kalabalik bolumun en dusuk oncelikli uyesi yer acar.
+    let duplicateIndex = -1;
+    for (let index = next.length - 1; index >= 0; index -= 1) {
+      const key = sectionOf(next[index]);
+      if (key !== sectionId && next.filter((other) => sectionOf(other) === key).length > 1) {
+        duplicateIndex = index;
+        break;
+      }
+    }
     if (duplicateIndex === -1) continue;
     next.splice(duplicateIndex, 1, representative);
-    seenTopics.add(topicId);
+    seenSections.add(sectionId);
   }
   return next;
 }
@@ -511,9 +527,9 @@ function selectByMix(
 /**
  * Ders akisi (§31):
  *   kolay ısınma → orta hatırlama → orta uygulama → zor üretim
- *   → hata tekrarı (önceki günler) → kapanış güven sorusu
+ *   → kapanış güven sorusu
  */
-function arrange(selected: Exercise[], review: Exercise[], seed: string): Exercise[] {
+function arrange(selected: Exercise[], seed: string): Exercise[] {
   const easy = selected.filter((item) => item.difficulty === 'easy');
   const medium = selected.filter((item) => item.difficulty === 'medium');
   const hard = selected.filter((item) => item.difficulty === 'hard');
@@ -529,7 +545,7 @@ function arrange(selected: Exercise[], review: Exercise[], seed: string): Exerci
     (a, b) => bySkill(a) - bySkill(b) || tieBreaker(a.id, seed) - tieBreaker(b.id, seed),
   );
 
-  const result = [...warmUp, ...orderedMedium, ...easy, ...hard, ...review];
+  const result = [...warmUp, ...orderedMedium, ...easy, ...hard];
   if (closer) result.push(closer);
   return result;
 }
@@ -600,6 +616,6 @@ export function estimateModeMinutes(pool: Exercise[], count: number): number {
 }
 
 /** Bir modun bu havuzda kac soru uretecegini onceden gosterir. */
-export function sessionSize(mode: SessionMode, poolSize: number, pool: Exercise[] = []): number {
-  return Math.min(modeSize(mode, pool), poolSize);
+export function sessionSize(mode: SessionMode, poolSize: number, topicId?: string): number {
+  return Math.min(modeSize(mode, topicId), poolSize);
 }

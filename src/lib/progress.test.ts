@@ -11,20 +11,20 @@ import {
 } from './storage';
 import {
   correctKeyboardToleranceHistory,
-  getDayStats,
+  getGlobalSummary,
+  getTopicProgressStats,
   getTopicStats,
   recordAttempt,
-  resetDayProgress,
+  resetTopicProgress,
   weaknessScore,
 } from './progress';
 import { buildReviewQueue, MAX_RETRIES, scheduleRetry } from './lesson';
 
-function exercise(id: string, day = 1, topic = 'Fiil Çekimi'): Exercise {
+function exercise(id: string, topicId = 'topic.verbs', topic = 'Fiiller ve Çekim'): Exercise {
   return {
     id,
-    day,
     topic,
-    topicId: `day${day}.${topic === 'Artikel' ? 'artikel' : 'fiil-cekimi'}`,
+    topicId,
     type: 'fill-blank',
     instruction: '`kommen` fiilini çek.',
     prompt: 'du ___',
@@ -33,11 +33,11 @@ function exercise(id: string, day = 1, topic = 'Fiil Çekimi'): Exercise {
     skill: 'recall',
     conceptIds: ['day2.konjugation.du-st'],
     origin: 'vault',
-    source: { file: 'test.md', day, naturalKey: `${day}/1/${id}` },
+    source: { file: 'test.md', naturalKey: `test/${id}` },
   };
 }
 
-const exercises = [exercise('a'), exercise('b'), exercise('c', 1, 'Artikel')];
+const exercises = [exercise('a'), exercise('b'), exercise('c', 'topic.articles', 'Artikeller ve Olumsuzluk')];
 
 function seed(results: Array<[string, 'correct' | 'minor-typo' | 'incorrect']>): UserProgress {
   let progress = createEmptyProgress();
@@ -83,9 +83,12 @@ describe('deneme kaydi', () => {
     expect(progress.exercises.a.mastered).toBe(true);
   });
 
-  it('hata kaydini konusuyla birlikte saklar', () => {
+  it('hata kaydini kanonik konusuyla birlikte saklar (gun yok)', () => {
     const progress = seed([['c', 'incorrect']]);
-    expect(progress.mistakes.c.topic).toBe('Artikel');
+    expect(progress.mistakes.c.topicId).toBe('topic.articles');
+    expect(progress.mistakes.c.topic).toBe('Artikeller ve Olumsuzluk');
+    expect((progress.mistakes.c as unknown as { day?: unknown }).day).toBeUndefined();
+    expect((progress.exercises.c as unknown as { day?: unknown }).day).toBeUndefined();
     expect(progress.mistakes.c.type).toBe('article');
     expect(progress.mistakes.c.count).toBe(1);
   });
@@ -121,9 +124,9 @@ describe('deneme kaydi', () => {
   });
 });
 
-describe('gun istatistikleri', () => {
+describe('konu istatistikleri', () => {
   it('bos ilerlemede baslamamis gosterir', () => {
-    const stats = getDayStats(createEmptyProgress(), 1, exercises);
+    const stats = getTopicProgressStats(createEmptyProgress(), 'topic.verbs', exercises);
     expect(stats.state).toBe('not-started');
     expect(stats.accuracy).toBeNull();
     expect(stats.completionPct).toBe(0);
@@ -134,7 +137,8 @@ describe('gun istatistikleri', () => {
       ['a', 'correct'],
       ['b', 'incorrect'],
     ]);
-    const stats = getDayStats(progress, 1, exercises);
+    const stats = getTopicProgressStats(progress, 'topic.verbs', exercises);
+    expect(stats.topicId).toBe('topic.verbs');
     expect(stats.completed).toBe(2);
     expect(stats.total).toBe(3);
     expect(stats.accuracy).toBeCloseTo(0.5);
@@ -147,7 +151,7 @@ describe('gun istatistikleri', () => {
       ['b', 'incorrect'],
       ['c', 'correct'],
     ]);
-    expect(getDayStats(progress, 1, exercises).reviewRecommended).toBe(true);
+    expect(getTopicProgressStats(progress, 'topic.verbs', exercises).reviewRecommended).toBe(true);
   });
 
   it('yuksek dogrulukta tekrar onermez', () => {
@@ -156,7 +160,7 @@ describe('gun istatistikleri', () => {
       ['b', 'correct'],
       ['c', 'correct'],
     ]);
-    const stats = getDayStats(progress, 1, exercises);
+    const stats = getTopicProgressStats(progress, 'topic.verbs', exercises);
     expect(stats.state).toBe('completed');
     expect(stats.reviewRecommended).toBe(false);
   });
@@ -167,20 +171,54 @@ describe('gun istatistikleri', () => {
       ['c', 'incorrect'],
       ['a', 'incorrect'],
     ]);
-    expect(getTopicStats(progress, exercises)[0].topic).toBe('Artikel');
+    const [first] = getTopicStats(progress, exercises);
+    expect(first.topicId).toBe('topic.articles');
+    expect(first.topic).toBe('Artikeller ve Olumsuzluk');
+  });
+
+  it('genel ozet tamamlanan KONULARI sayar (gun yok); Genel Tekrar tamamlanmaya sayilmaz', () => {
+    const review = { ...exercise('gr-x'), reviewOnly: true };
+    const progress = seed([
+      ['a', 'correct'],
+      ['b', 'correct'],
+    ]);
+    const summary = getGlobalSummary(progress, [...exercises, review]);
+    // Fiiller: a+b tamam; Artikeller: c henuz yok.
+    expect(summary.completedTopics).toBe(1);
+    expect((summary as unknown as { completedDays?: unknown }).completedDays).toBeUndefined();
   });
 });
 
 describe('sifirlama', () => {
-  it('yalnizca secilen gunu siler', () => {
-    const other = exercise('z', 2);
+  it('yalnizca secilen konunun birincil alistirmalarini siler; Genel Tekrar kayitlari kalir', () => {
+    const other = exercise('z', 'topic.articles', 'Artikeller ve Olumsuzluk');
+    const review = { ...exercise('gr-a'), reviewOnly: true };
     let progress = seed([['a', 'incorrect']]);
     progress = recordAttempt(progress, other, 'x', 'incorrect');
-    const reset = resetDayProgress(progress, 1);
+    progress = recordAttempt(progress, review, 'x', 'incorrect');
+    progress = { ...progress, topics: { 'topic.verbs': { topicId: 'topic.verbs', sessionsCompleted: 2 } } };
+    const reset = resetTopicProgress(progress, 'topic.verbs', ['a', 'b', 'gr-a']);
     expect(reset.exercises.a).toBeUndefined();
-    expect(reset.exercises.z).toBeDefined();
     expect(reset.mistakes.a).toBeUndefined();
+    expect(reset.exercises.z).toBeDefined();
     expect(reset.mistakes.z).toBeDefined();
+    expect(reset.exercises['gr-a']).toBeDefined();
+    expect(reset.topics['topic.verbs']).toBeUndefined();
+  });
+
+  it('yarim kalan ayni konu dersini kapatir, baskasininkine dokunmaz', () => {
+    const base = seed([['a', 'incorrect']]);
+    const active = {
+      mode: 'topic' as const,
+      topicId: 'topic.verbs',
+      queue: [{ exerciseId: 'a', presentationReason: 'primary' as const }],
+      index: 0,
+      startedAt: '2026-09-01T00:00:00.000Z',
+      results: [],
+      retries: {},
+    };
+    expect(resetTopicProgress({ ...base, activeLesson: active }, 'topic.verbs', ['a']).activeLesson).toBeUndefined();
+    expect(resetTopicProgress({ ...base, activeLesson: active }, 'topic.articles', ['c']).activeLesson).toBeDefined();
   });
 });
 
@@ -264,7 +302,7 @@ describe('klavye toleransi geriye dönük düzeltme', () => {
   /** keyboardTolerance:true ve Almanca özel harfli cevabi olan bir egzersiz. */
   function keyboardExercise(id: string): Exercise {
     return {
-      ...exercise(id, 1, 'Özel Ders'),
+      ...exercise(id, 'topic.greetings', 'Selamlaşma ve Tanışma'),
       answer: 'heißt',
       validation: { keyboardTolerance: true },
     };
@@ -304,7 +342,7 @@ describe('klavye toleransi geriye dönük düzeltme', () => {
     expect(corrected.exercises.z.incorrectCount).toBe(1);
   });
 
-  it('gun rozeti yalnizca ACIK hatalari sayar (Hatalarim ile tutarli)', () => {
+  it('konu rozeti yalnizca ACIK hatalari sayar (Hatalarim ile tutarli)', () => {
     const a = keyboardExercise('a');
     const b = exercise('b');
     let progress = createEmptyProgress();
@@ -320,12 +358,12 @@ describe('klavye toleransi geriye dönük düzeltme', () => {
     });
 
     // Duzeltme oncesi: ikisi de hata olarak gorunur.
-    expect(getDayStats(progress, 1, [a, b]).mistakeCount).toBe(2);
+    expect(getTopicProgressStats(progress, 'topic.verbs', [a, b]).mistakeCount).toBe(2);
 
     const corrected = correctKeyboardToleranceHistory(progress, (id) =>
       id === 'a' ? keyboardExercise('a') : undefined,
     );
     // 'a' duzeltildi, 'b' gercek hata kaldi.
-    expect(getDayStats(corrected, 1, [a, b]).mistakeCount).toBe(1);
+    expect(getTopicProgressStats(corrected, 'topic.verbs', [a, b]).mistakeCount).toBe(1);
   });
 });

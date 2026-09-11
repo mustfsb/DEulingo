@@ -10,9 +10,8 @@ const doms: JSDOM[] = [];
 function exercise(): Exercise {
   return {
     id: 'wb-ui',
-    day: 3,
     topic: 'Tanışma',
-    topicId: 'day3.kendini-tanitma',
+    topicId: 'topic.personal-info',
     type: 'word-bank-translation',
     instruction: 'Türkçesini Almanca oluştur.',
     answer: 'Ich bin Mustafa.',
@@ -39,7 +38,7 @@ function exercise(): Exercise {
     skill: 'production',
     conceptIds: ['day3.cevap.ich-bin'],
     origin: 'authored',
-    source: { file: 'test', day: 3, naturalKey: 'test/wb-ui' },
+    source: { file: 'test', naturalKey: 'test/wb-ui' },
   };
 }
 

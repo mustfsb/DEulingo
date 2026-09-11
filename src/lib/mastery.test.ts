@@ -7,9 +7,8 @@ import { createEmptyProgress, type UserProgress } from './storage';
 function exercise(id: string, overrides: Partial<Exercise> = {}): Exercise {
   return {
     id,
-    day: 2,
     topic: 'Fiil Çekimi',
-    topicId: 'day2.fiil-cekimi',
+    topicId: 'topic.verbs',
     type: 'fill-blank',
     instruction: 'test',
     answer: 'kommst',
@@ -17,7 +16,7 @@ function exercise(id: string, overrides: Partial<Exercise> = {}): Exercise {
     skill: 'recall',
     conceptIds: ['day2.konjugation.du-st'],
     origin: 'authored',
-    source: { file: 'authored', day: 2, naturalKey: `authored/${id}` },
+    source: { file: 'authored', naturalKey: `authored/${id}` },
     ...overrides,
   };
 }
@@ -107,7 +106,7 @@ describe('kavram ilerlemesi', () => {
 });
 
 describe('konu ustaligi', () => {
-  const topics = [{ id: 'day2.fiil-cekimi', title: 'Fiil Çekimi', conceptIds: ['c1', 'c2'] }];
+  const topics = [{ id: 'topic.verbs', title: 'Fiil Çekimi', conceptIds: ['c1', 'c2'] }];
 
   it('hic calisilmamis konu sifirdir', () => {
     const result = computeTopicMastery(createEmptyProgress(), [], topics);

@@ -1,12 +1,33 @@
 /**
- * Cikartilan taslaklari oynanabilir alistirmalara donusturur:
+ * Yazilmis taslaklari oynanabilir alistirmalara donusturur:
  * kelime cipleri, celdiriciler, secenek siralamasi ve dogrulama bayraklari.
+ * Tum rastgelelik alistirma ID'siyle tohumlanir — cikti deterministiktir.
  */
 
 import type { Exercise } from '../types.ts';
-import type { DraftExercise } from './extract.ts';
-import { seededShuffle, slugify, tokenizeSentence } from './text.ts';
-import { SECONDS_BY_TYPE, SKILL_BY_TYPE } from './defaults.ts';
+import { seededShuffle, tokenizeSentence } from './text.ts';
+
+/** Refine asamasinin okudugu/yazdigi alanlar. */
+export type DraftExercise = Pick<
+  Exercise,
+  | 'type'
+  | 'instruction'
+  | 'prompt'
+  | 'audioText'
+  | 'answer'
+  | 'acceptedAnswers'
+  | 'options'
+  | 'words'
+  | 'pairs'
+  | 'wordBank'
+  | 'audio'
+  | 'requirements'
+  | 'sampleAnswer'
+  | 'hint'
+  | 'explanation'
+  | 'openEnded'
+  | 'validation'
+>;
 
 /** Sik karistirilan ciftler — cumle kurma celdiricileri once buradan secilir. */
 const CONFUSABLES: Record<string, string[]> = {
@@ -89,55 +110,4 @@ export function refineDraft(draft: DraftExercise, seed: string): DraftExercise {
   }
 
   return draft;
-}
-
-/** Bos olsa bile JSON'da kalmasi gereken zorunlu v2 alanlari. */
-const REQUIRED_KEYS = new Set<keyof Exercise>([
-  'id',
-  'day',
-  'topic',
-  'type',
-  'instruction',
-  'difficulty',
-  'skill',
-  'conceptIds',
-  'origin',
-  'topicId',
-  'source',
-]);
-
-export function toExercise(draft: DraftExercise, id: string, source: Exercise['source']): Exercise {
-  const {
-    itemKey: _itemKey,
-    pronounce: _pronounce,
-    topicId: _topicId,
-    difficulty,
-    skill,
-    conceptIds,
-    origin,
-    ...rest
-  } = draft;
-
-  const exercise: Exercise = {
-    ...rest,
-    id,
-    source,
-    difficulty: difficulty ?? 'medium',
-    skill: skill ?? SKILL_BY_TYPE[draft.type],
-    conceptIds: conceptIds ?? [],
-    origin: origin ?? 'vault',
-    topicId: _topicId ?? slugify(draft.topic),
-    estimatedSeconds: draft.estimatedSeconds ?? SECONDS_BY_TYPE[draft.type],
-  };
-  if (draft.familyId) exercise.familyId = draft.familyId;
-
-  // Bos alanlari JSON'dan temizle (zorunlu alanlar haric).
-  for (const key of Object.keys(exercise) as (keyof Exercise)[]) {
-    if (REQUIRED_KEYS.has(key)) continue;
-    const value = exercise[key];
-    if (value === undefined || value === false || (Array.isArray(value) && value.length === 0)) {
-      delete exercise[key];
-    }
-  }
-  return exercise;
 }

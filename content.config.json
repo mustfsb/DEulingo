@@ -1,8 +1,8 @@
 {
   "vaultPath": "/Users/mustafa/Library/Mobile Documents/iCloud~md~obsidian/Documents/almanca",
   "files": [
-    { "path": "Özel Ders Özet.md", "role": "summary" },
-    { "path": "Genel Tekrar Özet.md", "role": "summary" }
+    { "path": "Konu Özetleri.md", "role": "topic-summary" },
+    { "path": "Genel Tekrar Özet.md", "role": "review-summary" }
   ],
   "output": "generated/exercises.json"
 }

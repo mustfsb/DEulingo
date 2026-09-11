@@ -19,9 +19,8 @@ function mount() {
   const root = createRoot(dom.window.document.getElementById('root')!);
   const exercise: Exercise = {
     id: 'text-audio-boundary',
-    day: 1,
     topic: 'Selamlaşma',
-    topicId: 'day1.selamlasma',
+    topicId: 'topic.greetings',
     type: 'fill-blank',
     instruction: 'Boşluğu doldur.',
     prompt: 'Guten ___',
@@ -31,9 +30,9 @@ function mount() {
     },
     difficulty: 'easy',
     skill: 'recall',
-    conceptIds: ['day1.selamlasma'],
+    conceptIds: ['topic.greetings'],
     origin: 'authored',
-    source: { file: 'test', day: 1, naturalKey: 'test/text-audio-boundary' },
+    source: { file: 'test', naturalKey: 'test/text-audio-boundary' },
   };
   act(() => {
     root.render(

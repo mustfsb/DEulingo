@@ -1,41 +1,61 @@
 /**
- * Ozet dosyasini `Özetler` bolumunun okudugu yapiya cevirir.
+ * Özet dosyalarını `Özetler` bölümünün okuduğu yapıya çevirir.
  *
- * Kaynaktaki H2 bolumleri konu, altlarindaki H3 bolumleri ("⚠️ Dikkat",
- * "İsim Kodlama" gibi) ayni konunun parcasi sayilir. Gun duzeyindeki
- * "5 Dakikalık Hızlı Tekrar" ve "Kendine Sor" bolumleri ayristirilip
- * mumkun oldugunda ilgili konuya dagitilir.
+ * - `Konu Özetleri.md`: H1 = kanonik konu, H2 = kayıtlı özet bölümü, H3 ve
+ *   altı aynı bölümün parçası ("⚠️ Dikkat" → uyarı). Konu sonundaki
+ *   "Hızlı Tekrar" ve "Kendine Sor" bölümleri konu düzeyine alınır.
+ * - `Genel Tekrar Özet.md`: tek bir H1 altındaki H2 bölümleri; her biri AYNI
+ *   kanonik konu kimliğine bağlanır (ayrı taksonomi yoktur).
  */
 
 import type {
+  ContentWarning,
   GermanExample,
   NoteBlock,
   Pronunciation,
   RecallQuestion,
-  SummaryDay,
-  SummaryTopic,
+  ReviewSummary,
+  SummarySection,
+  TopicSummary,
 } from '../types.ts';
-import { SUMMARY_TOPICS, type SummaryTopicDef } from '../authored/concepts.ts';
+import {
+  REVIEW_SECTIONS,
+  SUMMARY_SECTIONS,
+  TOPICS,
+  type CurriculumTopicDef,
+  type ReviewSectionDef,
+  type SummarySectionDef,
+} from '../curriculum/topics.ts';
 import { SUMMARY_AUGMENTATIONS } from '../authored/summary-augmentations.ts';
-import { RECALL_ANSWER_FIX } from '../overrides.ts';
 import { approximate, isCurated } from '../authored/pronunciation.ts';
 import { sectionToNote } from './notes.ts';
 import { collapseSpaces, plain } from './text.ts';
-import type { RawDay, RawSection } from './document.ts';
+import { parseTopicDocument, type AnswerGroup, type RawSection } from './document.ts';
 
 const KEY_POINTS = /Hızlı Tekrar/i;
 const RECALL = /Kendine Sor/i;
-const GENERAL_QUIZ = /Kendini Test Et/i;
+const QUIZ = /Kendini Test Et/i;
 const SOURCES = /Bu Özeti Oluşturan/i;
 const WARNING_TITLE = /Dikkat/i;
 
-/** Konu basligini kayitli konu tanimiyla eslestirir. */
-function matchTopic(title: string, track?: import('../types.ts').LearningTrack): SummaryTopicDef | undefined {
-  const normalized = collapseSpaces(plain(title)).toLocaleLowerCase('tr');
-  const candidates = SUMMARY_TOPICS.filter((topic) => ((topic.track as import('../types.ts').LearningTrack | undefined) ?? 'normal') === (track ?? 'normal'));
-  return candidates.find((topic) =>
-    topic.matchTitles.some((candidate) => collapseSpaces(plain(candidate)).toLocaleLowerCase('tr') === normalized),
+const normalizeTitle = (title: string) => collapseSpaces(plain(title)).toLocaleLowerCase('tr');
+
+function matchTopic(title: string): CurriculumTopicDef | undefined {
+  const normalized = normalizeTitle(title);
+  return TOPICS.find((topic) => topic.summaryTitles.some((candidate) => normalizeTitle(candidate) === normalized));
+}
+
+function matchSection(topicId: string, title: string): SummarySectionDef | undefined {
+  const normalized = normalizeTitle(title);
+  return SUMMARY_SECTIONS.find(
+    (section) =>
+      section.topicId === topicId && section.matchTitles.some((candidate) => normalizeTitle(candidate) === normalized),
   );
+}
+
+function matchReviewSection(title: string): ReviewSectionDef | undefined {
+  const normalized = normalizeTitle(title);
+  return REVIEW_SECTIONS.find((section) => section.matchTitles.some((candidate) => normalizeTitle(candidate) === normalized));
 }
 
 function blockText(block: NoteBlock): string {
@@ -52,22 +72,21 @@ function blockText(block: NoteBlock): string {
   }
 }
 
-/** Konunun tum metni — kavram `anchor` aramasi bunun uzerinde yapilir. */
-export function topicText(topic: SummaryTopic): string {
+/** Bölümün tüm metni — kavram `anchor` araması bunun üzerinde yapılır. */
+export function sectionText(section: SummarySection): string {
   return [
-    topic.title,
-    ...topic.blocks.map(blockText),
-    ...topic.warnings,
-    ...topic.keyPoints,
-    ...topic.examples.map((example) => `${example.german} ${example.turkish ?? ''}`),
-    ...topic.recallQuestions.map((item) => `${item.question} ${item.answer}`),
+    section.title,
+    ...section.blocks.map(blockText),
+    ...section.warnings,
+    ...section.examples.map((example) => `${example.german} ${example.turkish ?? ''}`),
+    ...(section.recallQuestions ?? []).map((item) => `${item.question} ${item.answer}`),
   ].join('\n');
 }
 
 /**
- * Kod bloklarindan Almanca ornek cumleleri cikarir.
+ * Kod bloklarından Almanca örnek cümleleri çıkarır.
  * `Ich komme aus der Türkei.  (Türkiye'den geliyorum.)` ve
- * `Tschüss / Ciao — Hoşça kal` bicimleri desteklenir.
+ * `der Brief — mektup` biçimleri desteklenir.
  */
 function extractExamples(blocks: NoteBlock[]): GermanExample[] {
   const examples: GermanExample[] = [];
@@ -75,7 +94,7 @@ function extractExamples(blocks: NoteBlock[]): GermanExample[] {
     if (block.kind !== 'code') continue;
     for (const raw of block.lines) {
       const line = raw.trim();
-      // Kural aciklamasi olan satirlar ornek degildir (`13 = drei + zehn → dreizehn`).
+      // Kural açıklaması olan satırlar örnek değildir (`13 = drei + zehn → dreizehn`).
       if (!line || line.includes('=') || line.includes('→')) continue;
 
       const dash = line.match(/^(.+?)\s+[—–]\s+(.+)$/);
@@ -92,14 +111,12 @@ function extractExamples(blocks: NoteBlock[]): GermanExample[] {
   return examples.map((example) => ({ ...example, pronunciation: approximate(example.german) }));
 }
 
-/** Konuda gecen, sozlukte karsiligi olan onemli Almanca kaliplar. */
-function topicPronunciation(blocks: NoteBlock[], examples: GermanExample[], limit = 8): Pronunciation[] {
+/** Konuda geçen, sözlükte karşılığı olan önemli Almanca kalıplar. */
+function sectionPronunciation(blocks: NoteBlock[], examples: GermanExample[], limit = 8): Pronunciation[] {
   const candidates: string[] = [];
-
   for (const block of blocks) {
     if (block.kind !== 'table') continue;
-    // Tablolarin ilk sutunu aday kabul edilir; Almanca olmayanlar asagida
-    // `isCurated` elemesinde zaten dusuyor.
+    // Tabloların ilk sütunu aday kabul edilir; Almanca olmayanlar `isCurated` elemesinde düşer.
     for (const row of block.rows) {
       const first = plain(row[0] ?? '').trim();
       if (first) candidates.push(first);
@@ -119,7 +136,7 @@ function topicPronunciation(blocks: NoteBlock[], examples: GermanExample[], limi
   return result;
 }
 
-/** "- [ ] madde" satirlarini duz metne cevirir. */
+/** "- [ ] madde" satırlarını düz metne çevirir. */
 function checklistItems(section: RawSection): string[] {
   return section.lines
     .map((line) => line.trim().match(/^-\s*\[[ xX]?\]\s*(.+)$/)?.[1])
@@ -134,240 +151,218 @@ function numberedItems(section: RawSection): string[] {
     .map(collapseSpaces);
 }
 
-/**
- * Bir metni en cok ortusen konuya atar.
- *
- * Eslestirme anahtarlari konu BASLIGINDAN ve kavram ETIKETLERINDEN turetilir
- * (kapsam `anchor`lari bu is icin uygun degil: onlar kaynakta birebir gecen
- * dizeler, kontrol listesi cumleleri degil).
- * Guvenli eslesme yoksa `undefined` doner ve madde ilk konuya birakilir.
- */
-function attribute(
-  text: string,
-  topics: SummaryTopic[],
-  keywords: Map<string, string[]>,
-): SummaryTopic | undefined {
-  const haystack = plain(text).toLocaleLowerCase('tr');
-  let best: { topic: SummaryTopic; score: number } | undefined;
-  for (const topic of topics) {
-    let score = 0;
-    for (const keyword of keywords.get(topic.id) ?? []) {
-      if (haystack.includes(keyword)) score += 1;
-    }
-    if (score > 0 && (!best || score > best.score)) best = { topic, score };
-  }
-  return best?.topic;
+/** Soru satırındaki "→ ipucu" kısmını ayırır; cevap gizli kalır. */
+function questionOnly(item: string): string {
+  return item.split(/\s+→\s+/)[0].trim();
 }
 
-/** Baslik ve kavram etiketlerinden eslestirme anahtarlari uretir. */
-export function attributionKeywords(
-  topics: Array<{ id: string; title: string }>,
-  concepts: Array<{ topicId: string; label: string }>,
-): Map<string, string[]> {
-  const result = new Map<string, string[]>();
-  const push = (topicId: string, source: string) => {
-    const tokens = plain(source)
-      .toLocaleLowerCase('tr')
-      .split(/[^\p{L}\p{N}']+/u)
-      .filter((token) => token.length >= 4);
-    result.set(topicId, [...new Set([...(result.get(topicId) ?? []), ...tokens])]);
+function recallFrom(section: RawSection, groups: AnswerGroup[]): RecallQuestion[] {
+  const answers = groups.find((group) => !group.title) ?? groups[0];
+  return numberedItems(section)
+    .map((item, index) => {
+      const answer = answers?.items.get(String(index + 1)) ?? item.split(/\s+→\s+/)[1];
+      return answer ? { question: questionOnly(item), answer: collapseSpaces(answer) } : null;
+    })
+    .filter((item): item is RecallQuestion => item !== null);
+}
+
+function createSection(id: string, topicId: string, title: string, raw: RawSection, conceptIds: string[]): SummarySection {
+  const note = sectionToNote(raw);
+  return {
+    id,
+    topicId,
+    title,
+    conceptIds,
+    blocks: note?.blocks ?? [],
+    warnings: [],
+    examples: [],
+    pronunciation: [],
   };
-
-  for (const topic of topics) push(topic.id, topic.title);
-  for (const concept of concepts) push(concept.topicId, concept.label);
-  return result;
 }
 
-/**
- * Ozet dosyasinin sonundaki `<details>` bloklarindan gun basina
- * "Kendine Sor" cevaplarini cikarir.
- *
- * Bu bloklar dosyanin en sonunda toplu halde durdugu icin belge ayristiricisi
- * hepsini son gune baglar; burada `<summary>N. Gün cevapları</summary>`
- * etiketine bakarak dogru gune dagitilir.
- */
-export function parseRecallAnswers(markdown: string): Map<number, string[]> {
-  const result = new Map<number, string[]>();
-  const blocks = markdown.matchAll(/<details>([\s\S]*?)<\/details>/gi);
+/** H3 ve altı: açık bölümün parçası. */
+function appendSubsection(target: SummarySection, raw: RawSection): void {
+  const note = sectionToNote(raw);
+  if (!note) return;
+  if (WARNING_TITLE.test(raw.title)) {
+    target.warnings.push(...note.blocks.map(blockText).filter(Boolean));
+  } else {
+    target.blocks.push({ kind: 'paragraph', text: `**${note.title}**` }, ...note.blocks);
+  }
+}
 
-  for (const [, body] of blocks) {
-    const label = body.match(/<summary>\s*(.*?)\s*<\/summary>/i)?.[1] ?? '';
-    const day = Number(label.match(/(\d+)\s*\.\s*G[üu]n/u)?.[1]);
-    if (!Number.isInteger(day)) {
-      // Gün etiketi yoksa genel tekrar cevaplarıdır (0. gün).
-      if (!/cevab/i.test(label)) continue;
-      const items: string[] = [];
-      for (const line of body.split('\n')) {
-        const match = line.trim().match(/^(\d+)\s*[.)]\s+(.+)$/);
-        if (match) items.push(collapseSpaces(match[2]));
-      }
-      if (items.length) {
-        const existing = result.get(0) ?? [];
-        result.set(0, [...existing, ...items]);
+function finalizeSection(section: SummarySection): void {
+  section.examples = [...extractExamples(section.blocks), ...section.examples];
+  section.pronunciation = sectionPronunciation(section.blocks, section.examples);
+  section.blocks = section.blocks.filter((block) => !(block.kind === 'paragraph' && !block.text.trim()));
+}
+
+function readingMinutes(text: string): number {
+  return Math.max(2, Math.round(text.split(/\s+/).length / 130));
+}
+
+export interface TopicSummaryParseResult {
+  summaries: TopicSummary[];
+  foundSectionIds: string[];
+  warnings: ContentWarning[];
+}
+
+/** `Konu Özetleri.md` → konu özetleri. */
+export function buildTopicSummaries(
+  markdown: string,
+  conceptsBySection: Map<string, string[]>,
+): TopicSummaryParseResult {
+  const document = parseTopicDocument(markdown);
+  const warnings: ContentWarning[] = [];
+  const summaries = new Map<string, TopicSummary>();
+  const found = new Set<string>();
+
+  for (const block of document.topics) {
+    const def = matchTopic(block.title);
+    if (!def) {
+      // Belge başlığı gibi bölümsüz H1'ler konu değildir.
+      if (block.sections.some((section) => section.level === 2)) {
+        warnings.push({
+          level: 'error',
+          code: 'unknown-topic-heading',
+          message: `Konu başlığı kanonik konu kaydında yok: "${block.title}".`,
+          ref: block.title,
+        });
       }
       continue;
     }
-
-    const items: string[] = [];
-    for (const line of body.split('\n')) {
-      const match = line.trim().match(/^(\d+)\s*[.)]\s+(.+)$/);
-      if (match) items.push(collapseSpaces(match[2]));
+    if (summaries.has(def.id)) {
+      warnings.push({ level: 'error', code: 'duplicate-topic-heading', message: `Konu iki kez yazılmış.`, ref: def.id });
+      continue;
     }
-    if (items.length) result.set(day, items);
-  }
-  return result;
-}
 
-export interface SummaryParseResult {
-  days: SummaryDay[];
-  /** Bu dosyada bulunan kayıtlı konu ID'leri (eksik kontrolü pakette yapılır). */
-  foundTopicIds: string[];
-}
+    const summary: TopicSummary = {
+      topicId: def.id,
+      title: def.title,
+      intro: block.intro,
+      estimatedReadingMinutes: 0,
+      sections: [],
+      keyPoints: [],
+      recallQuestions: [],
+    };
+    let current: SummarySection | undefined;
 
-export function buildSummaries(
-  rawDays: RawDay[],
-  markdown: string,
-  attributionKeys: Map<string, string[]>,
-  conceptsByTopic: Map<string, string[]>,
-  track: import('../types.ts').LearningTrack = 'normal',
-): SummaryParseResult {
-  const recallAnswers = parseRecallAnswers(markdown);
-  const days: SummaryDay[] = [];
-  const found = new Set<string>();
-
-  for (const rawDay of rawDays) {
-    const topics: SummaryTopic[] = [];
-    let current: SummaryTopic | undefined;
-    const pendingKeyPoints: string[] = [];
-    const pendingRecall: string[] = [];
-
-    for (const section of rawDay.sections) {
-      if (SOURCES.test(section.title)) continue;
-
-      if (KEY_POINTS.test(section.title)) {
-        pendingKeyPoints.push(...checklistItems(section));
+    for (const raw of block.sections) {
+      if (SOURCES.test(raw.title)) continue;
+      if (raw.level === 2 && KEY_POINTS.test(raw.title)) {
+        summary.keyPoints.push(...checklistItems(raw));
+        current = undefined;
         continue;
       }
-      if (RECALL.test(section.title)) {
-        pendingRecall.push(...numberedItems(section));
+      if (raw.level === 2 && RECALL.test(raw.title)) {
+        summary.recallQuestions.push(...recallFrom(raw, block.answerGroups));
+        current = undefined;
         continue;
       }
-
-      if (section.level === 2) {
-        const def = matchTopic(section.title, track);
-        if (!def) {
+      if (raw.level === 2) {
+        const sectionDef = matchSection(def.id, raw.title);
+        if (!sectionDef) {
+          warnings.push({
+            level: 'error',
+            code: 'unregistered-section',
+            message: `"${def.title}" konusundaki bölüm kayıtlı değil: "${raw.title}". Kararlı kimlik için curriculum/topics.ts içine ekle.`,
+            ref: `${def.id}/${raw.title}`,
+          });
           current = undefined;
           continue;
         }
-        found.add(def.id);
-        const note = sectionToNote(section);
-        const created: SummaryTopic = {
-          id: def.id,
-          title: def.title,
-          track,
-          conceptIds: conceptsByTopic.get(def.id) ?? [],
-          blocks: note?.blocks ?? [],
-          warnings: [],
-          keyPoints: [],
-          recallQuestions: [],
-          examples: [],
-          pronunciation: [],
-        };
-        current = created;
-        topics.push(created);
-        // 0. gün quiz bölümü: numaralı sorular gizli cevaplı recall olur,
-        // soru satırları gövdede tekrar etmez.
-        if (rawDay.day === 0 && GENERAL_QUIZ.test(section.title)) {
-          const questions = numberedItems(section);
-          const answers = recallAnswers.get(0) ?? [];
-          questions.forEach((question, index) => {
-            const answer = answers[index];
-            if (answer) created.recallQuestions.push({ question, answer: collapseSpaces(answer) });
-          });
-          created.blocks = created.blocks.filter(
-            (block) => !(block.kind === 'paragraph' && /^\d+\s*[.)]\s+/.test(block.text.trim())),
-          );
-        }
+        found.add(sectionDef.id);
+        current = createSection(sectionDef.id, def.id, sectionDef.title, raw, conceptsBySection.get(sectionDef.id) ?? []);
+        summary.sections.push(current);
         continue;
       }
-
-      // H3 ve altı: acik olan konunun parcasi.
-      if (!current) continue;
-      const note = sectionToNote(section);
-      if (!note) continue;
-      if (WARNING_TITLE.test(section.title)) {
-        current.warnings.push(...note.blocks.map(blockText).filter(Boolean));
-      } else {
-        current.blocks.push({ kind: 'paragraph', text: `**${note.title}**` }, ...note.blocks);
-      }
+      if (current) appendSubsection(current, raw);
     }
 
-    // Uygulama ici ek notlar.
     for (const augmentation of SUMMARY_AUGMENTATIONS) {
-      const topic = topics.find((item) => item.id === augmentation.topicId);
-      if (!topic) continue;
-      topic.augmented = true;
-      topic.blocks.push({ kind: 'paragraph', text: `**${augmentation.title}**` });
-      for (const paragraph of augmentation.paragraphs ?? []) {
-        topic.blocks.push({ kind: 'paragraph', text: paragraph });
-      }
-      if (augmentation.table) {
-        topic.blocks.push({ kind: 'table', head: augmentation.table.head, rows: augmentation.table.rows });
-      }
-      if (augmentation.warning) topic.warnings.push(augmentation.warning);
+      const section = summary.sections.find((item) => item.id === augmentation.sectionId);
+      if (!section) continue;
+      section.augmented = true;
+      section.blocks.push({ kind: 'paragraph', text: `**${augmentation.title}**` });
+      for (const paragraph of augmentation.paragraphs ?? []) section.blocks.push({ kind: 'paragraph', text: paragraph });
+      if (augmentation.table) section.blocks.push({ kind: 'table', head: augmentation.table.head, rows: augmentation.table.rows });
+      if (augmentation.warning) section.warnings.push(augmentation.warning);
       for (const example of augmentation.examples ?? []) {
-        topic.examples.push({ ...example, pronunciation: approximate(example.german) });
+        section.examples.push({ ...example, pronunciation: approximate(example.german) });
       }
     }
 
-    // Ornekler ve okunuslar.
-    for (const topic of topics) {
-      topic.examples = [...extractExamples(topic.blocks), ...topic.examples];
-      topic.pronunciation = topicPronunciation(topic.blocks, topic.examples);
-    }
-
-    // Gun duzeyindeki maddeleri konulara dagit.
-    for (const item of pendingKeyPoints) {
-      const topic = attribute(item, topics, attributionKeys);
-      (topic ?? topics[0])?.keyPoints.push(item);
-    }
-
-    // "Kendine Sor" sorulari, gunun cevap listesiyle eslestirilir.
-    // Kaynakta kaymis cevaplar `RECALL_ANSWER_FIX` ile duzeltilir.
-    const answers = recallAnswers.get(rawDay.day) ?? [];
-    const fixes = RECALL_ANSWER_FIX[rawDay.day];
-    pendingRecall.forEach((question, index) => {
-      const answer = fixes?.[index + 1] ?? answers[index];
-      if (!answer) return;
-      const recall: RecallQuestion = { question, answer: collapseSpaces(answer) };
-      const topic = attribute(`${question} ${answer}`, topics, attributionKeys);
-      (topic ?? topics[0])?.recallQuestions.push(recall);
-    });
-
-    for (const topic of topics) {
-      topic.blocks = topic.blocks.filter(
-        (block) => !(block.kind === 'paragraph' && !block.text.trim()),
-      );
-    }
-
-    days.push({
-      day: rawDay.day,
-      track,
-      title: rawDay.day === 0 ? 'Genel Tekrar' : `${rawDay.day}. Gün`,
-      estimatedReadingMinutes: readingMinutes(topics),
-      topics,
-    });
+    for (const section of summary.sections) finalizeSection(section);
+    summary.estimatedReadingMinutes = readingMinutes(
+      [
+        ...summary.intro,
+        ...summary.sections.map(sectionText),
+        ...summary.keyPoints,
+        ...summary.recallQuestions.map((item) => `${item.question} ${item.answer}`),
+      ].join(' '),
+    );
+    summaries.set(def.id, summary);
   }
 
-  return {
-    days,
-    foundTopicIds: [...found],
-  };
+  for (const topic of TOPICS) {
+    if (!summaries.has(topic.id)) {
+      warnings.push({ level: 'error', code: 'summary-topic-missing', message: `Konu özeti bulunamadı: "${topic.title}".`, ref: topic.id });
+    }
+  }
+  for (const section of SUMMARY_SECTIONS) {
+    if (!found.has(section.id)) {
+      warnings.push({ level: 'error', code: 'summary-section-missing', message: `Kayıtlı özet bölümü kaynakta yok: "${section.title}".`, ref: section.id });
+    }
+  }
+
+  const ordered = TOPICS.map((topic) => summaries.get(topic.id)).filter((item): item is TopicSummary => Boolean(item));
+  return { summaries: ordered, foundSectionIds: [...found], warnings };
 }
 
-function readingMinutes(topics: SummaryTopic[]): number {
-  const words = topics
-    .map((topic) => topicText(topic).split(/\s+/).length)
-    .reduce((total, count) => total + count, 0);
-  return Math.max(3, Math.round(words / 130));
+/** `Genel Tekrar Özet.md` → kümülatif tekrar özeti. */
+export function buildReviewSummary(markdown: string): { summary: ReviewSummary; warnings: ContentWarning[] } {
+  const document = parseTopicDocument(markdown);
+  const warnings: ContentWarning[] = [];
+  const block = document.topics[0];
+  const summary: ReviewSummary = { title: 'Genel Tekrar', intro: block?.intro ?? [], estimatedReadingMinutes: 0, sections: [] };
+  if (!block) {
+    warnings.push({ level: 'error', code: 'review-summary-empty', message: 'Genel Tekrar özetinde başlık bulunamadı.' });
+    return { summary, warnings };
+  }
+
+  const found = new Set<string>();
+  let current: SummarySection | undefined;
+  for (const raw of block.sections) {
+    if (raw.level === 2) {
+      const def = matchReviewSection(raw.title);
+      if (!def) {
+        warnings.push({
+          level: 'error',
+          code: 'unregistered-review-section',
+          message: `Genel Tekrar özetindeki bölüm kayıtlı değil: "${raw.title}".`,
+          ref: raw.title,
+        });
+        current = undefined;
+        continue;
+      }
+      found.add(def.id);
+      current = createSection(def.id, def.topicId ?? '', def.title, raw, []);
+      if (def.mode) current.reviewMode = def.mode;
+      if (QUIZ.test(raw.title)) {
+        current.recallQuestions = recallFrom(raw, block.answerGroups);
+        current.blocks = current.blocks.filter((item) => !(item.kind === 'paragraph' && /^\d+\s*[.)]\s+/.test(item.text.trim())));
+      }
+      summary.sections.push(current);
+      continue;
+    }
+    if (current) appendSubsection(current, raw);
+  }
+  for (const section of summary.sections) finalizeSection(section);
+  for (const def of REVIEW_SECTIONS) {
+    if (!found.has(def.id)) {
+      warnings.push({ level: 'error', code: 'review-section-missing', message: `Genel Tekrar bölümü kaynakta yok: "${def.title}".`, ref: def.id });
+    }
+  }
+  summary.estimatedReadingMinutes = readingMinutes(summary.sections.map(sectionText).join(' '));
+  return { summary, warnings };
 }

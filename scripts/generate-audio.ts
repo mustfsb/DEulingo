@@ -17,11 +17,10 @@ async function main() {
   const content = JSON.parse(await readFile(resolve('generated/exercises.json'), 'utf8')) as ContentBundle;
   const texts = new Set<string>();
   for (const exercise of content.exercises) exerciseTexts(exercise).forEach((text) => texts.add(text));
-  for (const day of content.summaries) {
-    for (const topic of day.topics) {
-      topic.examples.forEach((example) => texts.add(example.german));
-      topic.pronunciation.forEach((item) => texts.add(item.german));
-    }
+  const sections = [...content.summaries.flatMap((summary) => summary.sections), ...(content.reviewSummary?.sections ?? [])];
+  for (const section of sections) {
+    section.examples.forEach((example) => texts.add(example.german));
+    section.pronunciation.forEach((item) => texts.add(item.german));
   }
   const service = createTtsService();
   let cached = 0;

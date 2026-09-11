@@ -114,6 +114,7 @@ export function classifyMistake(exercise: Exercise, result: AttemptResult): Mist
   if (result === 'minor-typo') return 'spelling';
   const topic = exercise.topic.toLocaleLowerCase('tr');
   const isArticle =
+    exercise.topicId === 'topic.articles' ||
     topic.includes('artikel') ||
     (exercise.options?.length === 3 && exercise.options.every((o) => ['der', 'die', 'das'].includes(o)));
 
@@ -154,11 +155,8 @@ export function recordAttempt(
   options: RecordOptions = {},
 ): UserProgress {
   const now = new Date().toISOString();
-  const track = exercise.track ?? 'private';
   const previous: ExerciseProgress = progress.exercises[exercise.id] ?? {
     exerciseId: exercise.id,
-    day: exercise.day,
-    track,
     attempts: [],
     firstSeenAt: now,
     lastSeenAt: now,
@@ -181,8 +179,6 @@ export function recordAttempt(
   const attempts = [...previous.attempts, attempt];
   const updated: ExerciseProgress = {
     ...previous,
-    day: exercise.day,
-    track,
     attempts,
     lastSeenAt: now,
     correctCount: previous.correctCount + (result === 'correct' ? 1 : 0),
@@ -204,9 +200,9 @@ export function recordAttempt(
     const existing = mistakes[exercise.id];
     const record: MistakeRecord = {
       exerciseId: exercise.id,
-      track,
-      day: exercise.day,
+      topicId: exercise.topicId,
       topic: exercise.topic,
+      ...(existing?.legacyDay !== undefined ? { legacyDay: existing.legacyDay } : {}),
       prompt: exercise.prompt ?? exercise.instruction,
       userAnswer: formatInput(input),
       expectedAnswer: validation?.expected ?? exercise.answer ?? '',
@@ -258,8 +254,9 @@ export function formatInput(input: unknown): string {
 /* Turetilmis istatistikler                                            */
 /* ------------------------------------------------------------------ */
 
-export interface DayStats {
-  day: number;
+/** Bir konunun ilerlemesi (birincil ders alıştırmaları üzerinden). */
+export interface TopicProgressStats {
+  topicId: string;
   total: number;
   completed: number;
   correct: number;
@@ -275,7 +272,16 @@ export interface DayStats {
 
 export const REVIEW_THRESHOLD = 0.75;
 
-export function getDayStats(progress: UserProgress, day: number, exercises: Exercise[]): DayStats {
+/**
+ * Konu ilerlemesi. `exercises` konunun BIRINCIL ders alıştırmalarıdır:
+ * tamamlanma konu bazlıdır ve bir alıştırma yalnızca birincil konusunun
+ * tamamlanmasına sayılır (ikincil etiket ustalığa katkı verir, tamamlanmaya değil).
+ */
+export function getTopicProgressStats(
+  progress: UserProgress,
+  topicId: string,
+  exercises: Exercise[],
+): TopicProgressStats {
   const total = exercises.length;
   let completed = 0;
   let correct = 0;
@@ -294,14 +300,14 @@ export function getDayStats(progress: UserProgress, day: number, exercises: Exer
   const graded = correct + typo + incorrect;
   const accuracy = graded > 0 ? (correct + typo) / graded : null;
   const completionPct = total > 0 ? completed / total : 0;
-  // Sadece bugün AÇIK (cozulmemis) hatalar sayısı — Hatalarım ekraniyla tutarlı.
+  // Yalnızca AÇIK (çözülmemiş) hatalar — Hatalarım ekranıyla tutarlı.
   const openMistakeIds = new Set(Object.keys(progress.mistakes));
   const mistakeCount = exercises.filter((exercise) => openMistakeIds.has(exercise.id)).length;
-  const state: DayStats['state'] =
+  const state: TopicProgressStats['state'] =
     completed === 0 ? 'not-started' : completed >= total ? 'completed' : 'in-progress';
 
   return {
-    day,
+    topicId,
     total,
     completed,
     correct,
@@ -317,6 +323,7 @@ export function getDayStats(progress: UserProgress, day: number, exercises: Exer
 }
 
 export interface TopicStat {
+  topicId: string;
   topic: string;
   incorrect: number;
   typo: number;
@@ -329,7 +336,8 @@ export function getTopicStats(progress: UserProgress, exercises: Exercise[]): To
   for (const exercise of exercises) {
     const entry = progress.exercises[exercise.id];
     if (!entry || !entry.attempts.length) continue;
-    const stat = map.get(exercise.topic) ?? {
+    const stat = map.get(exercise.topicId) ?? {
+      topicId: exercise.topicId,
       topic: exercise.topic,
       incorrect: 0,
       typo: 0,
@@ -339,7 +347,7 @@ export function getTopicStats(progress: UserProgress, exercises: Exercise[]): To
     stat.incorrect += entry.incorrectCount;
     stat.typo += entry.typoCount;
     stat.attempts += entry.correctCount + entry.typoCount + entry.incorrectCount;
-    map.set(exercise.topic, stat);
+    map.set(exercise.topicId, stat);
   }
   for (const stat of map.values()) {
     stat.accuracy = stat.attempts > 0 ? (stat.attempts - stat.incorrect) / stat.attempts : null;
@@ -365,24 +373,25 @@ export interface GlobalSummary {
   accuracy: number | null;
   totalIncorrect: number;
   totalTypos: number;
-  completedDays: number;
+  /** Birincil ders alıştırmalarının tamamı en az bir kez çözülen konular. */
+  completedTopics: number;
   studyDays: number;
 }
 
-export function getGlobalSummary(
-  progress: UserProgress,
-  exercises: Exercise[],
-  dayNumbers: number[],
-): GlobalSummary {
+export function getGlobalSummary(progress: UserProgress, exercises: Exercise[]): GlobalSummary {
   const attempted = exercises.filter((exercise) => progress.exercises[exercise.id]?.attempts.length);
   const mastered = attempted.filter((exercise) => progress.exercises[exercise.id]?.mastered);
   const { totalCorrect, totalTypos, totalIncorrect } = progress.stats;
   const graded = totalCorrect + totalTypos + totalIncorrect;
 
-  const completedDays = dayNumbers.filter((day) => {
-    const dayExercises = exercises.filter((exercise) => exercise.day === day && !exercise.reviewOnly);
-    return dayExercises.length > 0 && getDayStats(progress, day, dayExercises).state === 'completed';
-  }).length;
+  const byTopic = new Map<string, Exercise[]>();
+  for (const exercise of exercises) {
+    if (exercise.reviewOnly) continue;
+    byTopic.set(exercise.topicId, [...(byTopic.get(exercise.topicId) ?? []), exercise]);
+  }
+  const completedTopics = [...byTopic].filter(
+    ([topicId, pool]) => getTopicProgressStats(progress, topicId, pool).state === 'completed',
+  ).length;
 
   return {
     totalExercises: exercises.length,
@@ -391,7 +400,7 @@ export function getGlobalSummary(
     accuracy: graded > 0 ? (totalCorrect + totalTypos) / graded : null,
     totalIncorrect,
     totalTypos,
-    completedDays,
+    completedTopics,
     studyDays: progress.stats.studyDates.length,
   };
 }
@@ -400,24 +409,29 @@ export function getGlobalSummary(
 /* Sifirlama                                                           */
 /* ------------------------------------------------------------------ */
 
-export function resetDayProgress(progress: UserProgress, day: number): UserProgress {
+/**
+ * Bir konunun ilerlemesini sıfırlar. `exerciseIds` konunun BIRINCIL ders
+ * alıştırmalarıdır; başka konulara ait ve Genel Tekrar (`gr-`) kayıtları
+ * etkilenmez.
+ */
+export function resetTopicProgress(progress: UserProgress, topicId: string, exerciseIds: string[]): UserProgress {
+  const ids = new Set(exerciseIds.filter((id) => !id.startsWith('gr-')));
   const exercises = { ...progress.exercises };
   const mistakes = { ...progress.mistakes };
-  for (const [id, entry] of Object.entries(progress.exercises)) {
-    // Genel Tekrar bankası (`gr-` ID'li) gün sıfırlamadan etkilenmez.
-    if (entry.day === day && !entry.exerciseId.startsWith('gr-')) delete exercises[id];
+  for (const id of ids) {
+    delete exercises[id];
+    delete mistakes[id];
   }
-  for (const [id, record] of Object.entries(progress.mistakes)) {
-    if (record.day === day && !record.exerciseId.startsWith('gr-')) delete mistakes[id];
-  }
-  const days = { ...progress.days };
-  delete days[day];
+  const topics = { ...progress.topics };
+  delete topics[topicId];
 
   const stats = recomputeStats(exercises);
   const activeLesson =
-    progress.activeLesson?.day === day && progress.activeLesson.mode === 'day' ? undefined : progress.activeLesson;
+    progress.activeLesson?.mode === 'topic' && progress.activeLesson.topicId === topicId
+      ? undefined
+      : progress.activeLesson;
 
-  return { ...progress, days, exercises, mistakes, activeLesson, stats: {
+  return { ...progress, topics, exercises, mistakes, activeLesson, stats: {
     ...stats,
     studyDates: progress.stats.studyDates,
   } };

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Markup } from '../components/Markup';
-import { exercisesById, getExercises, summaryTopicsById, topicDay } from '../lib/content';
+import { exercisesById, getExercises, summariesByTopic, topicTitle, topicsById } from '../lib/content';
 import { buildReviewQueue } from '../lib/lesson';
 import { MISTAKE_LABELS } from '../lib/progress';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -29,12 +29,13 @@ export function MistakesScreen({
     const buckets = new Map<string, { label: string; topicId?: string; records: MistakeRecord[] }>();
 
     for (const record of Object.values(progress.mistakes)) {
+      // Kanonik konu içerikten okunur; kayıttaki konu yalnızca geri dönüştür.
       const exercise = exercisesById.get(record.exerciseId);
-      const key =
-        groupBy === 'topic' ? (exercise?.topicId ?? record.topic) : MISTAKE_LABELS[record.type];
+      const topicId = exercise?.topicId ?? record.topicId;
+      const key = groupBy === 'topic' ? (topicId || record.topic) : MISTAKE_LABELS[record.type];
       const bucket = buckets.get(key) ?? {
-        label: groupBy === 'topic' ? (exercise?.topic ?? record.topic) : MISTAKE_LABELS[record.type],
-        topicId: groupBy === 'topic' ? exercise?.topicId : undefined,
+        label: groupBy === 'topic' ? (topicId ? topicTitle(topicId) : record.topic) : MISTAKE_LABELS[record.type],
+        topicId: groupBy === 'topic' ? topicId : undefined,
         records: [],
       };
       bucket.records.push(record);
@@ -87,7 +88,7 @@ export function MistakesScreen({
         <p className="eyebrow">Zayıf noktalar</p>
         <h1 className="mt-1 text-[2.5rem] sm:text-5xl">Hatalarım</h1>
         <p className="mt-3 text-lg text-ink-soft">
-          Tüm günlerin hataları tek listede birikir.
+          Tüm konuların hataları tek listede birikir.
         </p>
       </header>
 
@@ -163,37 +164,26 @@ export function MistakesScreen({
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <h2 className="text-2xl">{group.label}</h2>
                   <div className="flex flex-wrap items-center gap-3">
-                    {group.topicId && summaryTopicsById.has(group.topicId) && (
+                    {group.topicId && topicsById.has(group.topicId) && (
                       <>
                         {/* Konu pratigi ile ozet okuma ayri eylemlerdir; etiketler
-                            artik hangisinin ne yaptigini soyler. */}
+                            hangisinin ne yaptigini soyler. */}
                         <button
                           type="button"
                           className="btn btn-quiet text-sm"
-                          onClick={() =>
-                            navigate({
-                              name: 'lesson',
-                              day: topicDay.get(group.topicId!) ?? group.records[0].day,
-                              mode: 'topic',
-                              topicId: group.topicId,
-                            })
-                          }
+                          onClick={() => navigate({ name: 'lesson', topicId: group.topicId!, mode: 'normal' })}
                         >
                           Konuyu Çalış
                         </button>
-                        <button
-                          type="button"
-                          className="btn btn-quiet text-sm"
-                          onClick={() =>
-                            navigate({
-                              name: 'summary',
-                              day: topicDay.get(group.topicId!) ?? group.records[0].day,
-                              topicId: group.topicId,
-                            })
-                          }
-                        >
-                          Özeti Aç
-                        </button>
+                        {summariesByTopic.has(group.topicId) && (
+                          <button
+                            type="button"
+                            className="btn btn-quiet text-sm"
+                            onClick={() => navigate({ name: 'summary', topicId: group.topicId! })}
+                          >
+                            Özeti Aç
+                          </button>
+                        )}
                       </>
                     )}
                     <button
@@ -211,10 +201,13 @@ export function MistakesScreen({
                     <li key={record.exerciseId} className="card p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="badge" style={{ background: 'var(--color-sunk)' }}>
-                          {record.day === 0 || record.exerciseId.startsWith('gr-')
-                            ? '🔁 Genel Tekrar'
-                            : `${record.day}. Gün`}
+                          {record.exerciseId.startsWith('gr-') ? '🔁 Genel Tekrar' : '📘 Konu dersi'}
                         </span>
+                        {groupBy === 'type' && (record.topicId || exercisesById.get(record.exerciseId)?.topicId) && (
+                          <span className="badge" style={{ background: 'var(--color-sunk)' }}>
+                            {topicTitle(exercisesById.get(record.exerciseId)?.topicId ?? record.topicId)}
+                          </span>
+                        )}
                         <span className="badge" style={{ background: 'var(--color-sunk)' }}>
                           {MISTAKE_LABELS[record.type]}
                         </span>

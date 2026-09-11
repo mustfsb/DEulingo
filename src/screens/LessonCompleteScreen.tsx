@@ -3,17 +3,16 @@
  *
  * Ekran YALNIZCA kalici `lastResult`'tan beslenir. Bu yuzden:
  *   - sayfa yenilense de sonuc, hatalar ve challenge baglami durur,
- *   - eylemler hangi gune/oturuma ait olduklarini bilir,
+ *   - eylemler hangi konuya/oturuma ait olduklarini bilir,
  *   - yeni bir ders bitince eski sonucun eylemleri asla acilmaz.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { days, exercisesById, exercisesForDay, getSummary, summaryTopicsById } from '../lib/content';
+import { exercisesById, exercisesForTopic, getTopicSummary, topics, topicsById, topicTitle } from '../lib/content';
 import { audioController } from '../lib/audio/playback';
 import { goalProgress, markGoalCelebrated } from '../lib/daily-goal';
 import { MOTION, prefersReducedMotion } from '../lib/motion';
 import { challengeReadiness } from '../lib/session';
-import { EXERCISE_SET_IDS, EXERCISE_SET_LABELS } from '../content/exercise-sets';
 import { buildMistakeQueueIds } from '../lib/session-result';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
@@ -37,8 +36,9 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
   const soundPlayed = useRef(false);
 
   const accuracy = result.accuracy === null ? null : Math.round(result.accuracy * 100);
-  const day = result.day;
-  const isFollowUp = result.mode !== 'day';
+  // Yalnızca konu dersi bir konuya bağlıdır; tekrar oturumları konular arasıdır.
+  const topicId = result.mode === 'topic' ? result.topicId : undefined;
+  const isFollowUp = result.mode !== 'topic';
 
   const mistakeIds = useMemo(
     () =>
@@ -49,20 +49,17 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     [progress.mistakes, result],
   );
 
-  const nextDay = day === undefined ? undefined : days.find((entry) => entry.day > day)?.day;
-  const challengeReady = day === undefined ? false : challengeReadiness(exercisesForDay(day)).ready;
-  const hasSummary = day !== undefined && Boolean(getSummary(day));
-  const nextExerciseSetId = result.exerciseSetId
-    ? EXERCISE_SET_IDS[EXERCISE_SET_IDS.indexOf(result.exerciseSetId) + 1]
-    : undefined;
+  // Müfredat haritasında sıradaki konu (konular yaşayan modüllerdir; bu yalnızca bir öneridir).
+  const topicIndex = topicId ? topics.findIndex((topic) => topic.id === topicId) : -1;
+  const nextTopic = topicIndex >= 0 ? topics[topicIndex + 1] : undefined;
+  const challengeReady = topicId ? challengeReadiness(exercisesForTopic(topicId)).ready : false;
+  const hasSummary = Boolean(topicId && getTopicSummary(topicId));
 
   const ranked = result.topics;
   const strongest = ranked[0];
   const weakest = ranked.at(-1);
   const showWeakest = Boolean(weakest && weakest !== strongest && weakest.correct / weakest.total < 0.8);
-  const weakTopicPracticable = Boolean(
-    showWeakest && weakest && summaryTopicsById.has(weakest.topicId) && day !== undefined,
-  );
+  const weakTopicPracticable = Boolean(showWeakest && weakest && topicsById.has(weakest.topicId));
 
   // Kisa kutlama gecisi: once "tamamlandı", hemen ardindan detay (§27).
   useEffect(() => {
@@ -112,7 +109,6 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
         ...current,
         activeLesson: {
           mode: 'mistakes',
-          day: result.day,
           queue: mistakeIds.map((exerciseId) => ({ exerciseId, presentationReason: 'primary' as const })),
           index: 0,
           startedAt: new Date().toISOString(),
@@ -122,37 +118,30 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
           sourceSessionId: result.sessionId,
         },
       }));
-      navigate({ name: 'mistake-review', day: result.day });
+      navigate({ name: 'mistake-review' });
     });
 
   const startChallenge = () =>
     run('challenge', () => {
-      if (day === undefined) return;
-      navigate({ name: 'lesson', day, mode: 'challenge' });
+      if (!topicId) return;
+      navigate({ name: 'lesson', topicId, mode: 'challenge' });
     });
 
   const repeatSession = () =>
     run('repeat', () => {
-      if (day === undefined) return;
+      if (!topicId) return;
       navigate({
         name: 'lesson',
-        day,
+        topicId,
         mode: result.sessionMode ?? 'normal',
-        topicId: result.topicId,
-        exerciseSetId: result.exerciseSetId,
+        ...(result.sessionMode === 'section' && result.sectionId ? { sectionId: result.sectionId } : {}),
       });
-    });
-
-  const startNextSet = () =>
-    run('next-set', () => {
-      if (day === undefined || !nextExerciseSetId) return;
-      navigate({ name: 'lesson', day, mode: 'set', exerciseSetId: nextExerciseSetId });
     });
 
   const practiceWeakTopic = () =>
     run('weak-topic', () => {
-      if (day === undefined || !weakest) return;
-      navigate({ name: 'lesson', day, mode: 'topic', topicId: weakest.topicId });
+      if (!weakest) return;
+      navigate({ name: 'lesson', topicId: weakest.topicId, mode: 'quick' });
     });
 
   const headline = resultHeadline(result, accuracy, isFollowUp);
@@ -171,33 +160,26 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
   if (isFollowUp && weakTopicPracticable && weakest) {
     actions.push({ id: 'weak-topic', label: `Zayıf Konuyu Tekrarla: ${weakest.title}`, onClick: practiceWeakTopic });
   }
-  if (!isFollowUp && result.sessionMode === 'set' && nextExerciseSetId) {
-    actions.push({
-      id: 'next-set',
-      label: `${EXERCISE_SET_LABELS[nextExerciseSetId]}e Geç`,
-      onClick: startNextSet,
-    });
-  }
-  if (challengeReady && day !== undefined) {
+  if (challengeReady && topicId && result.sessionMode !== 'challenge') {
     actions.push({ id: 'challenge', label: '🔥 Zor Sorular', onClick: startChallenge });
   }
-  if (nextDay !== undefined) {
+  if (nextTopic) {
     actions.push({
-      id: 'next-day',
-      label: `${nextDay}. Güne Geç`,
-      onClick: () => run('next-day', () => navigate({ name: 'day', day: nextDay })),
+      id: 'next-topic',
+      label: `Sıradaki Konu: ${nextTopic.title}`,
+      onClick: () => run('next-topic', () => navigate({ name: 'topic', topicId: nextTopic.id })),
     });
   }
-  if (!isFollowUp && day !== undefined) {
+  if (!isFollowUp && topicId) {
     actions.push({ id: 'repeat', label: 'Tekrar Çalış', onClick: repeatSession });
   }
-  // Son gunde "Sonraki Gün" diye olu bir buton gostermek yerine gercek
-  // alternatifler sunulur (§33).
-  if (nextDay === undefined && day !== undefined) {
+  // Haritanın son konusunda ölü bir "Sıradaki" butonu yerine gerçek
+  // alternatif sunulur (§33).
+  if (!nextTopic && topicId) {
     actions.push({
       id: 'quick',
       label: 'Hızlı Tekrar',
-      onClick: () => run('quick', () => navigate({ name: 'lesson', day, mode: 'quick' })),
+      onClick: () => run('quick', () => navigate({ name: 'lesson', topicId, mode: 'quick' })),
     });
   }
   if (Object.keys(progress.mistakes).length > 0) {
@@ -207,11 +189,14 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
       onClick: () => run('all-mistakes', () => navigate({ name: 'mistakes' })),
     });
   }
-  if (hasSummary && day !== undefined) {
+  if (hasSummary && topicId) {
     actions.push({
       id: 'summary',
       label: '📖 Özeti Oku',
-      onClick: () => run('summary', () => navigate({ name: 'summary', day })),
+      onClick: () =>
+        run('summary', () =>
+          navigate({ name: 'summary', topicId, ...(result.sectionId ? { sectionId: result.sectionId } : {}) }),
+        ),
     });
   }
   if (result.mode === 'review') {
@@ -232,7 +217,7 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
     accuracy,
     canReview,
     challengeReady,
-    nextDay,
+    nextTopicId: nextTopic?.id,
     isFollowUp,
     weakTopicPracticable,
   });
@@ -306,13 +291,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
                     Tekrar önerisi:{' '}
                   </span>
                   {weakest.title} ({weakest.correct}/{weakest.total})
-                  {day !== undefined && summaryTopicsById.has(weakest.topicId) && (
+                  {topicsById.has(weakest.topicId) && (
                     <>
                       {' · '}
                       <button
                         type="button"
                         className="underline underline-offset-2"
-                        onClick={() => navigate({ name: 'summary', day, topicId: weakest.topicId })}
+                        onClick={() => navigate({ name: 'summary', topicId: weakest.topicId })}
                       >
                         özeti aç
                       </button>
@@ -366,17 +351,18 @@ export function resultHeadline(
           : `${answered} · ${result.correctCount + result.typoCount} doğru · ${result.incorrectCount} tekrar öneriliyor`,
     };
   }
-  const dayLabel = result.day === undefined ? (result.mode === 'review' ? 'Genel Tekrar' : 'Tekrar') : `${result.day}. Gün`;
+  const label =
+    result.mode === 'topic' && result.topicId ? topicTitle(result.topicId) : result.mode === 'review' ? 'Genel Tekrar' : 'Tekrar';
   if (result.perfect) {
-    return { title: 'Mükemmel ders!', subtitle: `${dayLabel} · ${answered} · tüm sorular doğru.` };
+    return { title: 'Mükemmel ders!', subtitle: `${label} · ${answered} · tüm sorular doğru.` };
   }
   if (accuracy !== null && accuracy >= NEAR_PERFECT * 100) {
-    return { title: 'Harika çalışma!', subtitle: `${dayLabel} tamamlandı · ${answered}` };
+    return { title: 'Harika çalışma!', subtitle: `${label} tamamlandı · ${answered}` };
   }
   if (accuracy !== null && accuracy < NEEDS_WORK * 100) {
-    return { title: 'Bir tur daha iyi olur', subtitle: `${dayLabel} tamamlandı · ${answered}` };
+    return { title: 'Bir tur daha iyi olur', subtitle: `${label} tamamlandı · ${answered}` };
   }
-  return { title: `${dayLabel} tamamlandı!`, subtitle: `${answered} çözüldü.` };
+  return { title: `${label} tamamlandı!`, subtitle: `${answered} çözüldü.` };
 }
 
 /** Birincil oneri sonuca gore degisir; besi de esit guclu buton gosterilmez. */
@@ -385,20 +371,21 @@ export function pickPrimaryAction(input: {
   accuracy: number | null;
   canReview: boolean;
   challengeReady: boolean;
-  nextDay?: number;
+  nextTopicId?: string;
   isFollowUp: boolean;
   weakTopicPracticable: boolean;
 }): string {
-  const { result, accuracy, canReview, challengeReady, nextDay, isFollowUp, weakTopicPracticable } = input;
+  const { result, accuracy, canReview, challengeReady, nextTopicId, isFollowUp, weakTopicPracticable } = input;
+  const challengeOffered = challengeReady && result.sessionMode !== 'challenge';
   if (isFollowUp) {
     if (weakTopicPracticable) return 'weak-topic';
-    return nextDay !== undefined ? 'next-day' : 'home';
+    return result.mode === 'review' ? 'general-review' : 'home';
   }
   if (canReview) return 'mistakes';
-  if (result.perfect && nextDay !== undefined) return 'next-day';
-  if (accuracy !== null && accuracy >= NEAR_PERFECT * 100 && challengeReady) return 'challenge';
-  if (challengeReady) return 'challenge';
-  if (nextDay !== undefined) return 'next-day';
+  if (result.perfect && nextTopicId !== undefined) return 'next-topic';
+  if (accuracy !== null && accuracy >= NEAR_PERFECT * 100 && challengeOffered) return 'challenge';
+  if (challengeOffered) return 'challenge';
+  if (nextTopicId !== undefined) return 'next-topic';
   return 'home';
 }
 

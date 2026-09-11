@@ -6,22 +6,22 @@
  *
  * Oncelik:
  *   1. Yarim kalan oturum
- *   2. Yakin zamanda dusuk dogruluklu gun
+ *   2. Calisilmis ama dogrulugu dusuk konu
  *   3. Cozulmemis hatalar (esik ustunde)
- *   4. Siradaki tamamlanmamis gun
- *   5. Eski/zayif malzemenin hizli tekrari
+ *   4. Harita sirasinda siradaki tamamlanmamis konu
+ *   5. En zayif konunun hizli tekrari
  */
 
 import type { Exercise } from '../content/types';
 import type { Route } from './router';
-import { getDayStats, REVIEW_THRESHOLD } from './progress';
+import { getTopicProgressStats, REVIEW_THRESHOLD } from './progress';
 import type { UserProgress } from './storage';
 
 export type RecommendationKind =
   | 'resume'
-  | 'weak-day'
+  | 'weak-topic'
   | 'mistakes'
-  | 'next-day'
+  | 'next-topic'
   | 'refresh';
 
 export interface Recommendation {
@@ -35,9 +35,10 @@ export interface Recommendation {
 
 export interface RecommendationInput {
   progress: UserProgress;
-  /** Icerikteki gun numaralari, artan sirada. */
-  dayNumbers: number[];
-  exercisesForDay: (day: number) => Exercise[];
+  /** Kanonik konular, müfredat haritası sırasıyla. */
+  topics: Array<{ id: string; title: string }>;
+  /** Konunun birincil ders alıştırmaları (tamamlanma bunlarla ölçülür). */
+  exercisesForTopic: (topicId: string) => Exercise[];
 }
 
 /** Bu sayidan fazla acik hata varsa tekrar one cikar. */
@@ -48,7 +49,7 @@ const MODE_LABEL: Record<string, string> = {
   full: 'Tam Çalışma',
   quick: 'Hızlı Tekrar',
   challenge: 'Zor Sorular',
-  topic: 'Konu Çalışması',
+  section: 'Bölüm Çalışması',
   'gr-mixed': 'Genel Tekrar',
   'gr-vocab': 'Kelime Çalışması',
   'gr-sentence': 'Cümle Kurma',
@@ -56,48 +57,50 @@ const MODE_LABEL: Record<string, string> = {
   'gr-listening': 'Dinleme',
   'gr-quick': 'Hızlı Tekrar',
   'gr-challenge': 'Zor Sorular',
-  'gr-topic': 'Konu Çalışması',
+  'gr-topic': 'Konu Tekrarı',
 };
 
 export function recommendNext(input: RecommendationInput): Recommendation {
-  const { progress, dayNumbers, exercisesForDay } = input;
+  const { progress, topics, exercisesForTopic } = input;
   const active = progress.activeLesson;
+  const titleOf = (topicId: string | undefined) => topics.find((topic) => topic.id === topicId)?.title;
 
   if (active && active.index < active.queue.length) {
     const remaining = active.queue.length - active.index;
-    const label =
-      active.mode === 'day'
-        ? `${active.day}. Gün — ${MODE_LABEL[active.sessionMode ?? 'normal'] ?? 'Çalışma'}`
-        : active.mode === 'mistakes'
-          ? 'Hata tekrarı'
-          : `${MODE_LABEL[active.sessionMode ?? 'gr-mixed'] ?? 'Genel Tekrar'}`;
+    const topicLesson = active.mode === 'topic' && active.topicId;
+    const label = topicLesson
+      ? `${titleOf(active.topicId) ?? 'Konu'} — ${MODE_LABEL[active.sessionMode ?? 'normal'] ?? 'Çalışma'}`
+      : active.mode === 'mistakes'
+        ? 'Hata tekrarı'
+        : `${MODE_LABEL[active.sessionMode ?? 'gr-mixed'] ?? 'Genel Tekrar'}${
+          active.topicId && titleOf(active.topicId) ? ` — ${titleOf(active.topicId)}` : ''
+        }`;
     return {
       kind: 'resume',
       eyebrow: 'Yarım kalan çalışma',
       title: label,
       description: `${remaining} soru kaldı. Kaldığın yerden devam edebilirsin.`,
       action: 'Devam Et',
-      route:
-        active.mode === 'day'
-          ? {
-            name: 'lesson',
-            day: active.day ?? dayNumbers[0] ?? 1,
-            mode: active.sessionMode ?? 'normal',
-            topicId: active.topicId,
-          }
-          : active.mode === 'mistakes'
-            ? { name: 'mistake-review', day: active.day }
-            : { name: 'review' },
+      route: topicLesson
+        ? {
+          name: 'lesson',
+          topicId: active.topicId!,
+          mode: active.sessionMode ?? 'normal',
+          ...(active.sectionId ? { sectionId: active.sectionId } : {}),
+        }
+        : active.mode === 'mistakes'
+          ? { name: 'mistake-review' }
+          : { name: 'review' },
     };
   }
 
-  const dayStats = dayNumbers.map((day) => ({
-    day,
-    stats: getDayStats(progress, day, exercisesForDay(day)),
+  const topicStats = topics.map((topic) => ({
+    topic,
+    stats: getTopicProgressStats(progress, topic.id, exercisesForTopic(topic.id)),
   }));
 
-  // 2. Calisilmis ama dogrulugu dusuk kalan en yeni gun.
-  const weak = [...dayStats]
+  // 2. Calisilmis ama dogrulugu dusuk kalan konu (haritada en ileri olan).
+  const weak = [...topicStats]
     .reverse()
     .find(
       (entry) =>
@@ -107,12 +110,12 @@ export function recommendNext(input: RecommendationInput): Recommendation {
     );
   if (weak) {
     return {
-      kind: 'weak-day',
+      kind: 'weak-topic',
       eyebrow: 'Bugün önerilen',
-      title: `${weak.day}. Gün — Hızlı Tekrar`,
+      title: `${weak.topic.title} — Hızlı Tekrar`,
       description: `Doğruluğun %${Math.round((weak.stats.accuracy ?? 0) * 100)}. Kısa bir tur bunu toparlar.`,
       action: 'Hızlı Tekrar',
-      route: { name: 'lesson', day: weak.day, mode: 'quick' },
+      route: { name: 'lesson', topicId: weak.topic.id, mode: 'quick' },
     };
   }
 
@@ -123,42 +126,44 @@ export function recommendNext(input: RecommendationInput): Recommendation {
       kind: 'mistakes',
       eyebrow: 'Bugün önerilen',
       title: `${openMistakes} aktif hata`,
-      description: 'Hatalarını tekrar etmek, yeni gün açmaktan daha çok kazandırır.',
+      description: 'Hatalarını tekrar etmek, yeni konu açmaktan daha çok kazandırır.',
       action: 'Hataları Tekrar Et',
       route: { name: 'mistakes' },
     };
   }
 
-  // 4. Siradaki tamamlanmamis gun.
-  const next = dayStats.find((entry) => entry.stats.state !== 'completed');
+  // 4. Haritada siradaki tamamlanmamis konu (yarim olan once).
+  const next =
+    topicStats.find((entry) => entry.stats.state === 'in-progress') ??
+    topicStats.find((entry) => entry.stats.state !== 'completed');
   if (next) {
     return {
-      kind: 'next-day',
+      kind: 'next-topic',
       eyebrow: 'Bugün önerilen',
       title:
         next.stats.state === 'in-progress'
-          ? `${next.day}. Gün — Kalanları Çalış`
-          : `${next.day}. Gün — Normal Çalışma`,
+          ? `${next.topic.title} — Kalanları Çalış`
+          : `${next.topic.title} — Normal Çalışma`,
       description:
         next.stats.state === 'in-progress'
           ? `${next.stats.total - next.stats.completed} alıştırma henüz hiç karşına çıkmadı.`
-          : 'Yeni gün seni bekliyor.',
+          : 'Bu konu seni bekliyor.',
       action: 'Başla',
-      route: { name: 'day', day: next.day },
+      route: { name: 'topic', topicId: next.topic.id },
     };
   }
 
-  // 5. Her sey tamam: en dusuk dogruluklu gunun hizli tekrari.
-  const oldest = [...dayStats].sort(
-    (a, b) => (a.stats.accuracy ?? 1) - (b.stats.accuracy ?? 1) || a.day - b.day,
+  // 5. Her sey tamam: en dusuk dogruluklu konunun hizli tekrari.
+  const weakest = [...topicStats].sort(
+    (a, b) => (a.stats.accuracy ?? 1) - (b.stats.accuracy ?? 1),
   )[0];
-  const day = oldest?.day ?? dayNumbers[0] ?? 1;
+  const topic = weakest?.topic ?? topics[0];
   return {
     kind: 'refresh',
     eyebrow: 'Bugün önerilen',
-    title: `${day}. Gün — Hızlı Tekrar`,
-    description: 'Tüm günler tamam. Bilgiyi taze tutmak için kısa bir tur.',
+    title: `${topic?.title ?? 'Konu'} — Hızlı Tekrar`,
+    description: 'Tüm konular tamam. Bilgiyi taze tutmak için kısa bir tur.',
     action: 'Hızlı Tekrar',
-    route: { name: 'lesson', day, mode: 'quick' },
+    route: { name: 'lesson', topicId: topic?.id ?? '', mode: 'quick' },
   };
 }

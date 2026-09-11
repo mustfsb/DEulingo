@@ -4,18 +4,17 @@ import { auditExerciseContent } from './content-audit';
 
 const exercise = (id: string, prompt: string, answer: string, familyId?: string): Exercise => ({
   id,
-  day: 2,
   topic: 'Test',
-  topicId: 'day2.test',
+  topicId: 'topic.verbs',
   type: 'fill-blank',
   instruction: 'Doldur.',
   prompt,
   answer,
   difficulty: 'easy',
   skill: 'recall',
-  conceptIds: ['day2.test'],
+  conceptIds: ['topic.verbs'],
   origin: 'authored',
-  source: { file: 'test', day: 2, naturalKey: id },
+  source: { file: 'test', naturalKey: id },
   familyId,
 });
 

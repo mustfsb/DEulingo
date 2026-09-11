@@ -1,6 +1,10 @@
 /**
  * Uretilen icerigin (generated/exercises.json) sema tanimlari.
  * Bu dosya hem Node tarafindaki parser hem de React tarafi tarafindan kullanilir.
+ *
+ * Müfredat KONU tabanlıdır: içerik kimliği `topicId`'dir. Gün numarası
+ * yalnızca `legacyDay` olarak (göç/denetim izi) taşınır ve hiçbir davranışı
+ * sürmez.
  */
 
 export type ExerciseType =
@@ -16,10 +20,7 @@ export type ExerciseType =
   | 'dictation'
   | 'word-bank-translation';
 
-/** İlk üç günün birbirini tekrar etmeyen, seçilebilir alıştırma paketleri. */
-export type ExerciseSetId = 'set-1' | 'set-2' | 'set-3';
-
-/** Öğrenme izleği — normal ve özel ders birbirinden bağımsızdır. */
+/** Tarihî öğrenme izleği (v9 öncesi kayıtlar). Yalnızca göçte okunur. */
 export type LearningTrack = 'normal' | 'private';
 
 export function isLearningTrack(value: unknown): value is LearningTrack {
@@ -114,45 +115,59 @@ export interface Pronunciation {
   note?: string;
 }
 
+/** Kavramın öğrenim durumu: `planned` kavramları gerektiren alıştırmalar kilitlidir. */
+export type ConceptStatus = 'learned' | 'planned';
+
 /**
  * Ogrenilebilir en kucuk birim. Her alistirma en az bir kavrama,
- * her kavram bir ozet konusuna baglanir.
+ * her kavram bir ozet bolumune (ve boylece tek bir konuya) baglanir.
  */
 export interface Concept {
-  /** "day2.konjugation.du-st" */
+  /** "modal-verbs.koennen.cekim" */
   id: string;
-  day: number;
-  /** Bagli oldugu ozet konusu: "day2.fiil-cekimi" */
+  /** Kanonik konu: "topic.modal-verbs". */
   topicId: string;
+  /** Kavramin anlatildigi ozet bolumu: "modal-verbs.koennen". */
+  sectionId: string;
   label: string;
   /** Bu kavramdan once ogrenilmis olmasi gereken kavramlar. */
   prerequisites?: string[];
-  /** Hangi izleğe ait — yoksa normal varsayılır (geriye dönük uyum). */
-  track?: LearningTrack;
+  /** Varsayılan `learned`. */
+  status?: ConceptStatus;
 }
 
 export interface ExerciseSource {
   file: string;
-  day: number;
   section?: string;
   sectionNumber?: number;
   itemKey?: string;
-  /** Override katmaninda kullanilan dogal anahtar: `gun/bolum/madde` */
+  /** Override katmaninda kullanilan dogal anahtar. */
   naturalKey: string;
 }
 
 export interface Exercise {
   id: string;
-  day: number;
-  /** Hangi izleğe ait — normal ve private izlekler ayrıdır. */
-  track?: LearningTrack;
+  /** Birincil kanonik konu — konu pratiği, ustalık ve hatalar bunu kullanır. */
+  topicId: string;
   /**
-   * Genel Tekrar bankası üyesi. `true` ise alıştırma gün havuzlarına girmez;
-   * yalnızca kümülatif Genel Tekrar oturumlarında kullanılır. İlerleme,
-   * ustalık ve hata takibi normal alıştırmalarla aynı kurallarla çalışır.
+   * Alıştırmanın ayrıca çalıştırdığı konular (kavramlarından ve bölüm
+   * ilişkilerinden türetilir). Konu pratiği ve Genel Tekrar filtreleri
+   * birincil + ikincil üyeliği birlikte görür.
+   */
+  secondaryTopicIds?: string[];
+  /** Özet bölümü ("Özeti aç"). */
+  sectionId?: string;
+  /** Birincil konunun UI başlığı. */
+  topic: string;
+  /**
+   * Genel Tekrar bankası üyesi. `true` ise alıştırma konu ders havuzlarına
+   * girmez; yalnızca kümülatif Genel Tekrar oturumlarında (ve Genel Tekrar
+   * konu filtrelerinde) kullanılır. İlerleme, ustalık ve hata takibi normal
+   * alıştırmalarla aynı kurallarla çalışır.
    */
   reviewOnly?: boolean;
-  topic: string;
+  /** Tarihî gün — YALNIZCA göç/denetim izi; hiçbir davranışı sürmez. */
+  legacyDay?: number;
   type: ExerciseType;
 
   instruction: string;
@@ -188,22 +203,15 @@ export interface Exercise {
   validation?: ExerciseValidation;
   source: ExerciseSource;
 
-  /* -- v2 ustveri ------------------------------------------------- */
-
   difficulty: Difficulty;
   skill: Skill;
-  /** Bu alistirmanin olctugu kavramlar; `concepts` kaydindaki ID'ler. */
+  /** Bu alistirmanin gerektirdigi ve olctugu kavramlar; `concepts` kaydindaki ID'ler. */
   conceptIds: string[];
   origin: ExerciseOrigin;
-  /** Bagli oldugu ozet konusu — konu bazli calisma bunu kullanir. */
-  topicId: string;
-
-  /** Varsa soru yalnızca bu bağımsız alıştırma setinde gösterilir. */
-  exerciseSetId?: ExerciseSetId;
 
   /**
    * Ayni kavrami farkli bicimlerde soran alistirmalar ayni aileyi paylasir.
-   * Oturum kurucusu ayni aileyi arka arkaya gostermez (§32 tekrar yorgunlugu).
+   * Oturum kurucusu ayni aileyi arka arkaya gostermez (tekrar yorgunlugu).
    */
   familyId?: string;
   estimatedSeconds?: number;
@@ -213,10 +221,7 @@ export interface Exercise {
   pronunciation?: Pronunciation[];
 }
 
-/**
- * Ozet dosyasindaki bir bolumun ara temsili.
- * `Özetler` bolumu bunun uzerine kurulur; pakette AYRICA saklanmaz.
- */
+/** Ozet dosyasindaki bir bolumun ara temsili. */
 export interface LessonNote {
   title: string;
   /** Kaynak baslik duzeyi: 2 = ana konu, 3 = alt not ("Dikkat" gibi). */
@@ -232,17 +237,29 @@ export type NoteBlock =
   | { kind: 'code'; lines: string[] }
   | { kind: 'callout'; text: string };
 
-export interface Day {
-  day: number;
-  track?: LearningTrack;
-  /** Ozet dosyasindaki H2 basliklarindan turetilen ana konular. */
-  topics: string[];
-  exerciseIds: string[];
-  estimatedMinutes: number;
-  /** Bu gunde ogretilen kavramlar. */
+/* ------------------------------------------------------------------ */
+/* Müfredat — kanonik konular                                          */
+/* ------------------------------------------------------------------ */
+
+/** Paketteki konu: kayıt bilgisi + türetilmiş üyelikler. */
+export interface CurriculumTopic {
+  id: string;
+  slug: string;
+  title: string;
+  emoji: string;
+  description: string;
+  keywords: string;
+  /** Müfredat haritasındaki sıra (0 tabanlı). */
+  order: number;
+  sectionIds: string[];
   conceptIds: string[];
-  /** Bu gune ait ozet konularinin ID'leri. */
-  summaryTopicIds: string[];
+  /** Birincil konusu bu olan ders alıştırmaları (Genel Tekrar bankası hariç). */
+  exerciseIds: string[];
+  /** İkincil etiketle bu konuyu da çalıştıran ders alıştırmaları. */
+  secondaryExerciseIds: string[];
+  /** Bu konuyu (birincil ya da ikincil) çalıştıran Genel Tekrar soruları. */
+  reviewExerciseIds: string[];
+  estimatedMinutes: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -261,44 +278,55 @@ export interface RecallQuestion {
   answer: string;
 }
 
-export interface SummaryTable {
-  head: string[];
-  rows: string[][];
-}
-
 /**
- * Ozet dosyasindaki bir H2 bolumunun yapilandirilmis hali.
- * Govde `NoteBlock` birlesimini yeniden kullanir — ham HTML render edilmez.
+ * Bir ozet BOLUMU (kaynaktaki H2). Govde `NoteBlock` birlesimini yeniden
+ * kullanir — ham HTML render edilmez.
  */
-export interface SummaryTopic {
+export interface SummarySection {
   /** Kararli ID; kaynak baslik yeniden yazilsa da degismez. */
   id: string;
+  /** Bolumun ait oldugu kanonik konu. */
+  topicId: string;
   title: string;
-  track?: LearningTrack;
-  /** Bu konunun ogrettigi kavramlar. */
+  /** Bu bolumun ogrettigi kavramlar. */
   conceptIds: string[];
   /** Aciklama govdesi (paragraf / liste / tablo / kod / callout). */
   blocks: NoteBlock[];
   /** "### ⚠️ Dikkat" alt bolumlerinden gelen uyarilar. */
   warnings: string[];
-  /** "5 Dakikalık Hızlı Tekrar" maddeleri. */
-  keyPoints: string[];
-  /** "Kendine Sor" sorulari + `<details>` icindeki cevaplari. */
-  recallQuestions: RecallQuestion[];
   /** Konudaki Almanca ornek cumleler. */
   examples: GermanExample[];
   /** Onemli kaliplarin yaklasik okunusu. */
   pronunciation: Pronunciation[];
+  /** Genel Tekrar ozetinde: "Bu Konuyu Çalış" yerine başlatılacak tekrar modu. */
+  reviewMode?: 'mixed' | 'vocab' | 'quick';
+  /** Genel Tekrar ozetindeki "Kendini Test Et" gibi bolumlerin sorulari. */
+  recallQuestions?: RecallQuestion[];
   /** Uygulama ici ek aciklama eklendiyse true (kaynak dosya degismedi). */
   augmented?: boolean;
 }
 
-export interface SummaryDay {
-  day: number;
-  track?: LearningTrack;
+/** Bir konunun tam özeti (`Konu Özetleri.md` içindeki H1 bloğu). */
+export interface TopicSummary {
+  topicId: string;
   title: string;
+  /** Konu başlığının altındaki kısa giriş (blockquote). */
+  intro: string[];
   estimatedReadingMinutes: number;
-  topics: SummaryTopic[];
+  sections: SummarySection[];
+  /** "Hızlı Tekrar" kontrol listesi. */
+  keyPoints: string[];
+  /** "Kendine Sor" soruları + gizli cevaplar. */
+  recallQuestions: RecallQuestion[];
+}
+
+/** Kümülatif, sıkıştırılmış tekrar özeti (`Genel Tekrar Özet.md`). */
+export interface ReviewSummary {
+  title: string;
+  intro: string[];
+  estimatedReadingMinutes: number;
+  /** Her bölüm aynı kanonik konu kimliğine bağlıdır (`topicId`). */
+  sections: SummarySection[];
 }
 
 export interface ContentWarning {
@@ -318,10 +346,14 @@ export interface ContentBundle {
    */
   contentVersion: string;
   sourceFiles: string[];
-  days: Day[];
+  /** Kanonik müfredat haritası (gösterim sırasıyla). */
+  topics: CurriculumTopic[];
   exercises: Exercise[];
   concepts: Concept[];
-  summaries: SummaryDay[];
+  /** Konu özetleri (konu sırasıyla). */
+  summaries: TopicSummary[];
+  /** Kümülatif Genel Tekrar özeti. */
+  reviewSummary?: ReviewSummary;
   /** Gelistirme denetimi icin turetilmis kavram kapsami (saklanan durum degil). */
   coverage: ConceptCoverage[];
   warnings: ContentWarning[];
@@ -329,13 +361,12 @@ export interface ContentBundle {
 
 /** Bir kavramin ne kadar pratigi oldugunu gosterir; bundle'dan turetilir. */
 export interface ConceptCoverage {
-  day: number;
-  track?: LearningTrack;
   topicId: string;
+  sectionId: string;
   conceptId: string;
   label: string;
   exercises: { easy: number; medium: number; hard: number };
   summaryCovered: boolean;
 }
 
-export const CONTENT_SCHEMA_VERSION = 2;
+export const CONTENT_SCHEMA_VERSION = 3;

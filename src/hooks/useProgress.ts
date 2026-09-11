@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { loadProgress, saveProgress, type UserProgress } from '../lib/storage';
 import { correctKeyboardToleranceHistory } from '../lib/progress';
-import { exercisesById } from '../lib/content';
+import { exercisesById, migrationContext } from '../lib/content';
 
 /** Yükleme sirasinda klavye toleransi geriye dönük düzeltmesini uygular. */
 function applyCorrections(raw: UserProgress): UserProgress {
@@ -17,7 +17,7 @@ export interface ProgressApi {
 }
 
 export function useProgressState(): ProgressApi {
-  const [progress, setProgress] = useState<UserProgress>(() => applyCorrections(loadProgress()));
+  const [progress, setProgress] = useState<UserProgress>(() => applyCorrections(loadProgress(localStorage, migrationContext)));
 
   useEffect(() => {
     saveProgress(progress);
@@ -27,7 +27,7 @@ export function useProgressState(): ProgressApi {
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key === 'almanca-alistirma:progress' && event.newValue) {
-        setProgress(applyCorrections(loadProgress()));
+        setProgress(applyCorrections(loadProgress(localStorage, migrationContext)));
       }
     };
     window.addEventListener('storage', onStorage);

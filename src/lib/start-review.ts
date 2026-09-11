@@ -3,15 +3,14 @@
  *
  * Oturum her zaman ÖNCEDEN kurulur (`Hatalarım` akışıyla aynı desen):
  * havuz → plan → `activeLesson` (mode `review`) → `#/tekrar`.
- * Gün sayacı artmaz, gün tamamlanması etkilenmez (§48); ustalık, hata ve
- * istatistikler normal kurallarla güncellenir.
+ * Konu oturum sayacı artmaz; ustalık, hata ve istatistikler normal
+ * kurallarla (alıştırmanın kanonik konusuna) işlenir.
  */
 
 import { buildSessionPlan, type SessionMode } from './session';
-import { exercisesById, reviewBank } from './content';
+import { exercisesById, getExercises, lessonExercises, reviewBank } from './content';
 import { buildReviewQueue } from './lesson';
-import { getExercises } from './content';
-import { MIN_GROUP_SIZE, groupPoolSize, reviewModeMeta, reviewPoolFor, type ReviewMode } from './general-review';
+import { MIN_TOPIC_POOL, reviewModeMeta, reviewPoolFor, type ReviewMode } from './general-review';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from './router';
 
@@ -28,29 +27,33 @@ export const REVIEW_SESSION_MODE: Record<ReviewMode, SessionMode> = {
 
 export interface StartReviewOptions {
   mode: ReviewMode;
-  groupId?: string;
+  /** Kanonik konu (Genel Tekrar konu kartı). */
+  topicId?: string;
 }
 
-/** Oturum kurulduysa true (kurulamazsa false — örn. grup havuzu çok küçük). */
+/** Genel Tekrar havuzu (konu kartında ders bankası da katılır). */
+export function reviewPool(mode: ReviewMode, topicId?: string) {
+  return reviewPoolFor(reviewBank, mode, topicId, lessonExercises);
+}
+
+/** Oturum kurulduysa true (kurulamazsa false — örn. konu havuzu çok küçük). */
 export function startReviewSession(
   api: ProgressApi,
   navigate: (route: Route) => void,
   options: StartReviewOptions,
 ): boolean {
-  const { mode, groupId } = options;
-  if (groupId && groupPoolSize(reviewBank, groupId) < MIN_GROUP_SIZE) return false;
-
-  const pool = reviewPoolFor(reviewBank, mode, groupId);
+  const { mode, topicId } = options;
+  const pool = reviewPool(mode, topicId);
   if (!pool.length) return false;
+  if (topicId && pool.length < MIN_TOPIC_POOL) return false;
 
   const sessionMode = REVIEW_SESSION_MODE[mode];
   const plan = buildSessionPlan({
     pool,
-    previous: [],
     progress: api.progress,
     mode: sessionMode,
-    topicId: groupId,
-    seed: `gr:${mode}:${groupId ?? ''}:${Date.now()}`,
+    topicId,
+    seed: `gr:${mode}:${topicId ?? ''}:${Date.now()}`,
   });
   if (!plan.primaryQueue.length) return false;
 
@@ -59,7 +62,7 @@ export function startReviewSession(
     activeLesson: {
       mode: 'review',
       sessionMode,
-      topicId: groupId,
+      ...(topicId ? { topicId } : {}),
       queue: plan.primaryQueue,
       index: 0,
       startedAt: new Date().toISOString(),
@@ -72,15 +75,15 @@ export function startReviewSession(
   return true;
 }
 
-/** Önizleme: bu mod/grup kaç soruluk oturum kurar? */
-export function previewReviewSize(mode: ReviewMode, groupId?: string): number {
-  const pool = reviewPoolFor(reviewBank, mode, groupId);
+/** Önizleme: bu mod/konu kaç soruluk oturum kurar? */
+export function previewReviewSize(mode: ReviewMode, topicId?: string): number {
+  const pool = reviewPool(mode, topicId);
   if (!pool.length) return 0;
-  const meta = reviewModeMeta(mode);
-  return Math.min(meta.size, pool.length);
+  if (topicId && pool.length < MIN_TOPIC_POOL) return 0;
+  return Math.min(reviewModeMeta(mode).size, pool.length);
 }
 
-/** Tüm hatalardan tekrar oturumu (tek isim alanı — izlek ayrımı yok). */
+/** Tüm hatalardan tekrar oturumu. */
 export function startMistakeSession(api: ProgressApi, navigate: (route: Route) => void): boolean {
   const ids = buildReviewQueue(getExercises(Object.keys(api.progress.mistakes)), api.progress, 15)
     .filter((id) => exercisesById.has(id));

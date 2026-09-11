@@ -13,15 +13,15 @@ import { dailyKey } from './daily-goal';
 const bundle = JSON.parse(readFileSync('generated/exercises.json', 'utf8')) as ContentBundle;
 const byId = new Map(bundle.exercises.map((exercise) => [exercise.id, exercise]));
 const lookup = (id: string) => byId.get(id);
-const day2 = bundle.exercises.filter((exercise) => exercise.day === 2);
+const articles = bundle.exercises.filter((exercise) => exercise.topicId === 'topic.articles' && !exercise.reviewOnly);
 
 function lesson(
   results: ActiveLesson['results'],
   overrides: Partial<ActiveLesson> = {},
 ): ActiveLesson {
   return {
-    mode: 'day',
-    day: 2,
+    mode: 'topic',
+    topicId: 'topic.articles',
     sessionMode: 'full',
     queue: results.map((item) => ({ exerciseId: item.exerciseId, presentationReason: 'primary' as const })),
     index: results.length,
@@ -33,7 +33,7 @@ function lesson(
   };
 }
 
-const ids = day2.slice(0, 5).map((exercise: Exercise) => exercise.id);
+const ids = articles.slice(0, 5).map((exercise: Exercise) => exercise.id);
 
 describe('ders sonucu', () => {
   it('sayimlari, dogrulugu ve hata kimliklerini yapili bicimde uretir', () => {
@@ -59,7 +59,8 @@ describe('ders sonucu', () => {
     expect(result.incorrectExerciseIds).toEqual([ids[2]]);
     expect(result.typoExerciseIds).toEqual([ids[1]]);
     expect(result.skippedExerciseIds).toEqual([ids[3]]);
-    expect(result.day).toBe(2);
+    expect(result.topicId).toBe('topic.articles');
+    expect((result as unknown as { day?: unknown }).day).toBeUndefined();
     expect(result.sessionMode).toBe('full');
     expect(result.bestStreak).toBe(6);
     expect(result.perfect).toBe(false);
@@ -118,7 +119,7 @@ describe('hata tekrari kuyrugu', () => {
       mistakes: {
         [ids[3]]: {
           exerciseId: ids[3],
-          day: 2,
+          topicId: 'topic.articles',
           topic: 't',
           prompt: 'p',
           userAnswer: 'a',
@@ -190,13 +191,33 @@ describe('hata tekrari kuyrugu', () => {
 });
 
 describe('ders kapanisi', () => {
-  it('aktif dersi temizler, gun sayacini artirir ve sonucu saklar', () => {
+  it('Genel Tekrar ve hata tekrari konu sayacini artirmaz', () => {
+    for (const mode of ['review', 'mistakes'] as const) {
+      const result = buildLessonResult(
+        lesson([{ exerciseId: ids[0], result: 'correct' }], { mode, sessionMode: undefined }),
+        { lookup },
+      );
+      expect(completeLesson(createEmptyProgress(), result).topics).toEqual({});
+    }
+  });
+
+  it('bolum pratigi sonucu bolum kimligini tasir', () => {
+    const result = buildLessonResult(
+      lesson([{ exerciseId: ids[0], result: 'correct' }], { sessionMode: 'section', sectionId: 'articles.negation' }),
+      { lookup },
+    );
+    expect(result.sectionId).toBe('articles.negation');
+    expect(result.sessionId).toContain('articles.negation');
+  });
+
+  it('aktif dersi temizler, konu sayacini artirir ve sonucu saklar', () => {
     const result = buildLessonResult(lesson([{ exerciseId: ids[0], result: 'correct' }]), { lookup });
     const completedAt = new Date('2026-08-17T09:30:00.000Z');
     const next = completeLesson(createEmptyProgress(), result, completedAt);
 
     expect(next.activeLesson).toBeUndefined();
-    expect(next.days[2].sessionsCompleted).toBe(1);
+    expect(next.topics['topic.articles'].sessionsCompleted).toBe(1);
+    expect(next.topics['topic.articles'].lastCompletedAt).toBe(completedAt.toISOString());
     expect(next.lastResult?.sessionId).toBe(result.sessionId);
     expect(next.daily[dailyKey(completedAt)].sessions).toBe(1);
   });
@@ -205,14 +226,16 @@ describe('ders kapanisi', () => {
     const first = buildLessonResult(lesson([{ exerciseId: ids[0], result: 'incorrect' }]), { lookup });
     const second = buildLessonResult(
       lesson([{ exerciseId: ids[1], result: 'correct' }], {
-        day: 3,
+        topicId: 'topic.modal-verbs',
         startedAt: '2026-08-17T10:00:00.000Z',
       }),
       { lookup },
     );
 
     const after = completeLesson(completeLesson(createEmptyProgress(), first), second);
-    expect(after.lastResult?.day).toBe(3);
+    expect(after.lastResult?.topicId).toBe('topic.modal-verbs');
+    expect(after.topics['topic.articles'].sessionsCompleted).toBe(1);
+    expect(after.topics['topic.modal-verbs'].sessionsCompleted).toBe(1);
     expect(after.lastResult?.incorrectExerciseIds).toEqual([]);
     expect(after.lastResult?.sessionId).not.toBe(first.sessionId);
   });
@@ -236,6 +259,6 @@ describe('ders kapanisi', () => {
 
     expect(reloaded.lastResult?.sessionId).toBe(result.sessionId);
     expect(reloaded.lastResult?.incorrectExerciseIds).toEqual([ids[0]]);
-    expect(reloaded.lastResult?.day).toBe(2);
+    expect(reloaded.lastResult?.topicId).toBe('topic.articles');
   });
 });

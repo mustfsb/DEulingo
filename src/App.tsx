@@ -3,7 +3,6 @@ import { useProgressState } from './hooks/useProgress';
 import { ThemeProvider, useResolvedTheme } from './hooks/useTheme';
 import { ThemeModeButton } from './components/ThemeModeButton';
 import { hrefFor, useRoute, type Route } from './lib/router';
-import { DayIntroScreen } from './screens/DayIntroScreen';
 import { DebugScreen } from './screens/DebugScreen';
 import { GeneralReviewScreen } from './screens/GeneralReviewScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -11,13 +10,14 @@ import { LessonCompleteScreen } from './screens/LessonCompleteScreen';
 import { LessonScreen } from './screens/LessonScreen';
 import { MistakesScreen } from './screens/MistakesScreen';
 import { StatsScreen } from './screens/StatsScreen';
-import { SummaryDayScreen } from './screens/SummaryDayScreen';
+import { ReviewSummaryScreen, SummaryTopicScreen } from './screens/SummaryTopicScreen';
 import { SummaryIndexScreen } from './screens/SummaryIndexScreen';
+import { TopicScreen } from './screens/TopicScreen';
 
 const NAV: Array<{ route: Route; label: string; matches: Route['name'][] }> = [
-  { route: { name: 'home' }, label: 'Öğren', matches: ['home', 'day'] },
+  { route: { name: 'home' }, label: 'Dersler', matches: ['home', 'topic'] },
   { route: { name: 'general-review' }, label: 'Genel Tekrar', matches: ['general-review'] },
-  { route: { name: 'summaries' }, label: 'Özetler', matches: ['summaries', 'summary'] },
+  { route: { name: 'summaries' }, label: 'Özetler', matches: ['summaries', 'summary', 'review-summary'] },
   { route: { name: 'mistakes' }, label: 'Hatalarım', matches: ['mistakes'] },
   { route: { name: 'stats' }, label: 'İstatistik', matches: ['stats'] },
 ];
@@ -52,11 +52,10 @@ function AppContents({
         // React ornegi yeniden kullanir ve bir dersten digerine gecis
         // (orn. "Zor Sorular") ekranda hicbir sey degistirmez.
         key={hrefFor(route)}
-        mode={route.name === 'lesson' ? 'day' : route.name === 'review' ? 'review' : 'mistakes'}
-        day={route.name === 'lesson' ? route.day : route.name === 'mistake-review' ? route.day : undefined}
-        sessionMode={route.name === 'lesson' ? route.mode : undefined}
+        mode={route.name === 'lesson' ? 'topic' : route.name === 'review' ? 'review' : 'mistakes'}
         topicId={route.name === 'lesson' ? route.topicId : undefined}
-        exerciseSetId={route.name === 'lesson' ? route.exerciseSetId : undefined}
+        sessionMode={route.name === 'lesson' ? route.mode : undefined}
+        sectionId={route.name === 'lesson' ? route.sectionId : undefined}
         api={api}
         navigate={navigate}
       />
@@ -83,11 +82,20 @@ function AppContents({
         }
       />
       {route.name === 'home' && <HomeScreen api={api} navigate={navigate} />}
-      {route.name === 'day' && <DayIntroScreen day={route.day} api={api} navigate={navigate} />}
+      {route.name === 'topic' && <TopicScreen key={route.topicId} topicId={route.topicId} api={api} navigate={navigate} />}
       {route.name === 'general-review' && <GeneralReviewScreen api={api} navigate={navigate} />}
       {route.name === 'summaries' && <SummaryIndexScreen api={api} navigate={navigate} />}
       {route.name === 'summary' && (
-        <SummaryDayScreen day={route.day} topicId={route.topicId} api={api} navigate={navigate} />
+        <SummaryTopicScreen
+          key={route.topicId}
+          topicId={route.topicId}
+          sectionId={route.sectionId}
+          api={api}
+          navigate={navigate}
+        />
+      )}
+      {route.name === 'review-summary' && (
+        <ReviewSummaryScreen sectionId={route.sectionId} api={api} navigate={navigate} />
       )}
       {route.name === 'mistakes' && <MistakesScreen api={api} navigate={navigate} />}
       {route.name === 'stats' && <StatsScreen api={api} />}

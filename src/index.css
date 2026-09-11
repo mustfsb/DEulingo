@@ -517,19 +517,7 @@
     transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Gunluk yol — "umlaut omurgasi": ciftli noktalardan olusan dikey ray */
-  .spine {
-    background-image: radial-gradient(
-      circle,
-      var(--color-line) 0 2.5px,
-      transparent 2.6px
-    );
-    background-size: 9px 18px;
-    background-repeat: repeat-y;
-    background-position: center top;
-  }
-
-  .day-tile {
+  .topic-tile {
     display: block;
     width: 100%;
     text-align: left;
@@ -545,37 +533,49 @@
       border-color 140ms ease;
   }
 
-  .day-tile:hover {
+  .topic-tile:hover {
     transform: translateY(-2px);
     box-shadow: 0 7px 0 0 var(--color-line);
   }
 
-  .day-tile:active {
+  .topic-tile:active {
     transform: translateY(3px);
     box-shadow: 0 2px 0 0 var(--color-line);
   }
 
-  .day-tile[data-state='completed'] {
+  .topic-tile[data-state='completed'] {
     border-color: var(--color-good);
     box-shadow: 0 5px 0 0 var(--color-good);
   }
 
-  .day-tile[data-state='completed']:hover {
+  .topic-tile[data-state='completed']:hover {
     box-shadow: 0 7px 0 0 var(--color-good);
   }
 
-  .day-tile[data-state='in-progress'] {
+  .topic-tile[data-state='in-progress'] {
     border-color: var(--color-brand);
     box-shadow: 0 5px 0 0 var(--color-brand);
   }
 
-  .day-tile[data-state='in-progress']:hover {
+  .topic-tile[data-state='in-progress']:hover {
     box-shadow: 0 7px 0 0 var(--color-brand);
   }
 
-  .day-tile[data-review='true'] {
+  .topic-tile[data-review='true'] {
     border-color: var(--color-warn);
     box-shadow: 0 5px 0 0 var(--color-warn);
+  }
+
+  /* Konu kartı: gövde konu sayfasını açar, eylemler kartın içinde ayrı düğmelerdir. */
+  div.topic-tile {
+    cursor: default;
+  }
+
+  .topic-tile-main {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
   }
 
   .badge {

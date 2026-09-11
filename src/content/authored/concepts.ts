@@ -1,1278 +1,519 @@
 /**
- * Kavram kaydi.
+ * Kavram kaydı — "neyin öğretilmiş sayıldığının" tek kaynağı.
  *
- * Her alistirma en az bir kavrama, her kavram bir ozet konusuna baglanir.
- * Bu dosya "neyin ogretilmis sayildiginin" tek kaynagidir: burada olmayan bir
- * kavram alistirmada kullanilamaz (senkron HATA verir).
+ * Her alıştırma en az bir kavrama, her kavram bir ÖZET BÖLÜMÜNE ve dolayısıyla
+ * tek bir kanonik KONUYA bağlanır (`curriculum/topics.ts`). Burada olmayan bir
+ * kavram alıştırmada kullanılamaz (senkron HATA verir).
  *
- * ANCHOR: Her kavram, ogretildigi ozet konusunun metninde gecmesi GEREKEN kisa
- * bir dize tasir. Senkron sirasinda bu dize aranir; bulunamazsa kapsam hatasi
- * verilir. Boylece "alistirma X kavramini soruyor ama ozet onu anlatmiyor"
- * durumu kaynak metin degistiginde de yakalanir (§24).
+ * ANCHOR: Her kavram, öğretildiği özet bölümünün metninde geçmesi GEREKEN kısa
+ * bir dize taşır. Senkron sırasında bu dize `Konu Özetleri.md` içindeki kendi
+ * bölümünde aranır; bulunamazsa kapsam hatası verilir. Böylece "alıştırma X
+ * kavramını soruyor ama özet onu anlatmıyor" durumu kaynak metin değiştiğinde
+ * de yakalanır.
  *
- * Kavramlar YALNIZCA su kaynaktan turetilmistir:
- *   - Özel Ders Özet.md (tek kanonik müfredat: 1, 2, 3, 5, 6, 7 ve 10. günler)
- * Kaynakta gecmeyen dilbilgisi buraya eklenmez.
+ * DURUM: `status: 'planned'` olan bir kavramı gerektiren alıştırma oturumlarda
+ * gösterilmez (ön koşul kilidi). Varsayılan `learned`'dır.
+ *
+ * Eski gün tabanlı kimliklerden bu kimliklere eşleme: `curriculum/legacy.ts`.
  */
 
 import type { Concept } from '../types.ts';
-
-/**
- * Ozet dosyasindaki H2 bolumlerinin kararli ID'leri.
- * `matchTitles` kaynak baslikla eslesmeyi saglar; baslik yeniden yazilirsa
- * yalnizca bu liste guncellenir, ID (ve dolayisiyla yer imleri) sabit kalir.
- */
-export interface SummaryTopicDef {
-  id: string;
-  day: number;
-  track?: import('../types.ts').LearningTrack;
-  /** UI'da gosterilen kisa ad. */
-  title: string;
-  /** Kaynak Ozet dosyasindaki H2 basliklariyla eslestirme adaylari. */
-  matchTitles: string[];
-}
-
-export const SUMMARY_TOPICS: SummaryTopicDef[] = [
-  // Private track — 1. Gün
-  {
-    id: 'private.day1.vorstellung',
-    day: 1,
-    track: 'private',
-    title: 'Kendini Tanıtma',
-    matchTitles: ['Kendini Tanıtma — İsim ve Tanışma', 'Kendini Tanıtma'],
-  },
-  {
-    id: 'private.day1.alter-herkunft-wohnort',
-    day: 1,
-    track: 'private',
-    title: 'Yaş, Köken ve İkamet',
-    matchTitles: ['Yaş, Köken ve İkamet'],
-  },
-  {
-    id: 'private.day1.beruf',
-    day: 1,
-    track: 'private',
-    title: 'Meslek',
-    matchTitles: ['Meslek — Ne İş Yapıyorsun?', 'Meslek'],
-  },
-  {
-    id: 'private.day1.kontakt-formular',
-    day: 1,
-    track: 'private',
-    title: 'İletişim ve Form',
-    matchTitles: ['İletişim ve Form — Kişisel Bilgiler', 'İletişim ve Form'],
-  },
-  {
-    id: 'private.day1.fiil-cekimi',
-    day: 1,
-    track: 'private',
-    title: 'Fiil Çekimi',
-    matchTitles: ['Fiil Çekimi — Düzenli ve Düzensiz Fiiller', 'Fiil Çekimi'],
-  },
-  {
-    id: 'private.day1.diller-selamlasma',
-    day: 1,
-    track: 'private',
-    title: 'Diller ve Selamlaşma',
-    matchTitles: ['Diller ve Selamlaşma'],
-  },
-  // Private track — 2. Gün
-  {
-    id: 'private.day2.artikel-belirli-belirsiz',
-    day: 2,
-    track: 'private',
-    title: 'Belirli ve Belirsiz Artikeller',
-    matchTitles: ['Belirli ve Belirsiz Artikeller — der, die, das, die (Pl.) / ein, eine', 'Belirli ve Belirsiz Artikeller'],
-  },
-  {
-    id: 'private.day2.artikel-kein-mein-dein',
-    day: 2,
-    track: 'private',
-    title: 'Olumsuz ve İyelik Artikelleri',
-    matchTitles: ['Olumsuz ve İyelik Artikelleri — kein, dein, mein', 'Olumsuz ve İyelik Artikelleri'],
-  },
-  {
-    id: 'private.day2.cumle-olumlu',
-    day: 2,
-    track: 'private',
-    title: 'Olumlu Cümle Kurma',
-    matchTitles: ['Olumlu Cümle Kurma'],
-  },
-  {
-    id: 'private.day2.cumle-olumsuz',
-    day: 2,
-    track: 'private',
-    title: 'Olumsuz Cümle Kurma',
-    matchTitles: ['Olumsuz Cümle Kurma — nicht / kein', 'Olumsuz Cümle Kurma'],
-  },
-  {
-    id: 'private.day2.sorular',
-    day: 2,
-    track: 'private',
-    title: 'Evet/Hayır Soruları',
-    matchTitles: ['Evet/Hayır Soruları'],
-  },
-  {
-    id: 'private.day2.haben-sein',
-    day: 2,
-    track: 'private',
-    title: 'haben ve sein — Kısa Tekrar',
-    matchTitles: ['haben ve sein — Kısa Tekrar'],
-  },
-  {
-    id: 'private.day2.gunluk-hayat',
-    day: 2,
-    track: 'private',
-    title: 'Günlük Hayat Cümleleri',
-    matchTitles: ['Günlük Hayat Cümleleri'],
-  },
-  // Private track — 3. Gün
-  {
-    id: 'private.day3.hedef',
-    day: 3,
-    track: 'private',
-    title: 'Bugünün Hedefi',
-    matchTitles: ['Bugünün Hedefi'],
-  },
-  {
-    id: 'private.day3.mogen-moechten-gern',
-    day: 3,
-    track: 'private',
-    title: 'Sevmek ve İstemek',
-    matchTitles: ['Sevmek ve İstemek — mögen, gern, möchten', 'Sevmek ve İstemek'],
-  },
-  {
-    id: 'private.day3.es-gibt',
-    day: 3,
-    track: 'private',
-    title: 'es gibt — Var / Yok',
-    matchTitles: ['es gibt — Var / Yok', 'es gibt'],
-  },
-  {
-    id: 'private.day3.yer-yon',
-    day: 3,
-    track: 'private',
-    title: 'Yer, Yön ve Küçük Ama Önemli Kelimeler',
-    matchTitles: ['Yer, Yön ve Küçük Ama Önemli Kelimeler'],
-  },
-  {
-    id: 'private.day3.ayrilabilen-fiiller',
-    day: 3,
-    track: 'private',
-    title: 'Ayrılabilen Fiiller',
-    matchTitles: ['Ayrılabilen Fiiller'],
-  },
-  {
-    id: 'private.day3.refleksif',
-    day: 3,
-    track: 'private',
-    title: 'Refleksif Fiiller',
-    matchTitles: ['Refleksif Fiiller'],
-  },
-  {
-    id: 'private.day3.sifat-ekleri',
-    day: 3,
-    track: 'private',
-    title: 'Sıfatlar ve Ekler',
-    matchTitles: ['Sıfatlar ve Ekler'],
-  },
-  {
-    id: 'private.day3.iyelik',
-    day: 3,
-    track: 'private',
-    title: 'İyelik Yapıları',
-    matchTitles: ['İyelik Yapıları — mein, dein, unser, ihr', 'İyelik Yapıları'],
-  },
-  {
-    id: 'private.day3.miktar-cogul',
-    day: 3,
-    track: 'private',
-    title: 'Sayılar, Miktarlar ve Çoğullar',
-    matchTitles: ['Sayılar, Miktarlar ve Çoğullar'],
-  },
-  {
-    id: 'private.day3.zaman',
-    day: 3,
-    track: 'private',
-    title: 'Zaman İfadeleri',
-    matchTitles: ['Zaman İfadeleri'],
-  },
-  {
-    id: 'private.day3.cumle-dizilisi',
-    day: 3,
-    track: 'private',
-    title: 'Cümle Dizilişi',
-    matchTitles: ['Cümle Dizilişi — Verb İkinci Sırada', 'Cümle Dizilişi'],
-  },
-  {
-    id: 'private.day3.gunluk-hayat',
-    day: 3,
-    track: 'private',
-    title: 'Günlük Hayat, Hava, Hayvanlar ve Alışveriş',
-    matchTitles: ['Günlük Hayat, Hava, Hayvanlar ve Alışveriş'],
-  },
-  {
-    id: 'private.day3.master-cumleler',
-    day: 3,
-    track: 'private',
-    title: '8 Temsilci Cümle',
-    matchTitles: ['8 Temsilci Cümle — Detaylı Çözümleme', '8 Temsilci Cümle'],
-  },
-  {
-    id: 'private.day3.tum-cumleler',
-    day: 3,
-    track: 'private',
-    title: '80 Cümlenin Doğru Almancası',
-    matchTitles: ['80 Cümlenin Doğru Almancası'],
-  },
-  // Private track — 5. Gün
-  {
-    id: 'private.day5.hedef',
-    day: 5,
-    track: 'private',
-    title: 'Bu Dersin Hedefi',
-    matchTitles: ['Bu Dersin Hedefi'],
-  },
-  {
-    id: 'private.day5.leben',
-    day: 5,
-    track: 'private',
-    title: 'leben — Yaşamak',
-    matchTitles: ['leben — Yaşamak', 'leben'],
-  },
-  {
-    id: 'private.day5.sayilar-onluklar',
-    day: 5,
-    track: 'private',
-    title: 'Sayılar 10–100',
-    matchTitles: ['Sayılar 10–100'],
-  },
-  {
-    id: 'private.day5.sayilar-yuzler',
-    day: 5,
-    track: 'private',
-    title: 'Yüzler ve Bin',
-    matchTitles: ['Yüzler ve Bin'],
-  },
-  {
-    id: 'private.day5.kisisel-bilgiler',
-    day: 5,
-    track: 'private',
-    title: 'Kişisel Bilgiler ve Form Alanları',
-    matchTitles: ['Kişisel Bilgiler ve Form Alanları'],
-  },
-  {
-    id: 'private.day5.dogum-yeri',
-    day: 5,
-    track: 'private',
-    title: 'Memleket, Doğum Yeri ve İkamet',
-    matchTitles: ['Memleket, Doğum Yeri ve İkamet'],
-  },
-  {
-    id: 'private.day5.medeni-hal',
-    day: 5,
-    track: 'private',
-    title: 'Familienstand — ledig / verheiratet',
-    matchTitles: ['Familienstand — ledig / verheiratet', 'Familienstand'],
-  },
-  {
-    id: 'private.day5.kendini-tanitma',
-    day: 5,
-    track: 'private',
-    title: 'Kendini Daha Ayrıntılı Tanıtma',
-    matchTitles: ['Kendini Daha Ayrıntılı Tanıtma'],
-  },
-  {
-    id: 'private.day5.baglaclar',
-    day: 5,
-    track: 'private',
-    title: 'und / aber — Bağlaçlar',
-    matchTitles: ['und / aber — Bağlaçlar', 'und / aber'],
-  },
-  {
-    id: 'private.day5.kelimeler',
-    day: 5,
-    track: 'private',
-    title: 'Yeni Faydalı Kelimeler',
-    matchTitles: ['Yeni Faydalı Kelimeler'],
-  },
-  {
-    id: 'private.day5.yiyecek',
-    day: 5,
-    track: 'private',
-    title: 'Yiyecek ve Mutfak Kelimeleri',
-    matchTitles: ['Yiyecek ve Mutfak Kelimeleri'],
-  },
-  // Private track — 6. Gün
-  {
-    id: 'private.day6.hedef',
-    day: 6,
-    track: 'private',
-    title: 'Bu Günün Hedefi',
-    matchTitles: ['Bu Günün Hedefi'],
-  },
-  {
-    id: 'private.day6.iyelik-tablo',
-    day: 6,
-    track: 'private',
-    title: 'İyelik Zamirleri — Tam Tablo',
-    matchTitles: ['İyelik Zamirleri — Tam Tablo', 'İyelik Zamirleri'],
-  },
-  {
-    id: 'private.day6.cumle-kurma',
-    day: 6,
-    track: 'private',
-    title: 'Kişi Zamiri + İyelik Zamiri ile Cümle Kurma',
-    matchTitles: ['Kişi Zamiri + İyelik Zamiri ile Cümle Kurma'],
-  },
-  // Private track — 7. Gün
-  {
-    id: 'private.day7.hedef',
-    day: 7,
-    track: 'private',
-    title: 'Bugünün Hedefi',
-    matchTitles: ['Bugünün Hedefi — Evimi Anlatmak'],
-  },
-  {
-    id: 'private.day7.ev-odalar',
-    day: 7,
-    track: 'private',
-    title: 'Ev ve Odalar',
-    matchTitles: ['Ev ve Odalar'],
-  },
-  {
-    id: 'private.day7.mobilyalar',
-    day: 7,
-    track: 'private',
-    title: 'Mobilyalar ve Ev Eşyaları',
-    matchTitles: ['Mobilyalar ve Ev Eşyaları'],
-  },
-  {
-    id: 'private.day7.evi-tarif',
-    day: 7,
-    track: 'private',
-    title: 'Evi Tarif Etmek',
-    matchTitles: ['Evi Tarif Etmek — hell, dunkel, groß, klein', 'Evi Tarif Etmek'],
-  },
-  {
-    id: 'private.day7.artikel-zamir',
-    day: 7,
-    track: 'private',
-    title: 'Artikelden Kişi Zamirine',
-    matchTitles: ['Artikelden Kişi Zamirine — der, die, das', 'Artikelden Kişi Zamirine'],
-  },
-  {
-    id: 'private.day7.yeni-fiiller',
-    day: 7,
-    track: 'private',
-    title: 'Yeni Fiiller',
-    matchTitles: ['Yeni Fiiller — kennen, geben, anrufen, stellen', 'Yeni Fiiller'],
-  },
-  {
-    id: 'private.day7.gefallen',
-    day: 7,
-    track: 'private',
-    title: 'gefallen — Beğenmek',
-    matchTitles: ['gefallen — Beğenmek'],
-  },
-  {
-    id: 'private.day7.essen-trinken',
-    day: 7,
-    track: 'private',
-    title: 'Essen und Trinken — gern',
-    matchTitles: ['Essen und Trinken — gern / nicht gern'],
-  },
-  {
-    id: 'private.day7.alisveris-siklik',
-    day: 7,
-    track: 'private',
-    title: 'Alışveriş ve Sıklık',
-    matchTitles: ['Alışveriş ve Sıklık'],
-  },
-  {
-    id: 'private.day7.miktar',
-    day: 7,
-    track: 'private',
-    title: 'Miktar ve Paket Kelimeleri',
-    matchTitles: ['Miktar ve Paket Kelimeleri'],
-  },
-  {
-    id: 'private.day7.yeni-yiyecek',
-    day: 7,
-    track: 'private',
-    title: 'Yeni Yiyecek Kelimeleri',
-    matchTitles: ['Yeni Yiyecek Kelimeleri'],
-  },
-  {
-    id: 'private.day7.fiyat',
-    day: 7,
-    track: 'private',
-    title: 'Fiyat Sormak',
-    matchTitles: ['Fiyat Sormak'],
-  },
-  {
-    id: 'private.day7.brauchen',
-    day: 7,
-    track: 'private',
-    title: 'brauchen — İhtiyaç Duymak',
-    matchTitles: ['brauchen — İhtiyaç Duymak'],
-  },
-  {
-    id: 'private.day7.faydali-kelimeler',
-    day: 7,
-    track: 'private',
-    title: 'Günlük Hayattan Yeni Kelimeler',
-    matchTitles: ['Günlük Hayattan Yeni Kelimeler'],
-  },
-  {
-    id: 'private.day7.evimi-anlatiyorum',
-    day: 7,
-    track: 'private',
-    title: 'Evimi Anlatıyorum — Meine Wohnung',
-    matchTitles: ['Evimi Anlatıyorum — Meine Wohnung', 'Evimi Anlatıyorum'],
-  },
-  {
-    id: 'private.day7.kaliplar',
-    day: 7,
-    track: 'private',
-    title: 'Evimi Anlatmak İçin Cümle Kalıpları',
-    matchTitles: ['Evimi Anlatmak İçin Cümle Kalıpları'],
-  },
-  // Private track — 10. Gün
-  {
-    id: 'private.day10.hedef',
-    day: 10,
-    track: 'private',
-    title: 'Bugünün Hedefi — Gününü Anlatmak',
-    matchTitles: ['Bugünün Hedefi — Gününü Anlatmak'],
-  },
-  {
-    id: 'private.day10.trennbar-nedir',
-    day: 10,
-    track: 'private',
-    title: 'Ayrılabilen Fiil Nedir?',
-    matchTitles: ['Ayrılabilen Fiil Nedir?'],
-  },
-  {
-    id: 'private.day10.kern-verben',
-    day: 10,
-    track: 'private',
-    title: 'En Önemli Ayrılabilen Fiiller',
-    matchTitles: ['En Önemli Ayrılabilen Fiiller'],
-  },
-  {
-    id: 'private.day10.mein-tag-sabah',
-    day: 10,
-    track: 'private',
-    title: 'Mein Tag — Sabah',
-    matchTitles: ['Mein Tag — Sabah'],
-  },
-  {
-    id: 'private.day10.mein-tag-gun',
-    day: 10,
-    track: 'private',
-    title: 'Mein Tag — Gün İçinde',
-    matchTitles: ['Mein Tag — Gün İçinde'],
-  },
-  {
-    id: 'private.day10.mein-tag-aksam',
-    day: 10,
-    track: 'private',
-    title: 'Mein Tag — Akşam',
-    matchTitles: ['Mein Tag — Akşam'],
-  },
-  {
-    id: 'private.day10.dann-danach',
-    day: 10,
-    track: 'private',
-    title: 'Dann ve Danach',
-    matchTitles: ['Dann ve Danach'],
-  },
-  {
-    id: 'private.day10.trennbar-nicht',
-    day: 10,
-    track: 'private',
-    title: 'Ayrılan / Ayrılmayan Fiil Karşılaştırması',
-    matchTitles: ['Ayrılan / Ayrılmayan Fiil Karşılaştırması'],
-  },
-  {
-    id: 'private.day10.uhrzeit-frage',
-    day: 10,
-    track: 'private',
-    title: 'Saat Kaç? — Wie spät ist es?',
-    matchTitles: ['Saat Kaç? — Wie spät ist es?'],
-  },
-  {
-    id: 'private.day10.uhrzeit-resmi',
-    day: 10,
-    track: 'private',
-    title: 'Resmî Saatler',
-    matchTitles: ['Resmî Saatler'],
-  },
-  {
-    id: 'private.day10.uhrzeit-gunluk',
-    day: 10,
-    track: 'private',
-    title: 'Günlük Saatler',
-    matchTitles: ['Günlük Saatler'],
-  },
-  {
-    id: 'private.day10.halb-viertel',
-    day: 10,
-    track: 'private',
-    title: 'halb / Viertel / vor / nach',
-    matchTitles: ['halb / Viertel / vor / nach'],
-  },
-  {
-    id: 'private.day10.um-uhr',
-    day: 10,
-    track: 'private',
-    title: '`um` ile Saat Söylemek',
-    matchTitles: ['`um` ile Saat Söylemek'],
-  },
-  {
-    id: 'private.day10.mein-tag-tam',
-    day: 10,
-    track: 'private',
-    title: 'Mein Tag — Tam Anlatım',
-    matchTitles: ['Mein Tag — Tam Anlatım'],
-  },
-  {
-    id: 'private.day10.wortschatz',
-    day: 10,
-    track: 'private',
-    title: 'Diğer Yeni Kelimeler',
-    matchTitles: ['Diğer Yeni Kelimeler'],
-  },
-  // Genel Tekrar — kümülatif özet (0. gün). `day: 0` ders günü değildir.
-  {
-    id: 'genel.nasil-kullanilir',
-    day: 0,
-    track: 'private',
-    title: 'Nasıl Kullanılır?',
-    matchTitles: ['Nasıl Kullanılır?'],
-  },
-  {
-    id: 'genel.tanisma',
-    day: 0,
-    track: 'private',
-    title: 'Selamlaşma ve Tanışma',
-    matchTitles: ['Selamlaşma ve Tanışma'],
-  },
-  {
-    id: 'genel.kendini-tanitma',
-    day: 0,
-    track: 'private',
-    title: 'Kendimi Tanıtıyorum',
-    matchTitles: ['Kendimi Tanıtıyorum'],
-  },
-  {
-    id: 'genel.kisi-zamirleri',
-    day: 0,
-    track: 'private',
-    title: 'Kişi Zamirleri',
-    matchTitles: ['Kişi Zamirleri'],
-  },
-  {
-    id: 'genel.artikeller',
-    day: 0,
-    track: 'private',
-    title: 'Artikeller',
-    matchTitles: ['Artikeller'],
-  },
-  {
-    id: 'genel.kein-mein',
-    day: 0,
-    track: 'private',
-    title: 'ein / eine / kein / keine / mein / dein',
-    matchTitles: ['ein / eine / kein / keine / mein / dein'],
-  },
-  {
-    id: 'genel.kisisel-bilgiler',
-    day: 0,
-    track: 'private',
-    title: 'Kişisel Bilgiler',
-    matchTitles: ['Kişisel Bilgiler'],
-  },
-  {
-    id: 'genel.soru-kurma',
-    day: 0,
-    track: 'private',
-    title: 'Soru Kurma',
-    matchTitles: ['Soru Kurma'],
-  },
-  {
-    id: 'genel.cumle-kurma',
-    day: 0,
-    track: 'private',
-    title: 'Cümle Kurma',
-    matchTitles: ['Cümle Kurma'],
-  },
-  {
-    id: 'genel.olumsuzluk',
-    day: 0,
-    track: 'private',
-    title: 'Olumsuzluk',
-    matchTitles: ['Olumsuzluk — nicht / kein', 'Olumsuzluk'],
-  },
-  {
-    id: 'genel.fiiller',
-    day: 0,
-    track: 'private',
-    title: 'Temel Fiiller',
-    matchTitles: ['Temel Fiiller'],
-  },
-  {
-    id: 'genel.fiil-cekimi',
-    day: 0,
-    track: 'private',
-    title: 'Fiil Çekimleri',
-    matchTitles: ['Fiil Çekimleri'],
-  },
-  {
-    id: 'genel.yiyecek',
-    day: 0,
-    track: 'private',
-    title: 'Essen und Trinken',
-    matchTitles: ['Essen und Trinken'],
-  },
-  {
-    id: 'genel.gern',
-    day: 0,
-    track: 'private',
-    title: 'Sevmek ve İstemek',
-    matchTitles: ['Sevmek ve İstemek — gern / mögen / möchten', 'Sevmek ve İstemek'],
-  },
-  {
-    id: 'genel.yer-yon',
-    day: 0,
-    track: 'private',
-    title: 'Yer ve Yön',
-    matchTitles: ['Yer ve Yön'],
-  },
-  {
-    id: 'genel.alisveris',
-    day: 0,
-    track: 'private',
-    title: 'Alışveriş',
-    matchTitles: ['Alışveriş'],
-  },
-  {
-    id: 'genel.miktar-fiyat',
-    day: 0,
-    track: 'private',
-    title: 'Miktarlar ve Fiyatlar',
-    matchTitles: ['Miktarlar ve Fiyatlar'],
-  },
-  {
-    id: 'genel.ev',
-    day: 0,
-    track: 'private',
-    title: 'Wohnung / Ev',
-    matchTitles: ['Wohnung / Ev'],
-  },
-  {
-    id: 'genel.mobilya',
-    day: 0,
-    track: 'private',
-    title: 'Mobilyalar',
-    matchTitles: ['Mobilyalar'],
-  },
-  {
-    id: 'genel.sifat',
-    day: 0,
-    track: 'private',
-    title: 'Sıfatlar',
-    matchTitles: ['Sıfatlar'],
-  },
-  {
-    id: 'genel.saat',
-    day: 0,
-    track: 'private',
-    title: 'Saatler',
-    matchTitles: ['Saatler'],
-  },
-  {
-    id: 'genel.ayrilabilen',
-    day: 0,
-    track: 'private',
-    title: 'Ayrılabilen Fiiller',
-    matchTitles: ['Ayrılabilen Fiiller — Toplu Tekrar'],
-  },
-  {
-    id: 'genel.mein-tag',
-    day: 0,
-    track: 'private',
-    title: 'Mein Tag',
-    matchTitles: ['Mein Tag'],
-  },
-  {
-    id: 'genel.dann-danach',
-    day: 0,
-    track: 'private',
-    title: 'dann / danach / und / aber',
-    matchTitles: ['dann / danach / und / aber'],
-  },
-  {
-    id: 'genel.kelimeler',
-    day: 0,
-    track: 'private',
-    title: 'En Önemli Kelimeler',
-    matchTitles: ['En Önemli Kelimeler'],
-  },
-  {
-    id: 'genel.kaliplar',
-    day: 0,
-    track: 'private',
-    title: 'Konuşma Kalıpları',
-    matchTitles: ['Konuşma Kalıpları'],
-  },
-  {
-    id: 'genel.hizli-tekrar',
-    day: 0,
-    track: 'private',
-    title: 'Hızlı Özet Turu',
-    matchTitles: ['Hızlı Özet Turu'],
-  },
-  {
-    id: 'genel.kendine-sor',
-    day: 0,
-    track: 'private',
-    title: 'Kendini Test Et',
-    matchTitles: ['Kendini Test Et'],
-  },
-];
-
-export const SUMMARY_TOPIC_IDS = new Set(SUMMARY_TOPICS.map((topic) => topic.id));
+import { SECTION_BY_ID } from '../curriculum/topics.ts';
 
 interface ConceptSpec {
   id: string;
-  topicId: string;
+  sectionId: string;
   label: string;
-  /** Ozet konusu metninde gecmesi gereken dize. */
+  /** Özet bölümü metninde geçmesi gereken dize. */
   anchor: string;
   prerequisites?: string[];
+  status?: Concept['status'];
 }
 
-function buildTrack(
-  day: number,
-  track: import('../types.ts').LearningTrack,
-  specs: ConceptSpec[],
-): Array<Concept & { anchor: string }> {
-  return specs.map((spec) => ({
-    id: spec.id,
-    day,
-    track: track === 'normal' ? undefined : track,
-    topicId: spec.topicId,
-    label: spec.label,
-    anchor: spec.anchor,
-    ...(spec.prerequisites?.length ? { prerequisites: spec.prerequisites } : {}),
-  }));
+function build(specs: ConceptSpec[]): Array<Concept & { anchor: string }> {
+  return specs.map((spec) => {
+    const section = SECTION_BY_ID.get(spec.sectionId);
+    if (!section) throw new Error(`Tanımsız özet bölümü: ${spec.sectionId} (${spec.id})`);
+    return {
+      id: spec.id,
+      topicId: section.topicId,
+      sectionId: spec.sectionId,
+      label: spec.label,
+      anchor: spec.anchor,
+      ...(spec.prerequisites?.length ? { prerequisites: spec.prerequisites } : {}),
+      ...(spec.status ? { status: spec.status } : {}),
+    };
+  });
 }
 
-const PV = 'private.day1.vorstellung';
-const PA = 'private.day1.alter-herkunft-wohnort';
-const PB = 'private.day1.beruf';
-const PK = 'private.day1.kontakt-formular';
-const PF = 'private.day1.fiil-cekimi';
-const PD = 'private.day1.diller-selamlasma';
-const P2_ART = 'private.day2.artikel-belirli-belirsiz';
-const P2_KMD = 'private.day2.artikel-kein-mein-dein';
-const P2_POS = 'private.day2.cumle-olumlu';
-const P2_NEG = 'private.day2.cumle-olumsuz';
-const P2_SOR = 'private.day2.sorular';
-const P2_HS = 'private.day2.haben-sein';
-const P2_GUN = 'private.day2.gunluk-hayat';
-const P3_HED = 'private.day3.hedef';
-const P3_MG = 'private.day3.mogen-moechten-gern';
-const P3_EG = 'private.day3.es-gibt';
-const P3_YY = 'private.day3.yer-yon';
-const P3_AF = 'private.day3.ayrilabilen-fiiller';
-const P3_RF = 'private.day3.refleksif';
-const P3_SF = 'private.day3.sifat-ekleri';
-const P3_IY = 'private.day3.iyelik';
-const P3_MK = 'private.day3.miktar-cogul';
-const P3_ZI = 'private.day3.zaman';
-const P3_CD = 'private.day3.cumle-dizilisi';
-const P3_GH = 'private.day3.gunluk-hayat';
-const P5_HED = 'private.day5.hedef';
-const P5_LEB = 'private.day5.leben';
-const P5_SON = 'private.day5.sayilar-onluklar';
-const P5_SYU = 'private.day5.sayilar-yuzler';
-const P5_KB = 'private.day5.kisisel-bilgiler';
-const P5_DY = 'private.day5.dogum-yeri';
-const P5_MH = 'private.day5.medeni-hal';
-const P5_KT = 'private.day5.kendini-tanitma';
-const P5_BAG = 'private.day5.baglaclar';
-const P5_KEL = 'private.day5.kelimeler';
-const P5_YEM = 'private.day5.yiyecek';
-const P6_HED = 'private.day6.hedef';
-const P6_IYE = 'private.day6.iyelik-tablo';
-const P6_CUM = 'private.day6.cumle-kurma';
-const P7_HED = 'private.day7.hedef';
-const P7_EV = 'private.day7.ev-odalar';
-const P7_MOB = 'private.day7.mobilyalar';
-const P7_TAR = 'private.day7.evi-tarif';
-const P7_ZAM = 'private.day7.artikel-zamir';
-const P7_FII = 'private.day7.yeni-fiiller';
-const P7_GEF = 'private.day7.gefallen';
-const P7_ESS = 'private.day7.essen-trinken';
-const P7_ALI = 'private.day7.alisveris-siklik';
-const P7_MIK = 'private.day7.miktar';
-const P7_YIY = 'private.day7.yeni-yiyecek';
-const P7_FIY = 'private.day7.fiyat';
-const P7_BRA = 'private.day7.brauchen';
-const P7_KEL = 'private.day7.faydali-kelimeler';
-const P7_EVIM = 'private.day7.evimi-anlatiyorum';
-const P7_KAL = 'private.day7.kaliplar';
-const P10_HED = 'private.day10.hedef';
-const P10_TRE = 'private.day10.trennbar-nedir';
-const P10_VER = 'private.day10.kern-verben';
-const P10_SAB = 'private.day10.mein-tag-sabah';
-const P10_GUN = 'private.day10.mein-tag-gun';
-const P10_AKS = 'private.day10.mein-tag-aksam';
-const P10_DAN = 'private.day10.dann-danach';
-const P10_KAR = 'private.day10.trennbar-nicht';
-const P10_SOR = 'private.day10.uhrzeit-frage';
-const P10_RES = 'private.day10.uhrzeit-resmi';
-const P10_GUL = 'private.day10.uhrzeit-gunluk';
-const P10_HAL = 'private.day10.halb-viertel';
-const P10_UMU = 'private.day10.um-uhr';
-const P10_TAM = 'private.day10.mein-tag-tam';
-const P10_WOR = 'private.day10.wortschatz';
-
-export const CONCEPTS: Array<Concept & { anchor: string }> = [
+export const CONCEPTS: Array<Concept & { anchor: string }> = build([
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 1. Gün                                                */
+  /* Selamlaşma ve Tanışma                                            */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(1, 'private', [
-    { id: 'private.day1.vorstellung.wie-heisst-du', topicId: PV, label: 'Wie heißt du? / Wie heißen Sie?', anchor: 'Wie heißt du?' },
-    { id: 'private.day1.vorstellung.wie-ist-dein-name', topicId: PV, label: 'Wie ist dein Name? / Ihr Name?', anchor: 'Wie ist dein Name?' },
-    { id: 'private.day1.vorstellung.wer-bist-du', topicId: PV, label: 'Wer bist du? / Wer sind Sie?', anchor: 'Wer bist du?' },
-    { id: 'private.day1.vorstellung.freut-mich', topicId: PV, label: 'Freut mich! / Ich habe mich gefreut!', anchor: 'Freut mich!' },
-    { id: 'private.day1.vorstellung.sich-vorstellen', topicId: PV, label: 'Kannst du dich bitte vorstellen?', anchor: 'Kannst du dich bitte vorstellen?' },
-
-    { id: 'private.day1.alter.wie-alt', topicId: PA, label: 'Wie alt bist du? / Wie alt sind Sie?', anchor: 'Wie alt bist du?' },
-    { id: 'private.day1.herkunft.woher', topicId: PA, label: 'Woher kommst du? / Woher kommen Sie?', anchor: 'Woher kommst du?' },
-    { id: 'private.day1.wohnort.wo-wohnst', topicId: PA, label: 'Wo wohnst du? / Wo wohnen Sie?', anchor: 'Wo wohnst du?' },
-    { id: 'private.day1.herkunft.aus', topicId: PA, label: 'Ich komme aus ...', anchor: 'Ich komme aus Sakarya' },
-    { id: 'private.day1.wohnort.in', topicId: PA, label: 'Ich wohne in ...', anchor: 'Ich wohne in Sakarya' },
-
-    { id: 'private.day1.beruf.frage', topicId: PB, label: 'Was machst du beruflich?', anchor: 'Was machst du beruflich?' },
-    { id: 'private.day1.beruf.antwort-bin', topicId: PB, label: 'Ich bin Student.', anchor: 'Ich bin Student' },
-    { id: 'private.day1.beruf.als-bei', topicId: PB, label: 'Ich arbeite als / bei ...', anchor: 'Ich arbeite als Lehrerin' },
-
-    { id: 'private.day1.kontakt.email', topicId: PK, label: 'Wie ist deine E-Mail-Adresse?', anchor: 'Wie ist deine E-Mail-Adresse?' },
-    { id: 'private.day1.kontakt.punkt', topicId: PK, label: 'Punkt (e-posta nokta)', anchor: 'Punkt' },
-    { id: 'private.day1.kontakt.telefon', topicId: PK, label: 'Wie ist deine Telefonnummer?', anchor: 'Wie ist deine Telefonnummer?' },
-    { id: 'private.day1.kontakt.antwort-telefon', topicId: PK, label: 'Meine Telefonnummer ist ...', anchor: 'Meine Telefonnummer ist' },
-    { id: 'private.day1.formular.felder', topicId: PK, label: 'Form alanları: Vorname, Nachname...', anchor: 'Vorname' },
-    { id: 'private.day1.formular.familienstand', topicId: PK, label: 'Familienstand: ledig', anchor: 'Familienstand' },
-    { id: 'private.day1.formular.kinder', topicId: PK, label: 'Ich habe keine Kinder.', anchor: 'Ich habe keine Kinder' },
-    { id: 'private.day1.formular.heimat', topicId: PK, label: 'Heimat: Türkei', anchor: 'Heimat' },
-
-    { id: 'private.day1.verben.sein', topicId: PF, label: 'sein: ich bin, du bist ...', anchor: 'ich bin' },
-    { id: 'private.day1.verben.heissen', topicId: PF, label: 'heißen: ich heiße ...', anchor: 'ich heiße' },
-    { id: 'private.day1.verben.kommen', topicId: PF, label: 'kommen: ich komme ...', anchor: 'ich komme' },
-    { id: 'private.day1.verben.essen', topicId: PF, label: 'essen: ich esse, du isst', anchor: 'ich esse' },
-    { id: 'private.day1.verben.sagen', topicId: PF, label: 'sagen: ich sage ...', anchor: 'ich sage' },
-    { id: 'private.day1.verben.sprechen', topicId: PF, label: 'sprechen: ich spreche, du sprichst', anchor: 'ich spreche' },
-    { id: 'private.day1.verben.kochen', topicId: PF, label: 'kochen: ich koche ...', anchor: 'ich koche' },
-
-    { id: 'private.day1.sprachen.welche', topicId: PD, label: 'Welche Sprachen sprichst du?', anchor: 'Welche Sprachen sprichst du?' },
-    { id: 'private.day1.sprachen.antwort', topicId: PD, label: 'Ich spreche Englisch, Türkisch ...', anchor: 'Ich spreche Englisch' },
-    { id: 'private.day1.selamlasma.hallo', topicId: PD, label: 'Hallo!, Guten Morgen ...', anchor: 'Hallo!' },
-    { id: 'private.day1.nezaket.entschuldigung', topicId: PD, label: 'Entschuldigung, Danke schön, Bitte', anchor: 'Entschuldigung' },
-  ]),
+  { id: 'greetings.vorstellung.wie-heisst-du', sectionId: 'greetings.introduce', label: 'Wie heißt du? / Wie heißen Sie?', anchor: 'Wie heißt du?' },
+  { id: 'greetings.vorstellung.wie-ist-dein-name', sectionId: 'greetings.introduce', label: 'Wie ist dein Name? / Ihr Name?', anchor: 'Wie ist dein Name?' },
+  { id: 'greetings.vorstellung.wer-bist-du', sectionId: 'greetings.introduce', label: 'Wer bist du? / Wer sind Sie?', anchor: 'Wer bist du?' },
+  { id: 'greetings.vorstellung.freut-mich', sectionId: 'greetings.introduce', label: 'Freut mich! / Ich habe mich gefreut!', anchor: 'Freut mich!' },
+  { id: 'greetings.vorstellung.sich-vorstellen', sectionId: 'greetings.introduce', label: 'Kannst du dich bitte vorstellen?', anchor: 'Kannst du dich bitte vorstellen?' },
+  { id: 'greetings.sprachen.welche', sectionId: 'greetings.hello', label: 'Welche Sprachen sprichst du?', anchor: 'Welche Sprachen sprichst du?' },
+  { id: 'greetings.sprachen.antwort', sectionId: 'greetings.hello', label: 'Ich spreche Englisch, Türkisch ...', anchor: 'Ich spreche Englisch' },
+  { id: 'greetings.selamlasma.hallo', sectionId: 'greetings.hello', label: 'Hallo!, Guten Morgen ...', anchor: 'Hallo!' },
+  { id: 'greetings.nezaket.entschuldigung', sectionId: 'greetings.hello', label: 'Entschuldigung, Danke schön, Bitte', anchor: 'Entschuldigung' },
+  { id: 'greetings.es-geht-mir', sectionId: 'greetings.wellbeing', label: 'Es geht mir gut = iyiyim', anchor: 'Es geht mir gut' },
 
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 2. Gün                                                */
+  /* Kişisel Bilgiler                                                 */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(2, 'private', [
-    { id: 'private.day2.artikel.der-die-das-die-pl', topicId: P2_ART, label: 'der / die / das / die (Pl.)', anchor: 'der, die, das, die (Pl.)' },
-    { id: 'private.day2.artikel.ein-eine', topicId: P2_ART, label: 'ein / eine', anchor: 'ein, eine' },
-    { id: 'private.day2.artikel.cogul-belirsiz-yok', topicId: P2_ART, label: 'çoğulda belirsiz artikel yok', anchor: 'çoğulda belirsiz artikel yoktur' },
-    { id: 'private.day2.artikel.was-ist-das', topicId: P2_ART, label: 'Was ist das? → Das ist ein/eine ...', anchor: 'Was ist das?' },
-    { id: 'private.day2.wortschatz.nesneler', topicId: P2_ART, label: '2. Gün nesne kelimeleri (der Vater, die Mutter ...)', anchor: 'der Vater' },
-
-    { id: 'private.day2.artikel.kein-keine', topicId: P2_KMD, label: 'kein / keine', anchor: 'kein, keine', prerequisites: ['private.day2.artikel.ein-eine'] },
-    { id: 'private.day2.artikel.mein-meine', topicId: P2_KMD, label: 'mein / meine', anchor: 'mein, meine', prerequisites: ['private.day2.artikel.kein-keine'] },
-    { id: 'private.day2.artikel.dein-deine', topicId: P2_KMD, label: 'dein / deine', anchor: 'dein, deine', prerequisites: ['private.day2.artikel.kein-keine'] },
-    { id: 'private.day2.artikel.zincir', topicId: P2_KMD, label: 'artikel zinciri: der/das → ein → kein → dein → mein', anchor: 'Artikel zinciri', prerequisites: ['private.day2.artikel.ein-eine', 'private.day2.artikel.kein-keine', 'private.day2.artikel.mein-meine', 'private.day2.artikel.dein-deine'] },
-    { id: 'private.day2.artikel.wie-ist-dein', topicId: P2_KMD, label: 'Wie ist dein/deine ...?', anchor: 'Wie ist dein', prerequisites: ['private.day2.artikel.dein-deine', 'private.day2.artikel.mein-meine'] },
-
-    { id: 'private.day2.cumle.olumlu-yapi', topicId: P2_POS, label: 'Özne + Fiil + Nesne + diğer bilgiler', anchor: 'Özne + Fiil + Nesne' },
-    { id: 'private.day2.verben.machen', topicId: P2_POS, label: 'machen = yapmak', anchor: 'machen = yapmak', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.verben.gehen-zur', topicId: P2_POS, label: 'gehen + zur Schule / zur Arbeit', anchor: 'zur Schule', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.zaman.jeden-tag-heute', topicId: P2_POS, label: 'jeden Tag, heute, jeden Morgen, um ... Uhr', anchor: 'jeden Morgen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-
-    { id: 'private.day2.olumsuzluk.nicht', topicId: P2_NEG, label: 'nicht: fiili/diğer bilgiyi olumsuzlar', anchor: 'fiili ya da zaman/yer bilgisini olumsuzlar', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.olumsuzluk.kein-haben', topicId: P2_NEG, label: 'kein/keine: haben + nesneyi olumsuzlar', anchor: 'haben + isim kalıbında nesneyi olumsuzlamak', prerequisites: ['private.day2.artikel.kein-keine', 'private.day1.formular.kinder'] },
-    { id: 'private.day2.olumsuzluk.donusum', topicId: P2_NEG, label: 'olumlu → olumsuz cümle dönüşümü', anchor: 'Sie geht heute nicht zur Schule', prerequisites: ['private.day2.olumsuzluk.nicht', 'private.day2.olumsuzluk.kein-haben'] },
-
-    { id: 'private.day2.sorular.evet-hayir-yapi', topicId: P2_SOR, label: 'Fiil + Özne + ... ? yapısı', anchor: 'Fiil + Özne + Nesne + (diğer bilgiler) ?', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.sorular.donusum', topicId: P2_SOR, label: 'cümle → soru dönüşümü', anchor: 'Cümle → Soru dönüşümü', prerequisites: ['private.day2.sorular.evet-hayir-yapi'] },
-    { id: 'private.day2.sorular.ja-nein-cevap', topicId: P2_SOR, label: 'Ja / Nein tam cümle cevap', anchor: 'Soru + Ja/Nein cevabı', prerequisites: ['private.day2.sorular.donusum', 'private.day2.olumsuzluk.kein-haben'] },
-
-    { id: 'private.day2.haben.tablo', topicId: P2_HS, label: 'haben çekimi: habe, hast, hat, haben, habt', anchor: 'haben — sahip olmak' },
-    { id: 'private.day2.sein.tekrar', topicId: P2_HS, label: 'sein çekimi tekrar', anchor: 'sein çekimi (tekrar)', prerequisites: ['private.day1.verben.sein'] },
-    { id: 'private.day2.haben.kein-ile', topicId: P2_HS, label: 'haben + kein/keine kalıbı (pekiştirme)', anchor: 'Ich habe kein Geld', prerequisites: ['private.day2.haben.tablo', 'private.day2.artikel.kein-keine'] },
-
-    { id: 'private.day2.gunluk.okul-is', topicId: P2_GUN, label: 'zur Schule / zur Arbeit gitmek', anchor: 'Okul ve iş', prerequisites: ['private.day2.verben.gehen-zur'] },
-    { id: 'private.day2.gunluk.kahve-spor', topicId: P2_GUN, label: 'Kaffee trinken, Sport machen', anchor: 'Kaffee trinken, Sport machen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.gunluk.kitap-okuma', topicId: P2_GUN, label: 'ein Buch lesen', anchor: 'ein Buch lesen', prerequisites: ['private.day2.cumle.olumlu-yapi'] },
-    { id: 'private.day2.gunluk.mini-dialog', topicId: P2_GUN, label: 'mini diyalog: soru + Ja/Nein cevap', anchor: 'Mini diyalog', prerequisites: ['private.day2.sorular.ja-nein-cevap'] },
-  ]),
+  { id: 'personal-info.alter.wie-alt', sectionId: 'personal-info.age-origin', label: 'Wie alt bist du? / Wie alt sind Sie?', anchor: 'Wie alt bist du?' },
+  { id: 'personal-info.herkunft.woher', sectionId: 'personal-info.age-origin', label: 'Woher kommst du? / Woher kommen Sie?', anchor: 'Woher kommst du?' },
+  { id: 'personal-info.wohnort.wo-wohnst', sectionId: 'personal-info.age-origin', label: 'Wo wohnst du? / Wo wohnen Sie?', anchor: 'Wo wohnst du?' },
+  { id: 'personal-info.herkunft.aus', sectionId: 'personal-info.age-origin', label: 'Ich komme aus ...', anchor: 'Ich komme aus Sakarya' },
+  { id: 'personal-info.wohnort.in', sectionId: 'personal-info.age-origin', label: 'Ich wohne in ...', anchor: 'Ich wohne in Sakarya' },
+  { id: 'personal-info.beruf.frage', sectionId: 'personal-info.job', label: 'Was machst du beruflich?', anchor: 'Was machst du beruflich?' },
+  { id: 'personal-info.beruf.antwort-bin', sectionId: 'personal-info.job', label: 'Ich bin Student.', anchor: 'Ich bin Student' },
+  { id: 'personal-info.beruf.als-bei', sectionId: 'personal-info.job', label: 'Ich arbeite als / bei ...', anchor: 'Ich arbeite als Lehrerin' },
+  { id: 'personal-info.kontakt.email', sectionId: 'personal-info.contact', label: 'Wie ist deine E-Mail-Adresse?', anchor: 'Wie ist deine E-Mail-Adresse?' },
+  { id: 'personal-info.kontakt.punkt', sectionId: 'personal-info.contact', label: 'Punkt (e-posta nokta)', anchor: 'Punkt' },
+  { id: 'personal-info.kontakt.telefon', sectionId: 'personal-info.contact', label: 'Wie ist deine Telefonnummer?', anchor: 'Wie ist deine Telefonnummer?' },
+  { id: 'personal-info.kontakt.antwort-telefon', sectionId: 'personal-info.contact', label: 'Meine Telefonnummer ist ...', anchor: 'Meine Telefonnummer ist' },
+  { id: 'personal-info.formular.felder', sectionId: 'personal-info.form', label: 'Form alanları: Vorname, Nachname...', anchor: 'Vorname' },
+  { id: 'personal-info.formular.familienstand', sectionId: 'personal-info.form', label: 'Familienstand: ledig', anchor: 'Familienstand' },
+  { id: 'personal-info.formular.kinder', sectionId: 'personal-info.form', label: 'Ich habe keine Kinder.', anchor: 'Ich habe keine Kinder' },
+  { id: 'personal-info.formular.heimat', sectionId: 'personal-info.form', label: 'Heimat: Türkei', anchor: 'Heimat' },
+  { id: 'personal-info.leben.anlam', sectionId: 'personal-info.leben', label: 'leben = yaşamak', anchor: 'leben = yaşamak' },
+  { id: 'personal-info.leben.cekim', sectionId: 'personal-info.leben', label: 'leben çekimi: ich lebe, du lebst ...', anchor: 'ich lebe', prerequisites: ['personal-info.leben.anlam'] },
+  { id: 'personal-info.leben.wohnen-farki', sectionId: 'personal-info.leben', label: 'leben (genel) ↔ wohnen (somut ikamet) farkı', anchor: 'Ich wohne in Berlin', prerequisites: ['personal-info.wohnort.in', 'personal-info.herkunft.aus', 'personal-info.leben.cekim'] },
+  { id: 'personal-info.form.alanlar', sectionId: 'personal-info.form', label: 'Form alanları: Familienname, Vorname, Heimatland, Geburtsort, Straße, Wohnort, Telefonnummer, Familienstand', anchor: 'der Familienname', prerequisites: ['personal-info.formular.felder'] },
+  { id: 'personal-info.form.kinder', sectionId: 'personal-info.form', label: 'Kinder alanı (Ich habe keine Kinder.)', anchor: 'Ich habe keine Kinder', prerequisites: ['personal-info.formular.kinder'] },
+  { id: 'personal-info.dogum.soru-cevap', sectionId: 'personal-info.birthplace', label: 'Wo bist du geboren? / Wo sind Sie geboren? / Ich bin in ... geboren.', anchor: 'Wo bist du geboren?', prerequisites: ['personal-info.wohnort.wo-wohnst'] },
+  { id: 'personal-info.dogum.aciklik', sectionId: 'personal-info.birthplace', label: 'kommen aus / geboren sein / wohnen-leben ayrımı', anchor: 'kommen aus = nereli olduğun', prerequisites: ['personal-info.herkunft.woher', 'personal-info.wohnort.wo-wohnst', 'personal-info.dogum.soru-cevap', 'personal-info.leben.wohnen-farki'] },
+  { id: 'personal-info.medeni-hal.ledig-verheiratet', sectionId: 'personal-info.marital', label: 'ledig (bekar) / verheiratet (evli)', anchor: 'ledig = bekar', prerequisites: ['personal-info.formular.familienstand'] },
+  { id: 'personal-info.tanitma.model', sectionId: 'personal-info.self-intro', label: 'Genişletilmiş kendini tanıtma modeli', anchor: 'Ich bin ... Jahre alt', prerequisites: ['greetings.vorstellung.wie-heisst-du', 'personal-info.beruf.antwort-bin', 'personal-info.dogum.soru-cevap', 'personal-info.leben.wohnen-farki'] },
+  { id: 'personal-info.tanitma.ornekler', sectionId: 'personal-info.self-intro', label: 'Örnek tanıtımlar (Mustafa, Nazar)', anchor: 'Ich heiße Nazar', prerequisites: ['personal-info.tanitma.model'] },
 
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 3. Gün                                                */
+  /* Sayılar                                                          */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(3, 'private', [
-    { id: 'private.day3.hedef.giris', topicId: P3_HED, label: '4. Gün hedefi: 80 cümleyi üretmek', anchor: '80 Türkçe cümle' },
-
-    { id: 'private.day3.mogen.cekim', topicId: P3_MG, label: 'mögen çekimi: ich mag, du magst ...', anchor: 'ich mag' },
-    { id: 'private.day3.moechten.cekim', topicId: P3_MG, label: 'möchten çekimi: ich möchte, du möchtest ...', anchor: 'ich möchte' },
-    { id: 'private.day3.gern.kullanim', topicId: P3_MG, label: 'Fiil + gern kalıbı', anchor: 'Fiil + gern' },
-    { id: 'private.day3.mogen-gern-farki', topicId: P3_MG, label: 'mag (isim ister) ↔ gern (fiilden sonra gelir)', anchor: 'mag bir ismi doğrudan sever' },
-
-    { id: 'private.day3.esgibt.temel', topicId: P3_EG, label: 'es gibt = var', anchor: 'Es gibt' },
-    { id: 'private.day3.esgibt.akkusativ', topicId: P3_EG, label: 'es gibt + Akkusativ (der → einen)', anchor: 'es gibt her zaman Akkusativ ister', prerequisites: ['private.day3.esgibt.temel'] },
-    { id: 'private.day3.esgibt.genel-cogul', topicId: P3_EG, label: 'genel ifadede çoğul isim artikelsiz kullanılır', anchor: 'Genel ve sayılamayan durumlarda' },
-
-    { id: 'private.day3.kontraksiyon.zum', topicId: P3_YY, label: 'zum = zu + dem', anchor: 'zum = zu + dem' },
-    { id: 'private.day3.kontraksiyon.zur', topicId: P3_YY, label: 'zur = zu + der', anchor: 'zur = zu + der' },
-    { id: 'private.day3.kontraksiyon.im', topicId: P3_YY, label: 'im = in + dem', anchor: 'im = in + dem' },
-    { id: 'private.day3.kontraksiyon.ins', topicId: P3_YY, label: 'ins = in + das', anchor: 'ins = in + das' },
-    { id: 'private.day3.kontraksiyon.am', topicId: P3_YY, label: 'am = an + dem', anchor: 'am = an + dem' },
-    { id: 'private.day3.kontraksiyon.ans', topicId: P3_YY, label: 'ans = an + das (bonus)', anchor: 'ans = an + das' },
-    { id: 'private.day3.im-ins-farki', topicId: P3_YY, label: 'im (yerde) ↔ ins (yöne) farkı', anchor: 'im yerde kalmayı, ins ise bir yöne gitmeyi anlatır', prerequisites: ['private.day3.kontraksiyon.im', 'private.day3.kontraksiyon.ins'] },
-    { id: 'private.day3.nach-hause', topicId: P3_YY, label: 'nach Hause = eve (yöne)', anchor: 'nach Hause' },
-    { id: 'private.day3.zu-hause', topicId: P3_YY, label: 'zu Hause = evde', anchor: 'zu Hause' },
-    { id: 'private.day3.mit-dativ', topicId: P3_YY, label: 'mit + Dativ ister', anchor: 'mit her zaman Dativ ister' },
-    { id: 'private.day3.mit-meinen-freunden', topicId: P3_YY, label: 'mit meinen Freunden — Dativ çoğulda -n', anchor: 'meinen Freunden', prerequisites: ['private.day3.mit-dativ'] },
-    { id: 'private.day3.der-den-dem', topicId: P3_YY, label: 'der (Nominativ) / den (Akkusativ) / dem (Dativ)', anchor: 'der / den / dem' },
-    { id: 'private.day3.in-akkusativ-yon', topicId: P3_YY, label: 'in + Akkusativ (yöne giderken): in den Park', anchor: 'in den Park', prerequisites: ['private.day3.der-den-dem'] },
-    { id: 'private.day3.auf-dem', topicId: P3_YY, label: 'auf + dem (üzerinde)', anchor: 'auf dem' },
-    { id: 'private.day3.bei-der', topicId: P3_YY, label: 'bei + Dativ (yanında)', anchor: 'bei der Schule' },
-
-    { id: 'private.day3.ayrilabilen.kural', topicId: P3_AF, label: 'ayrılabilen fiil kuralı: önek cümlenin sonuna gider', anchor: 'önek cümlenin en sonuna gider' },
-    { id: 'private.day3.aufstehen', topicId: P3_AF, label: 'aufstehen = kalkmak', anchor: 'aufstehen = kalkmak', prerequisites: ['private.day3.ayrilabilen.kural'] },
-    { id: 'private.day3.aufraeumen', topicId: P3_AF, label: 'aufräumen = toplamak/düzenlemek', anchor: 'aufräumen = toplamak', prerequisites: ['private.day3.ayrilabilen.kural'] },
-    { id: 'private.day3.zurueckkommen', topicId: P3_AF, label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['private.day3.ayrilabilen.kural'] },
-
-    { id: 'private.day3.refleksif.temel', topicId: P3_RF, label: 'refleksif zamirler: mich, dich, sich, uns, euch, sich', anchor: 'mich, dich, sich' },
-    { id: 'private.day3.sich-duschen', topicId: P3_RF, label: 'sich duschen = duş almak', anchor: 'sich duschen', prerequisites: ['private.day3.refleksif.temel'] },
-    { id: 'private.day3.sich-ausruhen', topicId: P3_RF, label: 'sich ausruhen = dinlenmek', anchor: 'sich ausruhen', prerequisites: ['private.day3.refleksif.temel'] },
-    { id: 'private.day3.refleksif-ayrilabilen', topicId: P3_RF, label: 'refleksif + ayrılabilen birlikte: ruhe mich ... aus', anchor: 'ruhe mich', prerequisites: ['private.day3.sich-ausruhen', 'private.day3.ayrilabilen.kural'] },
-
-    { id: 'private.day3.sifat.yuklem', topicId: P3_SF, label: 'sein + sıfat → ek almaz', anchor: 'sein fiilinden sonra sıfat ek almaz' },
-    { id: 'private.day3.sifat.ein-notr', topicId: P3_SF, label: 'ein + nötr isim + sıfat → -es', anchor: 'ein neues T-Shirt' },
-    { id: 'private.day3.sifat.cogul-artikelsiz', topicId: P3_SF, label: 'artikelsiz çoğul + sıfat → -e', anchor: 'schwarze Schuhe' },
-
-    { id: 'private.day3.iyelik.unser', topicId: P3_IY, label: 'unser / unsere = bizim', anchor: 'unser / unsere' },
-    { id: 'private.day3.iyelik.ihr', topicId: P3_IY, label: 'ihr / ihre = onun (kadın) / onların', anchor: 'ihr / ihre' },
-    { id: 'private.day3.iyelik.dativ-cogul', topicId: P3_IY, label: 'iyelik + Dativ çoğul: meinen, deinen ...', anchor: 'meinen, deinen', prerequisites: ['private.day3.mit-meinen-freunden'] },
-
-    { id: 'private.day3.miktar.sise', topicId: P3_MK, label: 'Zahl + Flasche(n) + Nomen: zwei Flaschen Wasser', anchor: 'zwei Flaschen' },
-    { id: 'private.day3.miktar.oda', topicId: P3_MK, label: 'Zahl + Zimmer (çoğulu değişmez)', anchor: 'drei Zimmer' },
-    { id: 'private.day3.cogul.genel', topicId: P3_MK, label: 'genel ifadelerde çoğul isim artikelsiz', anchor: 'Genel ifadelerde' },
-    { id: 'private.day3.cogul.umlaut', topicId: P3_MK, label: 'Buch → Bücher (Umlaut çoğul, tekrar)', anchor: 'Bücher' },
-
-    { id: 'private.day3.zaman.um-uhr', topicId: P3_ZI, label: 'um + saat', anchor: 'um 7 Uhr' },
-    { id: 'private.day3.zaman.am', topicId: P3_ZI, label: 'am Morgen / am Abend / am Wochenende', anchor: 'am Morgen', prerequisites: ['private.day3.kontraksiyon.am'] },
-    { id: 'private.day3.zaman.im-mevsim', topicId: P3_ZI, label: 'im Winter / im Sommer', anchor: 'im Winter', prerequisites: ['private.day3.kontraksiyon.im'] },
-    { id: 'private.day3.zaman.dann', topicId: P3_ZI, label: 'dann / danach = sonra', anchor: 'Dann' },
-    { id: 'private.day3.zaman.morgen-cift-anlam', topicId: P3_ZI, label: 'morgen (yarın, küçük harf) ↔ der Morgen (sabah, isim)', anchor: 'morgen küçük harfle' },
-
-    { id: 'private.day3.dizilisi.verb-ikinci', topicId: P3_CD, label: 'fiil her zaman ikinci sırada (V2)', anchor: 'fiil her zaman ikinci sırada' },
-    { id: 'private.day3.dizilisi.zaman-basta', topicId: P3_CD, label: 'zaman ifadesi başa geldiğinde fiil hemen arkasından gelir', anchor: 'Zaman ifadesi cümle başına', prerequisites: ['private.day3.dizilisi.verb-ikinci'] },
-    { id: 'private.day3.moechten-infinitiv', topicId: P3_CD, label: 'möchte + ... + fiil (mastar) cümle sonunda', anchor: 'mastar halinde cümlenin en sonuna gider', prerequisites: ['private.day3.moechten.cekim'] },
-
-    { id: 'private.day3.hava.ifadeler', topicId: P3_GH, label: 'Wetter ifadeleri: schön, warm, kalt', anchor: 'Das Wetter ist' },
-    { id: 'private.day3.hayvanlar.kelime', topicId: P3_GH, label: 'Hayvan kelimeleri: die Katze, der Hund, das Tier', anchor: 'die Katze' },
-    { id: 'private.day3.hobiler.kelime', topicId: P3_GH, label: 'Hobi kelimeleri: schwimmen, Fußball, lesen, fotografieren', anchor: 'gern Fußball' },
-    { id: 'private.day3.alisveris.kelime', topicId: P3_GH, label: 'Alışveriş kelimeleri: kaufen, T-Shirt, Schuhe, Hose', anchor: 'kaufen' },
-    { id: 'private.day3.ev-kelime', topicId: P3_GH, label: 'Ev kelimeleri: die Wohnung, das Zimmer, der Balkon, der Garten', anchor: 'die Wohnung' },
-    { id: 'private.day3.gunluk-rutin', topicId: P3_GH, label: 'Günlük rutin fiilleri: frühstücken, putzen, gießen, hören', anchor: 'frühstücken' },
-    { id: 'private.day3.es-geht-mir', topicId: P3_GH, label: 'Es geht mir gut = iyiyim', anchor: 'Es geht mir gut' },
-  ]),
+  { id: 'numbers.sayilar.onlu-sayilar', sectionId: 'numbers.teens-tens', label: '10–19 arası sayılar', anchor: 'dreizehn' },
+  { id: 'numbers.sayilar.onluklar', sectionId: 'numbers.teens-tens', label: '20, 30 (dreißig)... 100', anchor: 'dreißig', prerequisites: ['numbers.sayilar.onlu-sayilar'] },
+  { id: 'numbers.sayilar.bilesik', sectionId: 'numbers.teens-tens', label: 'Birler + und + Onlar (vierundfünfzig)', anchor: 'vierundfünfzig', prerequisites: ['numbers.sayilar.onluklar'] },
+  { id: 'numbers.sayilar.yuzler', sectionId: 'numbers.hundreds', label: '100, 200 (hundert, zweihundert)', anchor: 'zweihundert', prerequisites: ['numbers.sayilar.onluklar'] },
+  { id: 'numbers.sayilar.yuzler-bilesik', sectionId: 'numbers.hundreds', label: '205 = zweihundertfünf (und yok)', anchor: 'zweihundertfünf', prerequisites: ['numbers.sayilar.yuzler', 'numbers.sayilar.bilesik'] },
+  { id: 'numbers.sayilar.bin', sectionId: 'numbers.hundreds', label: '1000 = tausend', anchor: 'tausend', prerequisites: ['numbers.sayilar.yuzler'] },
 
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 5. Gün                                                */
+  /* Fiiller ve Çekim                                                 */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(5, 'private', [
-    { id: 'private.day5.hedef.giris', topicId: P5_HED, label: '5. Gün hedefi: form + sayılar', anchor: 'Alman formunu okuyup doldurabilmek' },
-
-    { id: 'private.day5.leben.anlam', topicId: P5_LEB, label: 'leben = yaşamak', anchor: 'leben = yaşamak' },
-    { id: 'private.day5.leben.cekim', topicId: P5_LEB, label: 'leben çekimi: ich lebe, du lebst ...', anchor: 'ich lebe', prerequisites: ['private.day5.leben.anlam'] },
-    { id: 'private.day5.leben.wohnen-farki', topicId: P5_LEB, label: 'leben (genel) ↔ wohnen (somut ikamet) farkı', anchor: 'Ich wohne in Berlin', prerequisites: ['private.day1.wohnort.in', 'private.day1.herkunft.aus', 'private.day5.leben.cekim'] },
-
-    { id: 'private.day5.sayilar.onlu-sayilar', topicId: P5_SON, label: '10–19 arası sayılar', anchor: 'dreizehn' },
-    { id: 'private.day5.sayilar.onluklar', topicId: P5_SON, label: '20, 30 (dreißig)... 100', anchor: 'dreißig', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
-    { id: 'private.day5.sayilar.bilesik', topicId: P5_SON, label: 'Birler + und + Onlar (vierundfünfzig)', anchor: 'vierundfünfzig', prerequisites: ['private.day5.sayilar.onluklar'] },
-
-    { id: 'private.day5.sayilar.yuzler', topicId: P5_SYU, label: '100, 200 (hundert, zweihundert)', anchor: 'zweihundert', prerequisites: ['private.day5.sayilar.onluklar'] },
-    { id: 'private.day5.sayilar.yuzler-bilesik', topicId: P5_SYU, label: '205 = zweihundertfünf (und yok)', anchor: 'zweihundertfünf', prerequisites: ['private.day5.sayilar.yuzler', 'private.day5.sayilar.bilesik'] },
-    { id: 'private.day5.sayilar.bin', topicId: P5_SYU, label: '1000 = tausend', anchor: 'tausend', prerequisites: ['private.day5.sayilar.yuzler'] },
-
-    { id: 'private.day5.form.alanlar', topicId: P5_KB, label: 'Form alanları: Familienname, Vorname, Heimatland, Geburtsort, Straße, Wohnort, Telefonnummer, Familienstand', anchor: 'der Familienname', prerequisites: ['private.day1.formular.felder'] },
-    { id: 'private.day5.form.kinder', topicId: P5_KB, label: 'Kinder alanı (1. Gün hatırlatması)', anchor: 'Ich habe keine Kinder', prerequisites: ['private.day1.formular.kinder'] },
-
-    { id: 'private.day5.dogum.soru-cevap', topicId: P5_DY, label: 'Wo bist du geboren? / Wo sind Sie geboren? / Ich bin in ... geboren.', anchor: 'Wo bist du geboren?', prerequisites: ['private.day1.wohnort.wo-wohnst'] },
-    { id: 'private.day5.dogum.aciklik', topicId: P5_DY, label: 'kommen aus / geboren sein / wohnen-leben ayrımı', anchor: 'kommen aus = nereli olduğun', prerequisites: ['private.day1.herkunft.woher', 'private.day1.wohnort.wo-wohnst', 'private.day5.dogum.soru-cevap', 'private.day5.leben.wohnen-farki'] },
-
-    { id: 'private.day5.medeni-hal.ledig-verheiratet', topicId: P5_MH, label: 'ledig (bekar) / verheiratet (evli)', anchor: 'ledig = bekar', prerequisites: ['private.day1.formular.familienstand'] },
-
-    { id: 'private.day5.tanitma.model', topicId: P5_KT, label: 'Genişletilmiş kendini tanıtma modeli', anchor: 'Ich bin ... Jahre alt', prerequisites: ['private.day1.vorstellung.wie-heisst-du', 'private.day1.beruf.antwort-bin', 'private.day5.dogum.soru-cevap', 'private.day5.leben.wohnen-farki'] },
-    { id: 'private.day5.tanitma.ornekler', topicId: P5_KT, label: 'Örnek tanıtımlar (Mustafa, Nazar)', anchor: 'Ich heiße Nazar', prerequisites: ['private.day5.tanitma.model'] },
-
-    { id: 'private.day5.baglac.und', topicId: P5_BAG, label: 'und = ve (ekleme)', anchor: 'und = ve' },
-    { id: 'private.day5.baglac.aber', topicId: P5_BAG, label: 'aber = ama (zıtlık)', anchor: 'aber = ama' },
-
-    { id: 'private.day5.kelime.leider', topicId: P5_KEL, label: 'leider = maalesef, ne yazık ki', anchor: 'leider' },
-    { id: 'private.day5.kelime.mehr', topicId: P5_KEL, label: 'mehr = daha fazla', anchor: 'mehr' },
-    { id: 'private.day5.kelime.geschwister', topicId: P5_KEL, label: 'die Geschwister = kardeşler', anchor: 'Geschwister' },
-    { id: 'private.day5.kelime.seit', topicId: P5_KEL, label: 'seit = -den beri', anchor: 'seit', prerequisites: ['private.day3.mit-dativ'] },
-    { id: 'private.day5.kelime.flughafen', topicId: P5_KEL, label: 'der Flughafen = havaalanı', anchor: 'Flughafen' },
-    { id: 'private.day5.kelime.moment', topicId: P5_KEL, label: 'der Moment / Moment! = an, bir dakika', anchor: 'Moment' },
-
-    { id: 'private.day5.yiyecek.kelimeler', topicId: P5_YEM, label: 'das Ei, das Mehl, der Pfannkuchen, der Kuchen, das Brötchen, die Birne, der Saft', anchor: 'das Ei' },
-  ]),
+  { id: 'verbs.verben.sein', sectionId: 'verbs.conjugation', label: 'sein: ich bin, du bist ...', anchor: 'ich bin' },
+  { id: 'verbs.verben.heissen', sectionId: 'verbs.conjugation', label: 'heißen: ich heiße ...', anchor: 'ich heiße' },
+  { id: 'verbs.verben.kommen', sectionId: 'verbs.conjugation', label: 'kommen: ich komme ...', anchor: 'ich komme' },
+  { id: 'verbs.verben.essen', sectionId: 'verbs.conjugation', label: 'essen: ich esse, du isst', anchor: 'ich esse' },
+  { id: 'verbs.verben.sagen', sectionId: 'verbs.conjugation', label: 'sagen: ich sage ...', anchor: 'ich sage' },
+  { id: 'verbs.verben.sprechen', sectionId: 'verbs.conjugation', label: 'sprechen: ich spreche, du sprichst', anchor: 'ich spreche' },
+  { id: 'verbs.verben.kochen', sectionId: 'verbs.conjugation', label: 'kochen: ich koche ...', anchor: 'ich koche' },
+  { id: 'verbs.haben.tablo', sectionId: 'verbs.haben-sein', label: 'haben çekimi: habe, hast, hat, haben, habt', anchor: 'haben — sahip olmak' },
+  { id: 'verbs.sein.tekrar', sectionId: 'verbs.haben-sein', label: 'sein çekimi tekrar', anchor: 'sein çekimi (tekrar)', prerequisites: ['verbs.verben.sein'] },
+  { id: 'verbs.haben.kein-ile', sectionId: 'verbs.haben-sein', label: 'haben + kein/keine kalıbı (pekiştirme)', anchor: 'Ich habe kein Geld', prerequisites: ['verbs.haben.tablo', 'articles.artikel.kein-keine'] },
+  { id: 'verbs.refleksif.temel', sectionId: 'verbs.reflexive', label: 'refleksif zamirler: mich, dich, sich, uns, euch, sich', anchor: 'mich, dich, sich' },
+  { id: 'verbs.sich-duschen', sectionId: 'verbs.reflexive', label: 'sich duschen = duş almak', anchor: 'sich duschen', prerequisites: ['verbs.refleksif.temel'] },
+  { id: 'verbs.sich-ausruhen', sectionId: 'verbs.reflexive', label: 'sich ausruhen = dinlenmek', anchor: 'sich ausruhen', prerequisites: ['verbs.refleksif.temel'] },
+  { id: 'verbs.refleksif-ayrilabilen', sectionId: 'verbs.reflexive', label: 'refleksif + ayrılabilen birlikte: ruhe mich ... aus', anchor: 'ruhe mich', prerequisites: ['verbs.sich-ausruhen', 'separable-verbs.ayrilabilen.kural'] },
+  { id: 'verbs.fiil.kennen', sectionId: 'verbs.more-verbs', label: 'kennen = tanımak', anchor: 'kennen = tanımak' },
+  { id: 'verbs.fiil.kennen-cekim', sectionId: 'verbs.more-verbs', label: 'kennen çekimi: ich kenne, du kennst ...', anchor: 'du kennst', prerequisites: ['verbs.fiil.kennen'] },
+  { id: 'verbs.fiil.geben', sectionId: 'verbs.more-verbs', label: 'geben = vermek', anchor: 'geben = vermek' },
+  { id: 'verbs.fiil.geben-gibt', sectionId: 'verbs.more-verbs', label: 'geben düzensiz: du gibst, er gibt (e → i)', anchor: 'du gibst', prerequisites: ['verbs.fiil.geben'] },
+  { id: 'verbs.fiil.es-gibt-fark', sectionId: 'verbs.more-verbs', label: 'geben (vermek) ↔ es gibt (var) ayrımı', anchor: 'geben tek başına', prerequisites: ['akkusativ.esgibt.temel', 'verbs.fiil.geben'] },
+  { id: 'verbs.fiil.stellen', sectionId: 'verbs.more-verbs', label: 'stellen = koymak', anchor: 'stellen = koymak' },
 
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 6. Gün                                                */
+  /* Artikeller ve Olumsuzluk                                         */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(6, 'private', [
-    { id: 'private.day6.hedef.giris', topicId: P6_HED, label: '6. Gün hedefi: kişi ve iyelik zamirleriyle 50 cümle', anchor: '50 örnek cümle' },
-
-    { id: 'private.day6.iyelik.sein-onun', topicId: P6_IYE, label: 'sein / seine = onun (erkek/nötr sahip)', anchor: 'sein / seine', prerequisites: ['private.day2.artikel.mein-meine', 'private.day2.artikel.dein-deine'] },
-    { id: 'private.day6.iyelik.zincir', topicId: P6_IYE, label: 'iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr', anchor: 'İyelik zamiri zinciri', prerequisites: ['private.day6.iyelik.sein-onun', 'private.day3.iyelik.unser', 'private.day3.iyelik.ihr'] },
-
-    { id: 'private.day6.cumle.kalip', topicId: P6_CUM, label: 'Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim', anchor: 'Kişi zamiri + Fiil + iyelik zamiri + isim', prerequisites: ['private.day6.iyelik.zincir', 'private.day2.haben.tablo'] },
-  ]),
-
-  /* ---------------------------------------------------------------- */
-  /* Özel Ders — 7. Gün                                                */
-  /* ---------------------------------------------------------------- */
-  ...buildTrack(7, 'private', [
-    { id: 'private.day7.hedef.giris', topicId: P7_HED, label: '7. Gün hedefi: kendi evini Almanca anlatmak', anchor: 'kendi evimi Almanca anlatmak' },
-    { id: 'private.day7.hedef.cekirdek', topicId: P7_HED, label: 'Günün çekirdek 26 kelimesi', anchor: 'günün çekirdeği bu 26 madde' },
-
-    { id: 'private.day7.ev.wohnung', topicId: P7_EV, label: 'die Wohnung = ev, daire', anchor: 'die Wohnung — ev, daire' },
-    { id: 'private.day7.ev.bad', topicId: P7_EV, label: 'das Bad = banyo', anchor: 'das Bad — banyo' },
-    { id: 'private.day7.ev.schlafzimmer', topicId: P7_EV, label: 'das Schlafzimmer = yatak odası', anchor: 'das Schlafzimmer — yatak odası' },
-    { id: 'private.day7.ev.flur', topicId: P7_EV, label: 'der Flur = koridor', anchor: 'der Flur — koridor' },
-    { id: 'private.day7.ev.kueche', topicId: P7_EV, label: 'die Küche = mutfak', anchor: 'die Küche — mutfak' },
-    { id: 'private.day7.ev.wohnzimmer', topicId: P7_EV, label: 'das Wohnzimmer = salon', anchor: 'das Wohnzimmer — salon' },
-    { id: 'private.day7.ev.toilette', topicId: P7_EV, label: 'die Toilette / die Toiletten = tuvalet(ler)', anchor: 'die Toilette — tuvalet' },
-
-    { id: 'private.day7.moebel.genel', topicId: P7_MOB, label: 'die Möbel = mobilyalar', anchor: 'die Möbel — mobilyalar' },
-    { id: 'private.day7.moebel.schrank', topicId: P7_MOB, label: 'der Schrank = dolap', anchor: 'der Schrank — dolap' },
-    { id: 'private.day7.moebel.bett', topicId: P7_MOB, label: 'das Bett = yatak', anchor: 'das Bett — yatak' },
-    { id: 'private.day7.moebel.sofa', topicId: P7_MOB, label: 'das Sofa = kanepe', anchor: 'das Sofa — kanepe' },
-    { id: 'private.day7.moebel.sessel', topicId: P7_MOB, label: 'der Sessel = koltuk', anchor: 'der Sessel — koltuk' },
-    { id: 'private.day7.moebel.fernseher', topicId: P7_MOB, label: 'der Fernseher = televizyon', anchor: 'der Fernseher — televizyon' },
-    { id: 'private.day7.moebel.teppich-regal', topicId: P7_MOB, label: 'der Teppich = halı, das Regal = raf', anchor: 'der Teppich — halı' },
-    { id: 'private.day7.moebel.herd-bad', topicId: P7_MOB, label: 'der Herd = ocak, die Badewanne = küvet, das Waschbecken = lavabo', anchor: 'der Herd — ocak' },
-    { id: 'private.day7.moebel.auf-dem-sessel', topicId: P7_MOB, label: 'auf dem Sessel = koltukta', anchor: 'auf dem Sessel — koltukta', prerequisites: ['private.day3.auf-dem'] },
-
-    { id: 'private.day7.tarif.hell', topicId: P7_TAR, label: 'hell = açık, ferah', anchor: 'hell = açık' },
-    { id: 'private.day7.tarif.dunkel', topicId: P7_TAR, label: 'dunkel = koyu', anchor: 'dunkel = koyu' },
-    { id: 'private.day7.tarif.breit', topicId: P7_TAR, label: 'breit = geniş', anchor: 'breit = geniş' },
-    { id: 'private.day7.tarif.schmal', topicId: P7_TAR, label: 'schmal = dar', anchor: 'schmal = dar' },
-    { id: 'private.day7.tarif.kuehl', topicId: P7_TAR, label: 'kühl = serin', anchor: 'kühl = serin' },
-    { id: 'private.day7.tarif.grau', topicId: P7_TAR, label: 'grau = gri', anchor: 'grau = gri' },
-    { id: 'private.day7.tarif.gross-klein', topicId: P7_TAR, label: 'karşıt çiftler: hell–dunkel, groß–klein, breit–schmal', anchor: 'groß — klein' },
-    { id: 'private.day7.tarif.sein-sifat', topicId: P7_TAR, label: 'sein + sıfat → ek almaz (tekrar)', anchor: 'hiçbir ek almaz', prerequisites: ['private.day3.sifat.yuklem'] },
-
-    { id: 'private.day7.zamir.der-er', topicId: P7_ZAM, label: 'der → er', anchor: 'der → er' },
-    { id: 'private.day7.zamir.das-es', topicId: P7_ZAM, label: 'das → es', anchor: 'das → es' },
-    { id: 'private.day7.zamir.die-sie', topicId: P7_ZAM, label: 'die → sie', anchor: 'die → sie' },
-    { id: 'private.day7.zamir.cumlede', topicId: P7_ZAM, label: 'cümlede zamire geçiş: Der Schrank ist groß. Er ist grau.', anchor: 'Er ist grau.', prerequisites: ['private.day7.zamir.der-er'] },
-
-    { id: 'private.day7.fiil.kennen', topicId: P7_FII, label: 'kennen = tanımak', anchor: 'kennen = tanımak' },
-    { id: 'private.day7.fiil.kennen-cekim', topicId: P7_FII, label: 'kennen çekimi: ich kenne, du kennst ...', anchor: 'du kennst', prerequisites: ['private.day7.fiil.kennen'] },
-    { id: 'private.day7.fiil.geben', topicId: P7_FII, label: 'geben = vermek', anchor: 'geben = vermek' },
-    { id: 'private.day7.fiil.geben-gibt', topicId: P7_FII, label: 'geben düzensiz: du gibst, er gibt (e → i)', anchor: 'du gibst', prerequisites: ['private.day7.fiil.geben'] },
-    { id: 'private.day7.fiil.es-gibt-fark', topicId: P7_FII, label: 'geben (vermek) ↔ es gibt (var) ayrımı', anchor: 'geben tek başına', prerequisites: ['private.day3.esgibt.temel', 'private.day7.fiil.geben'] },
-    { id: 'private.day7.fiil.anrufen', topicId: P7_FII, label: 'anrufen = telefonla aramak', anchor: 'anrufen = (telefonla) aramak' },
-    { id: 'private.day7.fiil.anrufen-ayrilabilen', topicId: P7_FII, label: 'anrufen ayrılabilen: Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['private.day3.ayrilabilen.kural', 'private.day7.fiil.anrufen'] },
-    { id: 'private.day7.fiil.stellen', topicId: P7_FII, label: 'stellen = koymak', anchor: 'stellen = koymak' },
-    { id: 'private.day7.fiil.nicht-yeri', topicId: P7_FII, label: 'nicht cümlenin sonuna gider: Ich komme heute nicht.', anchor: 'Ich komme heute nicht.', prerequisites: ['private.day2.olumsuzluk.nicht'] },
-
-    { id: 'private.day7.gefallen.anlam', topicId: P7_GEF, label: 'gefallen = beğenmek, hoşuna gitmek', anchor: 'gefallen = beğenmek, hoşuna gitmek' },
-    { id: 'private.day7.gefallen.kalip', topicId: P7_GEF, label: 'Das gefällt mir. (hazır kalıp)', anchor: 'Das gefällt mir.', prerequisites: ['private.day7.gefallen.anlam'] },
-
-    { id: 'private.day7.essen.frage', topicId: P7_ESS, label: 'Was isst du gern? / Was essen Sie gern?', anchor: 'Was isst du gern?', prerequisites: ['private.day3.gern.kullanim'] },
-    { id: 'private.day7.essen.antwort', topicId: P7_ESS, label: 'Ich esse gern ...', anchor: 'Ich esse gern Pommes.', prerequisites: ['private.day7.essen.frage'] },
-    { id: 'private.day7.essen.nicht-gern', topicId: P7_ESS, label: 'Ich esse ... nicht gern.', anchor: 'Nein, ich esse nicht gern Pizza.', prerequisites: ['private.day7.essen.antwort'] },
-    { id: 'private.day7.essen.lieblingsessen', topicId: P7_ESS, label: 'Was ist dein/Ihr Lieblingsessen?', anchor: 'Was ist dein Lieblingsessen?' },
-    { id: 'private.day7.trinken.frage', topicId: P7_ESS, label: 'Was trinkst du gern? → Ich trinke gern ...', anchor: 'Was trinkst du gern?' },
-    { id: 'private.day7.trinken.lieblingsgetraenk', topicId: P7_ESS, label: 'Was ist dein/Ihr Lieblingsgetränk?', anchor: 'Was ist dein Lieblingsgetränk?' },
-    { id: 'private.day7.essen.kelimeler', topicId: P7_ESS, label: 'das Essen, die Pommes, die Pizza, der Reis', anchor: 'die Pommes — patates kızartması' },
-    { id: 'private.day7.getraenke.kelimeler', topicId: P7_ESS, label: 'der Orangensaft, der Apfelsaft, die Milch, die Limonade', anchor: 'der Orangensaft — portakal suyu' },
-    { id: 'private.day7.essen.hunger-durst', topicId: P7_ESS, label: 'Ich habe Hunger. / Ich habe Durst.', anchor: 'Ich habe Hunger.', prerequisites: ['private.day2.haben.tablo'] },
-
-    { id: 'private.day7.kaufen.frage', topicId: P7_ALI, label: 'Was kaufst du oft? / Was kaufen Sie oft?', anchor: 'Was kaufst du oft?', prerequisites: ['private.day3.alisveris.kelime'] },
-    { id: 'private.day7.siklik.immer', topicId: P7_ALI, label: 'immer = her zaman', anchor: 'immer = her zaman' },
-    { id: 'private.day7.siklik.meistens', topicId: P7_ALI, label: 'meistens = çoğunlukla', anchor: 'meistens = çoğunlukla' },
-    { id: 'private.day7.siklik.oft', topicId: P7_ALI, label: 'oft = sık sık', anchor: 'oft = sık sık' },
-    { id: 'private.day7.siklik.manchmal', topicId: P7_ALI, label: 'manchmal = bazen', anchor: 'manchmal = bazen' },
-    { id: 'private.day7.siklik.nie', topicId: P7_ALI, label: 'nie = asla, hiç', anchor: 'nie = asla' },
-    { id: 'private.day7.siklik.cumlede', topicId: P7_ALI, label: 'sıklık kelimesi fiilden hemen sonra gelir', anchor: 'Ich kaufe immer Obst.', prerequisites: ['private.day7.siklik.immer'] },
-    { id: 'private.day7.kaufen.pro-woche', topicId: P7_ALI, label: 'Ich kaufe pro Woche zweimal.', anchor: 'Ich kaufe pro Woche zweimal.' },
-    { id: 'private.day7.alisveris.einkaufszettel', topicId: P7_ALI, label: 'der Einkaufszettel = alışveriş listesi', anchor: 'der Einkaufszettel — alışveriş listesi' },
-    { id: 'private.day7.alisveris.einkaufswagen', topicId: P7_ALI, label: 'der Einkaufswagen = alışveriş arabası', anchor: 'der Einkaufswagen — alışveriş arabası' },
-    { id: 'private.day7.alisveris.ifadeler', topicId: P7_ALI, label: 'Natürlich. / Sonst noch etwas?', anchor: 'Sonst noch etwas?' },
-
-    { id: 'private.day7.miktar.flasche', topicId: P7_MIK, label: 'eine Flasche ... = bir şişe', anchor: 'eine Flasche Wasser — bir şişe su', prerequisites: ['private.day3.miktar.sise'] },
-    { id: 'private.day7.miktar.packung', topicId: P7_MIK, label: 'eine Packung ... = bir paket', anchor: 'eine Packung Mehl — bir paket un' },
-    { id: 'private.day7.miktar.dose', topicId: P7_MIK, label: 'eine Dose ... = bir kutu (konserve)', anchor: 'eine Dose Tomaten — bir kutu domates' },
-    { id: 'private.day7.miktar.becher', topicId: P7_MIK, label: 'ein Becher ... = bir kutu (krema/yoğurt)', anchor: 'ein Becher Sahne — bir kutu krema' },
-    { id: 'private.day7.miktar.bund', topicId: P7_MIK, label: 'ein Bund ... = bir demet', anchor: 'ein Bund Frühlingszwiebeln' },
-    { id: 'private.day7.miktar.portion', topicId: P7_MIK, label: 'die Portion = porsiyon', anchor: 'eine Portion Gemüsesuppe' },
-    { id: 'private.day7.miktar.artikel', topicId: P7_MIK, label: 'ein/eine kabın artikeline göre seçilir', anchor: 'Kabın artikeli neyse', prerequisites: ['private.day2.artikel.ein-eine'] },
-
-    { id: 'private.day7.yiyecek.temel', topicId: P7_YIY, label: 'das Fleisch, der Wein, das Obst, das Gemüse', anchor: 'Fleisch = et' },
-    { id: 'private.day7.yiyecek.zwiebel', topicId: P7_YIY, label: 'die Zwiebel, die Frühlingszwiebeln, die Knoblauchzehe', anchor: 'die Zwiebel = soğan' },
-    { id: 'private.day7.yiyecek.gurke', topicId: P7_YIY, label: 'die Salatgurke, die sauren Gurken', anchor: 'die Salatgurke = salatalık' },
-    { id: 'private.day7.yiyecek.essig', topicId: P7_YIY, label: 'der Essig = sirke', anchor: 'der Essig — sirke' },
-    { id: 'private.day7.yiyecek.oel-pfeffer', topicId: P7_YIY, label: 'das Öl = yağ, der Pfeffer = kara biber', anchor: 'das Öl = yağ' },
-    { id: 'private.day7.yiyecek.haehnchen', topicId: P7_YIY, label: 'das Hähnchen = tavuk, die Gemüsesuppe = sebze çorbası', anchor: 'das Hähnchen = tavuk' },
-    { id: 'private.day7.yiyecek.sahne', topicId: P7_YIY, label: 'die Sahne = krema, die Tomaten = domatesler, der Käse = peynir', anchor: 'die Sahne = krema' },
-    { id: 'private.day7.yiyecek.nuesse', topicId: P7_YIY, label: 'die Nüsse, die Rosinen, der Staubzucker', anchor: 'die Nüsse = kuruyemiş' },
-
-    { id: 'private.day7.fiyat.kosten', topicId: P7_FIY, label: 'kosten = fiyatında olmak', anchor: 'kosten = fiyatında olmak' },
-    { id: 'private.day7.fiyat.was-kostet', topicId: P7_FIY, label: 'Was kostet das?', anchor: 'Was kostet das?', prerequisites: ['private.day7.fiyat.kosten'] },
-    { id: 'private.day7.fiyat.antwort', topicId: P7_FIY, label: 'Das kostet fünf Euro. / Das ist fünf Euro.', anchor: 'Das kostet fünf Euro.', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
-    { id: 'private.day7.fiyat.wie-viel', topicId: P7_FIY, label: 'Wie viel kostet ein Kilo ...?', anchor: 'Wie viel kostet ein Kilo Tomaten?' },
-    { id: 'private.day7.fiyat.teuer', topicId: P7_FIY, label: 'teuer = pahalı', anchor: 'teuer = pahalı' },
-
-    { id: 'private.day7.brauchen.frage', topicId: P7_BRA, label: 'Was brauchst du? / Was brauchen Sie?', anchor: 'Was brauchst du?' },
-    { id: 'private.day7.brauchen.antwort', topicId: P7_BRA, label: 'Ich brauche ...', anchor: 'Ich brauche den Apfel.', prerequisites: ['private.day7.brauchen.frage'] },
-    { id: 'private.day7.brauchen.kein', topicId: P7_BRA, label: 'Nein, ich brauche kein ...', anchor: 'Nein, ich brauche kein Mehl.', prerequisites: ['private.day2.artikel.kein-keine'] },
-
-    { id: 'private.day7.kelime.gluecklich', topicId: P7_KEL, label: 'glücklich = mutlu, der Traum = hayal', anchor: 'glücklich = mutlu' },
-    { id: 'private.day7.kelime.gast-leute', topicId: P7_KEL, label: 'der Gast / die Gäste, die Leute, in der Mensa', anchor: 'der Gast = misafir' },
-    { id: 'private.day7.kelime.fuer-dafuer', topicId: P7_KEL, label: 'für = için, dafür = bunun için', anchor: 'für = için' },
-    { id: 'private.day7.kelime.nur-etwas-viele', topicId: P7_KEL, label: 'nur = sadece, etwas = bir şey, viele = bir çok', anchor: 'nur = sadece' },
-    { id: 'private.day7.kelime.dazu-fertig-schmeckt', topicId: P7_KEL, label: 'dazu = ayrıca, fertig = hazır, schmeckt = tadı güzel', anchor: 'fertig = hazır' },
-    { id: 'private.day7.kelime.zusammen-dort', topicId: P7_KEL, label: 'zusammen = birlikte, dort = orada', anchor: 'zusammen = birlikte' },
-    { id: 'private.day7.kelime.auch', topicId: P7_KEL, label: 'auch = de, da, ayrıca', anchor: 'auch = de / da' },
-
-    { id: 'private.day7.evim.model', topicId: P7_EVIM, label: 'Evimi anlatan A1 model metni', anchor: 'Wir haben eine Wohnung.' },
-    { id: 'private.day7.evim.toiletten', topicId: P7_EVIM, label: 'Wir haben drei Toiletten.', anchor: 'Wir haben drei Toiletten.', prerequisites: ['private.day7.ev.toilette'] },
-    { id: 'private.day7.evim.mein-zimmer', topicId: P7_EVIM, label: 'Mein Zimmer ist grau / dunkel / klein.', anchor: 'Mein Zimmer ist grau.', prerequisites: ['private.day7.tarif.grau'] },
-    { id: 'private.day7.evim.schwester', topicId: P7_EVIM, label: 'Meine Schwester hat auch ein Zimmer.', anchor: 'Meine Schwester hat auch ein Zimmer.', prerequisites: ['private.day7.kelime.auch'] },
-    { id: 'private.day7.evim.ihr-zimmer', topicId: P7_EVIM, label: 'Ihr Zimmer ist hell / groß.', anchor: 'Ihr Zimmer ist hell.', prerequisites: ['private.day3.iyelik.ihr'] },
-    { id: 'private.day7.evim.wohnzimmer', topicId: P7_EVIM, label: 'Wir haben ein Wohnzimmer.', anchor: 'Wir haben ein Wohnzimmer.' },
-    { id: 'private.day7.evim.balkon', topicId: P7_EVIM, label: 'Wir haben einen Balkon. Der Balkon ist groß.', anchor: 'Wir haben einen Balkon.', prerequisites: ['private.day3.esgibt.akkusativ'] },
-    { id: 'private.day7.evim.kueche', topicId: P7_EVIM, label: 'Wir haben eine Küche. Unsere Küche ist hell.', anchor: 'Unsere Küche ist hell.', prerequisites: ['private.day3.iyelik.unser'] },
-    { id: 'private.day7.evim.katze', topicId: P7_EVIM, label: 'Unsere Katze hat auch ein Zimmer.', anchor: 'Unsere Katze hat auch ein Zimmer.', prerequisites: ['private.day3.hayvanlar.kelime'] },
-    { id: 'private.day7.evim.karsilastirma-yok', topicId: P7_EVIM, label: 'karşılaştırma yerine iki ayrı cümle', anchor: 'karşılaştırma eki' },
-
-    { id: 'private.day7.kalip.wir-haben', topicId: P7_KAL, label: 'Wir haben + isim', anchor: 'Wir haben + isim' },
-    { id: 'private.day7.kalip.ist-sifat', topicId: P7_KAL, label: '... ist + sıfat', anchor: 'ist + sıfat' },
-    { id: 'private.day7.kalip.hat-auch', topicId: P7_KAL, label: '... hat auch + isim', anchor: 'hat auch + isim' },
-    { id: 'private.day7.kalip.es-gibt', topicId: P7_KAL, label: 'Es gibt + isim', anchor: 'Es gibt + isim', prerequisites: ['private.day3.esgibt.temel'] },
-    { id: 'private.day7.kalip.sira', topicId: P7_KAL, label: 'evi anlatma sırası', anchor: 'kaç oda/tuvalet var' },
-  ]),
+  { id: 'articles.artikel.der-die-das-die-pl', sectionId: 'articles.definite-indefinite', label: 'der / die / das / die (Pl.)', anchor: 'der, die, das, die (Pl.)' },
+  { id: 'articles.artikel.ein-eine', sectionId: 'articles.definite-indefinite', label: 'ein / eine', anchor: 'ein, eine' },
+  { id: 'articles.artikel.cogul-belirsiz-yok', sectionId: 'articles.definite-indefinite', label: 'çoğulda belirsiz artikel yok', anchor: 'çoğulda belirsiz artikel yoktur' },
+  { id: 'articles.artikel.was-ist-das', sectionId: 'articles.definite-indefinite', label: 'Was ist das? → Das ist ein/eine ...', anchor: 'Was ist das?' },
+  { id: 'articles.wortschatz.nesneler', sectionId: 'articles.definite-indefinite', label: 'Temel nesne kelimeleri (der Vater, die Mutter ...)', anchor: 'der Vater' },
+  { id: 'articles.artikel.kein-keine', sectionId: 'articles.chain', label: 'kein / keine', anchor: 'kein, keine', prerequisites: ['articles.artikel.ein-eine'] },
+  { id: 'articles.artikel.mein-meine', sectionId: 'articles.chain', label: 'mein / meine', anchor: 'mein, meine', prerequisites: ['articles.artikel.kein-keine'] },
+  { id: 'articles.artikel.dein-deine', sectionId: 'articles.chain', label: 'dein / deine', anchor: 'dein, deine', prerequisites: ['articles.artikel.kein-keine'] },
+  { id: 'articles.artikel.zincir', sectionId: 'articles.chain', label: 'artikel zinciri: der/das → ein → kein → dein → mein', anchor: 'Artikel zinciri', prerequisites: ['articles.artikel.ein-eine', 'articles.artikel.kein-keine', 'articles.artikel.mein-meine', 'articles.artikel.dein-deine'] },
+  { id: 'articles.artikel.wie-ist-dein', sectionId: 'articles.chain', label: 'Wie ist dein/deine ...?', anchor: 'Wie ist dein', prerequisites: ['articles.artikel.dein-deine', 'articles.artikel.mein-meine'] },
+  { id: 'articles.olumsuzluk.nicht', sectionId: 'articles.negation', label: 'nicht: fiili/diğer bilgiyi olumsuzlar', anchor: 'fiili ya da zaman/yer bilgisini olumsuzlar', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'articles.olumsuzluk.kein-haben', sectionId: 'articles.negation', label: 'kein/keine: haben + nesneyi olumsuzlar', anchor: 'haben + isim kalıbında nesneyi olumsuzlamak', prerequisites: ['articles.artikel.kein-keine', 'personal-info.formular.kinder'] },
+  { id: 'articles.olumsuzluk.donusum', sectionId: 'articles.negation', label: 'olumlu → olumsuz cümle dönüşümü', anchor: 'Sie geht heute nicht zur Schule', prerequisites: ['articles.olumsuzluk.nicht', 'articles.olumsuzluk.kein-haben'] },
+  { id: 'articles.miktar.oda', sectionId: 'articles.plural', label: 'Zahl + Zimmer (çoğulu değişmez)', anchor: 'drei Zimmer' },
+  { id: 'articles.cogul.genel', sectionId: 'articles.plural', label: 'genel ifadelerde çoğul isim artikelsiz', anchor: 'Genel ifadelerde' },
+  { id: 'articles.cogul.umlaut', sectionId: 'articles.plural', label: 'Buch → Bücher (Umlaut çoğul, tekrar)', anchor: 'Bücher' },
+  { id: 'articles.fiil.nicht-yeri', sectionId: 'articles.nicht-position', label: 'nicht cümlenin sonuna gider: Ich komme heute nicht.', anchor: 'Ich komme heute nicht.', prerequisites: ['articles.olumsuzluk.nicht'] },
 
   /* ---------------------------------------------------------------- */
-  /* Özel Ders — 10. Gün                                               */
+  /* Zamirler ve İyelik                                               */
   /* ---------------------------------------------------------------- */
-  ...buildTrack(10, 'private', [
-    { id: 'private.day10.hedef.giris', topicId: P10_HED, label: '10. Gün hedefi: gününü anlatmak + saati söylemek', anchor: 'Günün sonunda hedef net' },
+  { id: 'pronouns.iyelik.unser', sectionId: 'pronouns.unser-ihr', label: 'unser / unsere = bizim', anchor: 'unser / unsere' },
+  { id: 'pronouns.iyelik.ihr', sectionId: 'pronouns.unser-ihr', label: 'ihr / ihre = onun (kadın) / onların', anchor: 'ihr / ihre' },
+  { id: 'pronouns.iyelik.dativ-cogul', sectionId: 'pronouns.unser-ihr', label: 'iyelik + Dativ çoğul: meinen, deinen ...', anchor: 'meinen, deinen', prerequisites: ['places.mit-meinen-freunden'] },
+  { id: 'pronouns.iyelik.sein-onun', sectionId: 'pronouns.possessive-table', label: 'sein / seine = onun (erkek/nötr sahip)', anchor: 'sein / seine', prerequisites: ['articles.artikel.mein-meine', 'articles.artikel.dein-deine'] },
+  { id: 'pronouns.iyelik.zincir', sectionId: 'pronouns.possessive-table', label: 'iyelik zamiri zinciri: mein → dein → sein → ihr → unser → ihr', anchor: 'İyelik zamiri zinciri', prerequisites: ['pronouns.iyelik.sein-onun', 'pronouns.iyelik.unser', 'pronouns.iyelik.ihr'] },
+  { id: 'pronouns.cumle.kalip', sectionId: 'pronouns.sentence', label: 'Cümle kalıbı: Kişi zamiri + Fiil + iyelik zamiri + isim', anchor: 'Kişi zamiri + Fiil + iyelik zamiri + isim', prerequisites: ['pronouns.iyelik.zincir', 'verbs.haben.tablo'] },
+  { id: 'pronouns.zamir.der-er', sectionId: 'pronouns.article-to-pronoun', label: 'der → er', anchor: 'der → er' },
+  { id: 'pronouns.zamir.das-es', sectionId: 'pronouns.article-to-pronoun', label: 'das → es', anchor: 'das → es' },
+  { id: 'pronouns.zamir.die-sie', sectionId: 'pronouns.article-to-pronoun', label: 'die → sie', anchor: 'die → sie' },
+  { id: 'pronouns.zamir.cumlede', sectionId: 'pronouns.article-to-pronoun', label: 'cümlede zamire geçiş: Der Schrank ist groß. Er ist grau.', anchor: 'Er ist grau.', prerequisites: ['pronouns.zamir.der-er'] },
 
-    { id: 'private.day10.trennbar.kural', topicId: P10_TRE, label: 'ayrılabilen fiil kuralı: kök 2. sırada, önek sonda', anchor: 'kök ikinci sırada, önek en sonda', prerequisites: ['private.day3.ayrilabilen.kural'] },
-    { id: 'private.day10.trennbar.ornek', topicId: P10_TRE, label: 'Ich stehe um 7 Uhr auf.', anchor: 'Ich stehe um 7 Uhr auf.', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.trennbar.saat-basta', topicId: P10_TRE, label: 'Um 7 Uhr stehe ich auf.', anchor: 'Um 7 Uhr stehe ich auf.', prerequisites: ['private.day10.trennbar.kural', 'private.day3.dizilisi.zaman-basta'] },
+  /* ---------------------------------------------------------------- */
+  /* Cümle Kurma                                                      */
+  /* ---------------------------------------------------------------- */
+  { id: 'sentence-building.cumle.olumlu-yapi', sectionId: 'sentence-building.basic', label: 'Özne + Fiil + Nesne + diğer bilgiler', anchor: 'Özne + Fiil + Nesne' },
+  { id: 'sentence-building.verben.machen', sectionId: 'sentence-building.basic', label: 'machen = yapmak', anchor: 'machen = yapmak', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'sentence-building.verben.gehen-zur', sectionId: 'sentence-building.basic', label: 'gehen + zur Schule / zur Arbeit', anchor: 'zur Schule', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'sentence-building.zaman.jeden-tag-heute', sectionId: 'sentence-building.basic', label: 'jeden Tag, heute, jeden Morgen, um ... Uhr', anchor: 'jeden Morgen', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'sentence-building.dizilisi.verb-ikinci', sectionId: 'sentence-building.v2', label: 'fiil her zaman ikinci sırada (V2)', anchor: 'fiil her zaman ikinci sırada' },
+  { id: 'sentence-building.dizilisi.zaman-basta', sectionId: 'sentence-building.v2', label: 'zaman ifadesi başa geldiğinde fiil hemen arkasından gelir', anchor: 'Zaman ifadesi cümle başına', prerequisites: ['sentence-building.dizilisi.verb-ikinci'] },
+  { id: 'sentence-building.baglac.und', sectionId: 'sentence-building.und-aber', label: 'und = ve (ekleme)', anchor: 'und = ve' },
+  { id: 'sentence-building.baglac.aber', sectionId: 'sentence-building.und-aber', label: 'aber = ama (zıtlık)', anchor: 'aber = ama' },
+  { id: 'sentence-building.dann.dann', sectionId: 'sentence-building.dann-danach', label: 'Dann gehe ich zur Schule.', anchor: 'Dann gehe ich zur Schule.', prerequisites: ['time.zaman.dann'] },
+  { id: 'sentence-building.dann.danach', sectionId: 'sentence-building.dann-danach', label: 'Danach komme ich nach Hause.', anchor: 'Danach komme ich nach Hause.', prerequisites: ['time.zaman.dann'] },
+  { id: 'sentence-building.dann.v2', sectionId: 'sentence-building.dann-danach', label: 'Danach başta → fiil ikinci sırada', anchor: 'Danach komme ich', prerequisites: ['sentence-building.dann.danach', 'sentence-building.dizilisi.zaman-basta'] },
 
-    { id: 'private.day10.verb.aufstehen', topicId: P10_VER, label: 'aufstehen = yataktan kalkmak', anchor: 'aufstehen = yataktan kalkmak', prerequisites: ['private.day3.aufstehen'] },
-    { id: 'private.day10.verb.aufwachen', topicId: P10_VER, label: 'aufwachen = uyanmak', anchor: 'aufwachen = uyanmak', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.uyanma-farki', topicId: P10_VER, label: 'aufwachen (göz açmak) ↔ aufstehen (kalkmak) farkı', anchor: 'gözlerini açmak', prerequisites: ['private.day10.verb.aufstehen', 'private.day10.verb.aufwachen'] },
-    { id: 'private.day10.verb.anziehen', topicId: P10_VER, label: 'sich anziehen = giyinmek', anchor: 'sich anziehen = giyinmek', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.ausziehen', topicId: P10_VER, label: 'sich ausziehen = üstünü çıkarmak', anchor: 'sich ausziehen = üstünü çıkarmak', prerequisites: ['private.day10.verb.anziehen'] },
-    { id: 'private.day10.verb.anziehen-chunk', topicId: P10_VER, label: 'Ich ziehe mich an. (hazır kalıp)', anchor: 'Ich ziehe mich an.', prerequisites: ['private.day10.verb.anziehen', 'private.day3.refleksif.temel'] },
-    { id: 'private.day10.verb.einkaufen', topicId: P10_VER, label: 'einkaufen = alışveriş yapmak', anchor: 'einkaufen = alışveriş yapmak', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.einkaufen-cumle', topicId: P10_VER, label: 'Ich kaufe ein.', anchor: 'Ich kaufe ein.', prerequisites: ['private.day10.verb.einkaufen'] },
-    { id: 'private.day10.verb.aufraeumen', topicId: P10_VER, label: 'aufräumen = odayı toplamak', anchor: 'aufräumen = odayı toplamak', prerequisites: ['private.day3.aufraeumen'] },
-    { id: 'private.day10.verb.aufraeumen-cumle', topicId: P10_VER, label: 'Ich räume auf.', anchor: 'Ich räume auf.', prerequisites: ['private.day10.verb.aufraeumen'] },
-    { id: 'private.day10.verb.anrufen', topicId: P10_VER, label: 'anrufen = telefonla aramak', anchor: 'anrufen = telefonla aramak', prerequisites: ['private.day7.fiil.anrufen'] },
-    { id: 'private.day10.verb.anrufen-cumle', topicId: P10_VER, label: 'Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['private.day10.verb.anrufen', 'private.day7.fiil.anrufen-ayrilabilen'] },
-    { id: 'private.day10.verb.fernsehen', topicId: P10_VER, label: 'fernsehen = televizyon izlemek', anchor: 'fernsehen = televizyon izlemek', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.fernsehen-cumle', topicId: P10_VER, label: 'Ich sehe am Abend fern.', anchor: 'Ich sehe am Abend fern.', prerequisites: ['private.day10.verb.fernsehen'] },
-    { id: 'private.day10.verb.aufhoeren', topicId: P10_VER, label: 'aufhören = bırakmak', anchor: 'aufhören = bırakmak', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.vorbereiten', topicId: P10_VER, label: 'vorbereiten = hazırlamak', anchor: 'vorbereiten = hazırlamak', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.einladen', topicId: P10_VER, label: 'einladen = davet etmek', anchor: 'einladen = davet etmek', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.mitbringen', topicId: P10_VER, label: 'mitbringen = beraberinde getirmek', anchor: 'mitbringen = beraberinde getirmek', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.aufsetzen', topicId: P10_VER, label: 'aufsetzen = takmak', anchor: 'aufsetzen = takmak', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.zurueckkommen', topicId: P10_VER, label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['private.day3.zurueckkommen'] },
-    { id: 'private.day10.verb.achtgeben', topicId: P10_VER, label: 'achtgeben = dikkat etmek', anchor: 'achtgeben = dikkat etmek', prerequisites: ['private.day10.trennbar.kural'] },
-    { id: 'private.day10.verb.gern-sorular', topicId: P10_VER, label: 'Was machst du gern? / Wann stehst du auf?', anchor: 'Was machst du gern?', prerequisites: ['private.day3.gern.kullanim'] },
+  /* ---------------------------------------------------------------- */
+  /* Soru Kurma                                                       */
+  /* ---------------------------------------------------------------- */
+  { id: 'questions.sorular.evet-hayir-yapi', sectionId: 'questions.yes-no', label: 'Fiil + Özne + ... ? yapısı', anchor: 'Fiil + Özne + Nesne + (diğer bilgiler) ?', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'questions.sorular.donusum', sectionId: 'questions.yes-no', label: 'cümle → soru dönüşümü', anchor: 'Cümle → Soru dönüşümü', prerequisites: ['questions.sorular.evet-hayir-yapi'] },
+  { id: 'questions.sorular.ja-nein-cevap', sectionId: 'questions.yes-no', label: 'Ja / Nein tam cümle cevap', anchor: 'Soru + Ja/Nein cevabı', prerequisites: ['questions.sorular.donusum', 'articles.olumsuzluk.kein-haben'] },
+  { id: 'questions.w-woerter', sectionId: 'questions.w-questions', label: 'W-soruları: Wer, Was, Wo, Woher, Wie, Wann, Welche', anchor: 'W-sorusunda fiil ikinci sıradadır' },
 
-    { id: 'private.day10.sabah.gesicht', topicId: P10_SAB, label: 'Ich wasche mein Gesicht.', anchor: 'Ich wasche mein Gesicht.' },
-    { id: 'private.day10.sabah.zaehne', topicId: P10_SAB, label: 'Ich putze meine Zähne.', anchor: 'Ich putze meine Zähne.' },
-    { id: 'private.day10.sabah.duschen', topicId: P10_SAB, label: 'Ich dusche. (kısa biçim)', anchor: 'Ich dusche.', prerequisites: ['private.day3.sich-duschen'] },
-    { id: 'private.day10.sabah.fruehstueck-fark', topicId: P10_SAB, label: 'Frühstück machen (hazırlamak) ↔ frühstücken (etmek)', anchor: 'Frühstück machen = kahvaltı hazırlamak', prerequisites: ['private.day3.gunluk-rutin'] },
-    { id: 'private.day10.sabah.fruehstuecken', topicId: P10_SAB, label: 'Ich frühstücke.', anchor: 'Ich frühstücke.', prerequisites: ['private.day10.sabah.fruehstueck-fark'] },
+  /* ---------------------------------------------------------------- */
+  /* Yer ve Yön                                                       */
+  /* ---------------------------------------------------------------- */
+  { id: 'places.kontraksiyon.zum', sectionId: 'places.prepositions', label: 'zum = zu + dem', anchor: 'zum = zu + dem' },
+  { id: 'places.kontraksiyon.zur', sectionId: 'places.prepositions', label: 'zur = zu + der', anchor: 'zur = zu + der' },
+  { id: 'places.kontraksiyon.im', sectionId: 'places.prepositions', label: 'im = in + dem', anchor: 'im = in + dem' },
+  { id: 'places.kontraksiyon.ins', sectionId: 'places.prepositions', label: 'ins = in + das', anchor: 'ins = in + das' },
+  { id: 'places.kontraksiyon.am', sectionId: 'places.prepositions', label: 'am = an + dem', anchor: 'am = an + dem' },
+  { id: 'places.kontraksiyon.ans', sectionId: 'places.prepositions', label: 'ans = an + das (bonus)', anchor: 'ans = an + das' },
+  { id: 'places.im-ins-farki', sectionId: 'places.prepositions', label: 'im (yerde) ↔ ins (yöne) farkı', anchor: 'im yerde kalmayı, ins ise bir yöne gitmeyi anlatır', prerequisites: ['places.kontraksiyon.im', 'places.kontraksiyon.ins'] },
+  { id: 'places.nach-hause', sectionId: 'places.prepositions', label: 'nach Hause = eve (yöne)', anchor: 'nach Hause' },
+  { id: 'places.zu-hause', sectionId: 'places.prepositions', label: 'zu Hause = evde', anchor: 'zu Hause' },
+  { id: 'places.mit-dativ', sectionId: 'places.prepositions', label: 'mit + Dativ ister', anchor: 'mit her zaman Dativ ister' },
+  { id: 'places.mit-meinen-freunden', sectionId: 'places.prepositions', label: 'mit meinen Freunden — Dativ çoğulda -n', anchor: 'meinen Freunden', prerequisites: ['places.mit-dativ'] },
+  { id: 'places.der-den-dem', sectionId: 'places.prepositions', label: 'der (Nominativ) / den (Akkusativ) / dem (Dativ)', anchor: 'der / den / dem' },
+  { id: 'places.in-akkusativ-yon', sectionId: 'places.prepositions', label: 'in + Akkusativ (yöne giderken): in den Park', anchor: 'in den Park', prerequisites: ['places.der-den-dem'] },
+  { id: 'places.auf-dem', sectionId: 'places.prepositions', label: 'auf + dem (üzerinde)', anchor: 'auf dem' },
+  { id: 'places.bei-der', sectionId: 'places.prepositions', label: 'bei + Dativ (yanında)', anchor: 'bei der Schule' },
 
-    { id: 'private.day10.gun.schule', topicId: P10_GUN, label: 'Ich gehe zur Schule.', anchor: 'Ich gehe zur Schule.', prerequisites: ['private.day2.verben.gehen-zur'] },
-    { id: 'private.day10.gun.lernen', topicId: P10_GUN, label: 'Ich lerne Deutsch und Mathe in der Schule.', anchor: 'Ich lerne Deutsch und Mathe in der Schule.' },
-    { id: 'private.day10.gun.mittag', topicId: P10_GUN, label: 'Ich esse zu Mittag.', anchor: 'Ich esse zu Mittag.', prerequisites: ['private.day1.verben.essen'] },
-    { id: 'private.day10.gun.hausaufgaben', topicId: P10_GUN, label: 'Ich mache meine Hausaufgaben.', anchor: 'Ich mache meine Hausaufgaben.', prerequisites: ['private.day2.verben.machen'] },
-    { id: 'private.day10.gun.freunde', topicId: P10_GUN, label: 'Ich spiele mit meinen Freunden.', anchor: 'Ich spiele mit meinen Freunden.', prerequisites: ['private.day3.mit-meinen-freunden'] },
+  /* ---------------------------------------------------------------- */
+  /* Sevmek ve Beğenmek                                               */
+  /* ---------------------------------------------------------------- */
+  { id: 'likes.mogen.cekim', sectionId: 'likes.moegen-gern', label: 'mögen çekimi: ich mag, du magst ...', anchor: 'ich mag' },
+  { id: 'likes.gern.kullanim', sectionId: 'likes.moegen-gern', label: 'Fiil + gern kalıbı', anchor: 'Fiil + gern' },
+  { id: 'likes.mogen-gern-farki', sectionId: 'likes.moegen-gern', label: 'mag (isim ister) ↔ gern (fiilden sonra gelir)', anchor: 'mag bir ismi doğrudan sever' },
+  { id: 'likes.gefallen.anlam', sectionId: 'likes.gefallen', label: 'gefallen = beğenmek, hoşuna gitmek', anchor: 'gefallen = beğenmek, hoşuna gitmek' },
+  { id: 'likes.gefallen.kalip', sectionId: 'likes.gefallen', label: 'Das gefällt mir. (hazır kalıp)', anchor: 'Das gefällt mir.', prerequisites: ['likes.gefallen.anlam'] },
 
-    { id: 'private.day10.aksam.abendessen', topicId: P10_AKS, label: 'Ich esse um neun Uhr Abendessen.', anchor: 'Ich esse um neun Uhr Abendessen.', prerequisites: ['private.day3.zaman.um-uhr'] },
-    { id: 'private.day10.aksam.ausziehen', topicId: P10_AKS, label: 'Ich ziehe mich aus.', anchor: 'Ich ziehe mich aus.', prerequisites: ['private.day10.verb.ausziehen'] },
-    { id: 'private.day10.aksam.buch', topicId: P10_AKS, label: 'Ich lese ein Buch.', anchor: 'Ich lese ein Buch.', prerequisites: ['private.day2.gunluk.kitap-okuma'] },
-    { id: 'private.day10.aksam.bett', topicId: P10_AKS, label: 'Danach gehe ich ins Bett.', anchor: 'Danach gehe ich ins Bett.', prerequisites: ['private.day3.kontraksiyon.ins'] },
-    { id: 'private.day10.aksam.spazieren', topicId: P10_AKS, label: 'spazieren gehen = yürüyüş yapmak', anchor: 'spazieren gehen = yürüyüş yapmak' },
+  /* ---------------------------------------------------------------- */
+  /* Essen und Trinken                                                */
+  /* ---------------------------------------------------------------- */
+  { id: 'food.yiyecek.kelimeler', sectionId: 'food.words-basic', label: 'das Ei, das Mehl, der Pfannkuchen, der Kuchen, das Brötchen, die Birne, der Saft', anchor: 'das Ei' },
+  { id: 'food.essen.frage', sectionId: 'food.preferences', label: 'Was isst du gern? / Was essen Sie gern?', anchor: 'Was isst du gern?', prerequisites: ['likes.gern.kullanim'] },
+  { id: 'food.essen.antwort', sectionId: 'food.preferences', label: 'Ich esse gern ...', anchor: 'Ich esse gern Pommes.', prerequisites: ['food.essen.frage'] },
+  { id: 'food.essen.nicht-gern', sectionId: 'food.preferences', label: 'Ich esse ... nicht gern.', anchor: 'Nein, ich esse nicht gern Pizza.', prerequisites: ['food.essen.antwort'] },
+  { id: 'food.essen.lieblingsessen', sectionId: 'food.preferences', label: 'Was ist dein/Ihr Lieblingsessen?', anchor: 'Was ist dein Lieblingsessen?' },
+  { id: 'food.trinken.frage', sectionId: 'food.preferences', label: 'Was trinkst du gern? → Ich trinke gern ...', anchor: 'Was trinkst du gern?' },
+  { id: 'food.trinken.lieblingsgetraenk', sectionId: 'food.preferences', label: 'Was ist dein/Ihr Lieblingsgetränk?', anchor: 'Was ist dein Lieblingsgetränk?' },
+  { id: 'food.essen.kelimeler', sectionId: 'food.preferences', label: 'das Essen, die Pommes, die Pizza, der Reis', anchor: 'die Pommes — patates kızartması' },
+  { id: 'food.getraenke.kelimeler', sectionId: 'food.preferences', label: 'der Orangensaft, der Apfelsaft, die Milch, die Limonade', anchor: 'der Orangensaft — portakal suyu' },
+  { id: 'food.essen.hunger-durst', sectionId: 'food.preferences', label: 'Ich habe Hunger. / Ich habe Durst.', anchor: 'Ich habe Hunger.', prerequisites: ['verbs.haben.tablo'] },
+  { id: 'food.yiyecek.temel', sectionId: 'food.words-more', label: 'das Fleisch, der Wein, das Obst, das Gemüse', anchor: 'Fleisch = et' },
+  { id: 'food.yiyecek.zwiebel', sectionId: 'food.words-more', label: 'die Zwiebel, die Frühlingszwiebeln, die Knoblauchzehe', anchor: 'die Zwiebel = soğan' },
+  { id: 'food.yiyecek.gurke', sectionId: 'food.words-more', label: 'die Salatgurke, die sauren Gurken', anchor: 'die Salatgurke = salatalık' },
+  { id: 'food.yiyecek.essig', sectionId: 'food.words-more', label: 'der Essig = sirke', anchor: 'der Essig — sirke' },
+  { id: 'food.yiyecek.oel-pfeffer', sectionId: 'food.words-more', label: 'das Öl = yağ, der Pfeffer = kara biber', anchor: 'das Öl = yağ' },
+  { id: 'food.yiyecek.haehnchen', sectionId: 'food.words-more', label: 'das Hähnchen = tavuk, die Gemüsesuppe = sebze çorbası', anchor: 'das Hähnchen = tavuk' },
+  { id: 'food.yiyecek.sahne', sectionId: 'food.words-more', label: 'die Sahne = krema, die Tomaten = domatesler, der Käse = peynir', anchor: 'die Sahne = krema' },
+  { id: 'food.yiyecek.nuesse', sectionId: 'food.words-more', label: 'die Nüsse, die Rosinen, der Staubzucker', anchor: 'die Nüsse = kuruyemiş' },
+  { id: 'food.suppe-teller', sectionId: 'food.meal-words', label: 'die Suppe = çorba, der Teller = tabak', anchor: 'die Suppe — çorba' },
+  { id: 'food.lebensmittel', sectionId: 'food.meal-words', label: 'die Lebensmittel = gıda, yiyecekler (çoğul)', anchor: 'die Lebensmittel — gıda' },
 
-    { id: 'private.day10.dann.dann', topicId: P10_DAN, label: 'Dann gehe ich zur Schule.', anchor: 'Dann gehe ich zur Schule.', prerequisites: ['private.day3.zaman.dann'] },
-    { id: 'private.day10.dann.danach', topicId: P10_DAN, label: 'Danach komme ich nach Hause.', anchor: 'Danach komme ich nach Hause.', prerequisites: ['private.day3.zaman.dann'] },
-    { id: 'private.day10.dann.v2', topicId: P10_DAN, label: 'Danach başta → fiil ikinci sırada', anchor: 'Danach komme ich', prerequisites: ['private.day10.dann.danach', 'private.day3.dizilisi.zaman-basta'] },
+  /* ---------------------------------------------------------------- */
+  /* Alışveriş ve Fiyatlar                                            */
+  /* ---------------------------------------------------------------- */
+  { id: 'shopping.miktar.sise', sectionId: 'shopping.quantities', label: 'Zahl + Flasche(n) + Nomen: zwei Flaschen Wasser', anchor: 'zwei Flaschen' },
+  { id: 'shopping.alisveris.kelime', sectionId: 'shopping.frequency', label: 'Alışveriş kelimeleri: kaufen, T-Shirt, Schuhe, Hose', anchor: 'kaufen' },
+  { id: 'shopping.kaufen.frage', sectionId: 'shopping.frequency', label: 'Was kaufst du oft? / Was kaufen Sie oft?', anchor: 'Was kaufst du oft?', prerequisites: ['shopping.alisveris.kelime'] },
+  { id: 'shopping.siklik.immer', sectionId: 'shopping.frequency', label: 'immer = her zaman', anchor: 'immer = her zaman' },
+  { id: 'shopping.siklik.meistens', sectionId: 'shopping.frequency', label: 'meistens = çoğunlukla', anchor: 'meistens = çoğunlukla' },
+  { id: 'shopping.siklik.oft', sectionId: 'shopping.frequency', label: 'oft = sık sık', anchor: 'oft = sık sık' },
+  { id: 'shopping.siklik.manchmal', sectionId: 'shopping.frequency', label: 'manchmal = bazen', anchor: 'manchmal = bazen' },
+  { id: 'shopping.siklik.nie', sectionId: 'shopping.frequency', label: 'nie = asla, hiç', anchor: 'nie = asla' },
+  { id: 'shopping.siklik.cumlede', sectionId: 'shopping.frequency', label: 'sıklık kelimesi fiilden hemen sonra gelir', anchor: 'Ich kaufe immer Obst.', prerequisites: ['shopping.siklik.immer'] },
+  { id: 'shopping.kaufen.pro-woche', sectionId: 'shopping.frequency', label: 'Ich kaufe pro Woche zweimal.', anchor: 'Ich kaufe pro Woche zweimal.' },
+  { id: 'shopping.alisveris.einkaufszettel', sectionId: 'shopping.frequency', label: 'der Einkaufszettel = alışveriş listesi', anchor: 'der Einkaufszettel — alışveriş listesi' },
+  { id: 'shopping.alisveris.einkaufswagen', sectionId: 'shopping.frequency', label: 'der Einkaufswagen = alışveriş arabası', anchor: 'der Einkaufswagen — alışveriş arabası' },
+  { id: 'shopping.alisveris.ifadeler', sectionId: 'shopping.frequency', label: 'Natürlich. / Sonst noch etwas?', anchor: 'Sonst noch etwas?' },
+  { id: 'shopping.miktar.flasche', sectionId: 'shopping.quantities', label: 'eine Flasche ... = bir şişe', anchor: 'eine Flasche Wasser — bir şişe su', prerequisites: ['shopping.miktar.sise'] },
+  { id: 'shopping.miktar.packung', sectionId: 'shopping.quantities', label: 'eine Packung ... = bir paket', anchor: 'eine Packung Mehl — bir paket un' },
+  { id: 'shopping.miktar.dose', sectionId: 'shopping.quantities', label: 'eine Dose ... = bir kutu (konserve)', anchor: 'eine Dose Tomaten — bir kutu domates' },
+  { id: 'shopping.miktar.becher', sectionId: 'shopping.quantities', label: 'ein Becher ... = bir kutu (krema/yoğurt)', anchor: 'ein Becher Sahne — bir kutu krema' },
+  { id: 'shopping.miktar.bund', sectionId: 'shopping.quantities', label: 'ein Bund ... = bir demet', anchor: 'ein Bund Frühlingszwiebeln' },
+  { id: 'shopping.miktar.portion', sectionId: 'shopping.quantities', label: 'die Portion = porsiyon', anchor: 'eine Portion Gemüsesuppe' },
+  { id: 'shopping.miktar.artikel', sectionId: 'shopping.quantities', label: 'ein/eine kabın artikeline göre seçilir', anchor: 'Kabın artikeli neyse', prerequisites: ['articles.artikel.ein-eine'] },
+  { id: 'shopping.fiyat.kosten', sectionId: 'shopping.prices', label: 'kosten = fiyatında olmak', anchor: 'kosten = fiyatında olmak' },
+  { id: 'shopping.fiyat.was-kostet', sectionId: 'shopping.prices', label: 'Was kostet das?', anchor: 'Was kostet das?', prerequisites: ['shopping.fiyat.kosten'] },
+  { id: 'shopping.fiyat.antwort', sectionId: 'shopping.prices', label: 'Das kostet fünf Euro. / Das ist fünf Euro.', anchor: 'Das kostet fünf Euro.', prerequisites: ['numbers.sayilar.onlu-sayilar'] },
+  { id: 'shopping.fiyat.wie-viel', sectionId: 'shopping.prices', label: 'Wie viel kostet ein Kilo ...?', anchor: 'Wie viel kostet ein Kilo Tomaten?' },
+  { id: 'shopping.fiyat.teuer', sectionId: 'shopping.prices', label: 'teuer = pahalı', anchor: 'teuer = pahalı' },
+  { id: 'shopping.brauchen.frage', sectionId: 'shopping.brauchen', label: 'Was brauchst du? / Was brauchen Sie?', anchor: 'Was brauchst du?' },
+  { id: 'shopping.brauchen.antwort', sectionId: 'shopping.brauchen', label: 'Ich brauche ...', anchor: 'Ich brauche den Apfel.', prerequisites: ['shopping.brauchen.frage'] },
+  { id: 'shopping.brauchen.kein', sectionId: 'shopping.brauchen', label: 'Nein, ich brauche kein ...', anchor: 'Nein, ich brauche kein Mehl.', prerequisites: ['articles.artikel.kein-keine'] },
+  { id: 'shopping.wort.kosten', sectionId: 'shopping.prices', label: 'Es kostet nur 180 Euro im Monat.', anchor: 'Es kostet nur 180 Euro im Monat.', prerequisites: ['shopping.fiyat.kosten'] },
+  { id: 'shopping.verkaufen', sectionId: 'shopping.buy-sell', label: 'verkaufen = satmak (kaufen ↔ verkaufen)', anchor: 'verkaufen — satmak' },
 
-    { id: 'private.day10.karsi.besuchen', topicId: P10_KAR, label: 'besuchen ayrılmaz: Ich besuche dich.', anchor: 'Ich besuche dich.', prerequisites: ['private.day10.verb.anrufen-cumle'] },
-    { id: 'private.day10.karsi.ipucu', topicId: P10_KAR, label: 'ayrılmayan başlangıçlar: be-, emp-, er-, ver-, zer-', anchor: 'be-, emp-, er-, ver-, zer-', prerequisites: ['private.day10.karsi.besuchen'] },
-    { id: 'private.day10.karsi.liste', topicId: P10_KAR, label: 'empfinden/erklären/vergessen/zerstören/zerreißen tanıma', anchor: 'zerstören = tahrip etmek', prerequisites: ['private.day10.karsi.ipucu'] },
+  /* ---------------------------------------------------------------- */
+  /* Ev ve Mobilyalar                                                 */
+  /* ---------------------------------------------------------------- */
+  { id: 'home.ev-kelime', sectionId: 'home.rooms', label: 'Ev kelimeleri: die Wohnung, das Zimmer, der Balkon, der Garten', anchor: 'die Wohnung' },
+  { id: 'home.ev.wohnung', sectionId: 'home.rooms', label: 'die Wohnung = ev, daire', anchor: 'die Wohnung — ev, daire' },
+  { id: 'home.ev.bad', sectionId: 'home.rooms', label: 'das Bad = banyo', anchor: 'das Bad — banyo' },
+  { id: 'home.ev.schlafzimmer', sectionId: 'home.rooms', label: 'das Schlafzimmer = yatak odası', anchor: 'das Schlafzimmer — yatak odası' },
+  { id: 'home.ev.flur', sectionId: 'home.rooms', label: 'der Flur = koridor', anchor: 'der Flur — koridor' },
+  { id: 'home.ev.kueche', sectionId: 'home.rooms', label: 'die Küche = mutfak', anchor: 'die Küche — mutfak' },
+  { id: 'home.ev.wohnzimmer', sectionId: 'home.rooms', label: 'das Wohnzimmer = salon', anchor: 'das Wohnzimmer — salon' },
+  { id: 'home.ev.toilette', sectionId: 'home.rooms', label: 'die Toilette / die Toiletten = tuvalet(ler)', anchor: 'die Toilette — tuvalet' },
+  { id: 'home.moebel.genel', sectionId: 'home.furniture', label: 'die Möbel = mobilyalar', anchor: 'die Möbel — mobilyalar' },
+  { id: 'home.moebel.schrank', sectionId: 'home.furniture', label: 'der Schrank = dolap', anchor: 'der Schrank — dolap' },
+  { id: 'home.moebel.bett', sectionId: 'home.furniture', label: 'das Bett = yatak', anchor: 'das Bett — yatak' },
+  { id: 'home.moebel.sofa', sectionId: 'home.furniture', label: 'das Sofa = kanepe', anchor: 'das Sofa — kanepe' },
+  { id: 'home.moebel.sessel', sectionId: 'home.furniture', label: 'der Sessel = koltuk', anchor: 'der Sessel — koltuk' },
+  { id: 'home.moebel.fernseher', sectionId: 'home.furniture', label: 'der Fernseher = televizyon', anchor: 'der Fernseher — televizyon' },
+  { id: 'home.moebel.teppich-regal', sectionId: 'home.furniture', label: 'der Teppich = halı, das Regal = raf', anchor: 'der Teppich — halı' },
+  { id: 'home.moebel.herd-bad', sectionId: 'home.furniture', label: 'der Herd = ocak, die Badewanne = küvet, das Waschbecken = lavabo', anchor: 'der Herd — ocak' },
+  { id: 'home.moebel.auf-dem-sessel', sectionId: 'home.furniture', label: 'auf dem Sessel = koltukta', anchor: 'auf dem Sessel — koltukta', prerequisites: ['places.auf-dem'] },
+  { id: 'home.evim.model', sectionId: 'home.my-home', label: 'Evimi anlatan A1 model metni', anchor: 'Wir haben eine Wohnung.' },
+  { id: 'home.evim.toiletten', sectionId: 'home.my-home', label: 'Wir haben drei Toiletten.', anchor: 'Wir haben drei Toiletten.', prerequisites: ['home.ev.toilette'] },
+  { id: 'home.evim.mein-zimmer', sectionId: 'home.my-home', label: 'Mein Zimmer ist grau / dunkel / klein.', anchor: 'Mein Zimmer ist grau.', prerequisites: ['adjectives.tarif.grau'] },
+  { id: 'home.evim.schwester', sectionId: 'home.my-home', label: 'Meine Schwester hat auch ein Zimmer.', anchor: 'Meine Schwester hat auch ein Zimmer.', prerequisites: ['vocabulary.kelime.auch'] },
+  { id: 'home.evim.ihr-zimmer', sectionId: 'home.my-home', label: 'Ihr Zimmer ist hell / groß.', anchor: 'Ihr Zimmer ist hell.', prerequisites: ['pronouns.iyelik.ihr'] },
+  { id: 'home.evim.wohnzimmer', sectionId: 'home.my-home', label: 'Wir haben ein Wohnzimmer.', anchor: 'Wir haben ein Wohnzimmer.' },
+  { id: 'home.evim.balkon', sectionId: 'home.my-home', label: 'Wir haben einen Balkon. Der Balkon ist groß.', anchor: 'Wir haben einen Balkon.', prerequisites: ['akkusativ.esgibt.akkusativ'] },
+  { id: 'home.evim.kueche', sectionId: 'home.my-home', label: 'Wir haben eine Küche. Unsere Küche ist hell.', anchor: 'Unsere Küche ist hell.', prerequisites: ['pronouns.iyelik.unser'] },
+  { id: 'home.evim.katze', sectionId: 'home.my-home', label: 'Unsere Katze hat auch ein Zimmer.', anchor: 'Unsere Katze hat auch ein Zimmer.', prerequisites: ['vocabulary.hayvanlar.kelime'] },
+  { id: 'home.evim.karsilastirma-yok', sectionId: 'home.my-home', label: 'karşılaştırma yerine iki ayrı cümle', anchor: 'karşılaştırma eki' },
+  { id: 'home.kalip.wir-haben', sectionId: 'home.patterns', label: 'Wir haben + isim', anchor: 'Wir haben + isim' },
+  { id: 'home.kalip.ist-sifat', sectionId: 'home.patterns', label: '... ist + sıfat', anchor: 'ist + sıfat' },
+  { id: 'home.kalip.hat-auch', sectionId: 'home.patterns', label: '... hat auch + isim', anchor: 'hat auch + isim' },
+  { id: 'home.kalip.es-gibt', sectionId: 'home.patterns', label: 'Es gibt + isim', anchor: 'Es gibt + isim', prerequisites: ['akkusativ.esgibt.temel'] },
+  { id: 'home.kalip.sira', sectionId: 'home.patterns', label: 'evi anlatma sırası', anchor: 'kaç oda/tuvalet var' },
+  { id: 'home.wort.badewanne', sectionId: 'home.furniture', label: 'die Badewanne = küvet', anchor: 'die Badewanne = küvet' },
+  { id: 'home.wort.zimmer-satz', sectionId: 'home.my-home', label: 'Das Zimmer ist zehn Quadratmeter groß.', anchor: 'zehn Quadratmeter groß', prerequisites: ['adjectives.tarif.gross-klein'] },
+  { id: 'home.fenster-vorhang', sectionId: 'home.furniture', label: 'das Fenster = pencere, der Vorhang = perde', anchor: 'das Fenster — pencere' },
+  { id: 'home.giessen', sectionId: 'home.chores', label: 'gießen = sulamak: Meine Mutter gießt die Blumen.', anchor: 'Meine Mutter gießt die Blumen.' },
+  { id: 'home.spuelen', sectionId: 'home.chores', label: 'spülen = (bulaşık) yıkamak: Ich spüle das Geschirr.', anchor: 'Ich spüle das Geschirr.' },
+  { id: 'home.reparieren', sectionId: 'home.chores', label: 'reparieren: Mein Vater repariert das Fenster.', anchor: 'Mein Vater repariert das Fenster.', prerequisites: ['vocabulary.reparieren'] },
 
-    { id: 'private.day10.soru.wie-spaet', topicId: P10_SOR, label: 'Wie spät ist es? = saat kaç?', anchor: 'Wie spät ist es?' },
-    { id: 'private.day10.soru.wie-viel', topicId: P10_SOR, label: 'Wie viel Uhr ist es? = saat kaç?', anchor: 'Wie viel Uhr ist es?', prerequisites: ['private.day10.soru.wie-spaet'] },
-    { id: 'private.day10.soru.einheiten', topicId: P10_SOR, label: 'die Uhr / die Stunde / die Minute / die Sekunde', anchor: 'die Stunde = saat' },
+  /* ---------------------------------------------------------------- */
+  /* Sıfatlar                                                         */
+  /* ---------------------------------------------------------------- */
+  { id: 'adjectives.sifat.yuklem', sectionId: 'adjectives.endings', label: 'sein + sıfat → ek almaz', anchor: 'sein fiilinden sonra sıfat ek almaz' },
+  { id: 'adjectives.sifat.ein-notr', sectionId: 'adjectives.endings', label: 'ein + nötr isim + sıfat → -es', anchor: 'ein neues T-Shirt' },
+  { id: 'adjectives.sifat.cogul-artikelsiz', sectionId: 'adjectives.endings', label: 'artikelsiz çoğul + sıfat → -e', anchor: 'schwarze Schuhe' },
+  { id: 'adjectives.tarif.hell', sectionId: 'adjectives.describe', label: 'hell = açık, ferah', anchor: 'hell = açık' },
+  { id: 'adjectives.tarif.dunkel', sectionId: 'adjectives.describe', label: 'dunkel = koyu', anchor: 'dunkel = koyu' },
+  { id: 'adjectives.tarif.breit', sectionId: 'adjectives.describe', label: 'breit = geniş', anchor: 'breit = geniş' },
+  { id: 'adjectives.tarif.schmal', sectionId: 'adjectives.describe', label: 'schmal = dar', anchor: 'schmal = dar' },
+  { id: 'adjectives.tarif.kuehl', sectionId: 'adjectives.describe', label: 'kühl = serin', anchor: 'kühl = serin' },
+  { id: 'adjectives.tarif.grau', sectionId: 'adjectives.describe', label: 'grau = gri', anchor: 'grau = gri' },
+  { id: 'adjectives.tarif.gross-klein', sectionId: 'adjectives.describe', label: 'karşıt çiftler: hell–dunkel, groß–klein, breit–schmal', anchor: 'groß — klein' },
+  { id: 'adjectives.tarif.sein-sifat', sectionId: 'adjectives.describe', label: 'sein + sıfat → ek almaz (tekrar)', anchor: 'hiçbir ek almaz', prerequisites: ['adjectives.sifat.yuklem'] },
 
-    { id: 'private.day10.resmi.kural', topicId: P10_RES, label: 'resmî saat kalıbı: saat + Uhr + dakika', anchor: 'resmî saat = saat + Uhr + dakika', prerequisites: ['private.day5.sayilar.onlu-sayilar'] },
-    { id: 'private.day10.resmi.ornek', topicId: P10_RES, label: 'Es ist acht Uhr zwanzig.', anchor: 'Es ist acht Uhr zwanzig.', prerequisites: ['private.day10.resmi.kural'] },
+  /* ---------------------------------------------------------------- */
+  /* Akkusativ                                                        */
+  /* ---------------------------------------------------------------- */
+  { id: 'akkusativ.esgibt.temel', sectionId: 'akkusativ.es-gibt', label: 'es gibt = var', anchor: 'Es gibt' },
+  { id: 'akkusativ.esgibt.akkusativ', sectionId: 'akkusativ.es-gibt', label: 'es gibt + Akkusativ (der → einen)', anchor: 'es gibt her zaman Akkusativ ister', prerequisites: ['akkusativ.esgibt.temel'] },
+  { id: 'akkusativ.esgibt.genel-cogul', sectionId: 'akkusativ.es-gibt', label: 'genel ifadede çoğul isim artikelsiz kullanılır', anchor: 'Genel ve sayılamayan durumlarda' },
+  { id: 'akkusativ.nedir', sectionId: 'akkusativ.basics', label: 'Akkusativ = nesne hâli (neyi? kimi?)', anchor: 'Akkusativ = nesne hâli' },
+  { id: 'akkusativ.der-den', sectionId: 'akkusativ.basics', label: 'der → den (eril nesne)', anchor: 'der → den', prerequisites: ['akkusativ.nedir'] },
+  { id: 'akkusativ.ein-einen', sectionId: 'akkusativ.basics', label: 'ein → einen (eril nesne)', anchor: 'ein → einen', prerequisites: ['akkusativ.nedir'] },
+  { id: 'akkusativ.die-das', sectionId: 'akkusativ.basics', label: 'die / das / çoğul Akkusativ\'te değişmez', anchor: 'die ve das değişmez', prerequisites: ['akkusativ.nedir'] },
+  { id: 'akkusativ.sein-yok', sectionId: 'akkusativ.basics', label: 'sein Akkusativ istemez: Das ist ein Kuchen.', anchor: 'sein Akkusativ istemez', prerequisites: ['akkusativ.nedir'] },
+  { id: 'akkusativ.mein-meinen', sectionId: 'akkusativ.possessive', label: 'mein → meinen, dein → deinen', anchor: 'mein → meinen', prerequisites: ['akkusativ.ein-einen', 'articles.artikel.mein-meine'] },
+  { id: 'akkusativ.kein-keinen', sectionId: 'akkusativ.possessive', label: 'kein → keinen', anchor: 'kein → keinen', prerequisites: ['akkusativ.ein-einen', 'articles.artikel.kein-keine'] },
 
-    { id: 'private.day10.gunluk.nach-vor', topicId: P10_GUL, label: 'zwanzig nach fünf / zwanzig vor vier', anchor: 'zwanzig nach fünf', prerequisites: ['private.day10.soru.einheiten'] },
-    { id: 'private.day10.gunluk.viertel', topicId: P10_GUL, label: 'Viertel nach sechs / Viertel vor neun', anchor: 'Viertel nach sechs', prerequisites: ['private.day10.gunluk.nach-vor'] },
+  /* ---------------------------------------------------------------- */
+  /* Saatler ve Zaman                                                 */
+  /* ---------------------------------------------------------------- */
+  { id: 'time.zaman.um-uhr', sectionId: 'time.expressions', label: 'um + saat', anchor: 'um 7 Uhr' },
+  { id: 'time.zaman.am', sectionId: 'time.expressions', label: 'am Morgen / am Abend / am Wochenende', anchor: 'am Morgen', prerequisites: ['places.kontraksiyon.am'] },
+  { id: 'time.zaman.im-mevsim', sectionId: 'time.expressions', label: 'im Winter / im Sommer', anchor: 'im Winter', prerequisites: ['places.kontraksiyon.im'] },
+  { id: 'time.zaman.dann', sectionId: 'time.expressions', label: 'dann / danach = sonra', anchor: 'Dann' },
+  { id: 'time.zaman.morgen-cift-anlam', sectionId: 'time.expressions', label: 'morgen (yarın, küçük harf) ↔ der Morgen (sabah, isim)', anchor: 'morgen küçük harfle' },
+  { id: 'time.soru.wie-spaet', sectionId: 'time.question', label: 'Wie spät ist es? = saat kaç?', anchor: 'Wie spät ist es?' },
+  { id: 'time.soru.wie-viel', sectionId: 'time.question', label: 'Wie viel Uhr ist es? = saat kaç?', anchor: 'Wie viel Uhr ist es?', prerequisites: ['time.soru.wie-spaet'] },
+  { id: 'time.soru.einheiten', sectionId: 'time.question', label: 'die Uhr / die Stunde / die Minute / die Sekunde', anchor: 'die Stunde = saat' },
+  { id: 'time.resmi.kural', sectionId: 'time.official', label: 'resmî saat kalıbı: saat + Uhr + dakika', anchor: 'resmî saat = saat + Uhr + dakika', prerequisites: ['numbers.sayilar.onlu-sayilar'] },
+  { id: 'time.resmi.ornek', sectionId: 'time.official', label: 'Es ist acht Uhr zwanzig.', anchor: 'Es ist acht Uhr zwanzig.', prerequisites: ['time.resmi.kural'] },
+  { id: 'time.gunluk.nach-vor', sectionId: 'time.everyday', label: 'zwanzig nach fünf / zwanzig vor vier', anchor: 'zwanzig nach fünf', prerequisites: ['time.soru.einheiten'] },
+  { id: 'time.gunluk.viertel', sectionId: 'time.everyday', label: 'Viertel nach sechs / Viertel vor neun', anchor: 'Viertel nach sechs', prerequisites: ['time.gunluk.nach-vor'] },
+  { id: 'time.halb.anlam', sectionId: 'time.halb', label: 'halb acht = 07.30 (bir sonrakini söyler)', anchor: 'halb acht = 07.30', prerequisites: ['time.soru.einheiten'] },
+  { id: 'time.halb.ornek', sectionId: 'time.halb', label: 'Es ist halb acht.', anchor: 'Es ist halb acht.', prerequisites: ['time.halb.anlam'] },
+  { id: 'time.um.kural', sectionId: 'time.um', label: 'um sieben Uhr = saat yedide', anchor: 'um sieben Uhr = saat yedide', prerequisites: ['time.zaman.um-uhr'] },
+  { id: 'time.um.ornek', sectionId: 'time.um', label: 'Ich stehe um sieben Uhr auf.', anchor: 'Ich stehe um sieben Uhr auf.', prerequisites: ['time.um.kural', 'separable-verbs.verb.aufstehen'] },
 
-    { id: 'private.day10.halb.anlam', topicId: P10_HAL, label: 'halb acht = 07.30 (bir sonrakini söyler)', anchor: 'halb acht = 07.30', prerequisites: ['private.day10.soru.einheiten'] },
-    { id: 'private.day10.halb.ornek', topicId: P10_HAL, label: 'Es ist halb acht.', anchor: 'Es ist halb acht.', prerequisites: ['private.day10.halb.anlam'] },
+  /* ---------------------------------------------------------------- */
+  /* Mein Tag                                                         */
+  /* ---------------------------------------------------------------- */
+  { id: 'daily-routine.gunluk.okul-is', sectionId: 'daily-routine.everyday-sentences', label: 'zur Schule / zur Arbeit gitmek', anchor: 'Okul ve iş', prerequisites: ['sentence-building.verben.gehen-zur'] },
+  { id: 'daily-routine.gunluk.kahve-spor', sectionId: 'daily-routine.everyday-sentences', label: 'Kaffee trinken, Sport machen', anchor: 'Kaffee trinken, Sport machen', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'daily-routine.gunluk.kitap-okuma', sectionId: 'daily-routine.everyday-sentences', label: 'ein Buch lesen', anchor: 'ein Buch lesen', prerequisites: ['sentence-building.cumle.olumlu-yapi'] },
+  { id: 'daily-routine.gunluk.mini-dialog', sectionId: 'daily-routine.everyday-sentences', label: 'mini diyalog: soru + Ja/Nein cevap', anchor: 'Mini diyalog', prerequisites: ['questions.sorular.ja-nein-cevap'] },
+  { id: 'daily-routine.gunluk-rutin', sectionId: 'daily-routine.routine-verbs', label: 'Günlük rutin fiilleri: frühstücken, putzen, gießen, hören', anchor: 'frühstücken' },
+  { id: 'daily-routine.sabah.gesicht', sectionId: 'daily-routine.morning', label: 'Ich wasche mein Gesicht.', anchor: 'Ich wasche mein Gesicht.' },
+  { id: 'daily-routine.sabah.zaehne', sectionId: 'daily-routine.morning', label: 'Ich putze meine Zähne.', anchor: 'Ich putze meine Zähne.' },
+  { id: 'daily-routine.sabah.duschen', sectionId: 'daily-routine.morning', label: 'Ich dusche. (kısa biçim)', anchor: 'Ich dusche.', prerequisites: ['verbs.sich-duschen'] },
+  { id: 'daily-routine.sabah.fruehstueck-fark', sectionId: 'daily-routine.morning', label: 'Frühstück machen (hazırlamak) ↔ frühstücken (etmek)', anchor: 'Frühstück machen = kahvaltı hazırlamak', prerequisites: ['daily-routine.gunluk-rutin'] },
+  { id: 'daily-routine.sabah.fruehstuecken', sectionId: 'daily-routine.morning', label: 'Ich frühstücke.', anchor: 'Ich frühstücke.', prerequisites: ['daily-routine.sabah.fruehstueck-fark'] },
+  { id: 'daily-routine.gun.schule', sectionId: 'daily-routine.day', label: 'Ich gehe zur Schule.', anchor: 'Ich gehe zur Schule.', prerequisites: ['sentence-building.verben.gehen-zur'] },
+  { id: 'daily-routine.gun.lernen', sectionId: 'daily-routine.day', label: 'Ich lerne Deutsch und Mathe in der Schule.', anchor: 'Ich lerne Deutsch und Mathe in der Schule.' },
+  { id: 'daily-routine.gun.mittag', sectionId: 'daily-routine.day', label: 'Ich esse zu Mittag.', anchor: 'Ich esse zu Mittag.', prerequisites: ['verbs.verben.essen'] },
+  { id: 'daily-routine.gun.hausaufgaben', sectionId: 'daily-routine.day', label: 'Ich mache meine Hausaufgaben.', anchor: 'Ich mache meine Hausaufgaben.', prerequisites: ['sentence-building.verben.machen'] },
+  { id: 'daily-routine.gun.freunde', sectionId: 'daily-routine.day', label: 'Ich spiele mit meinen Freunden.', anchor: 'Ich spiele mit meinen Freunden.', prerequisites: ['places.mit-meinen-freunden'] },
+  { id: 'daily-routine.aksam.abendessen', sectionId: 'daily-routine.evening', label: 'Ich esse um neun Uhr Abendessen.', anchor: 'Ich esse um neun Uhr Abendessen.', prerequisites: ['time.zaman.um-uhr'] },
+  { id: 'daily-routine.aksam.ausziehen', sectionId: 'daily-routine.evening', label: 'Ich ziehe mich aus.', anchor: 'Ich ziehe mich aus.', prerequisites: ['separable-verbs.verb.ausziehen'] },
+  { id: 'daily-routine.aksam.buch', sectionId: 'daily-routine.evening', label: 'Ich lese ein Buch.', anchor: 'Ich lese ein Buch.', prerequisites: ['daily-routine.gunluk.kitap-okuma'] },
+  { id: 'daily-routine.aksam.bett', sectionId: 'daily-routine.evening', label: 'Danach gehe ich ins Bett.', anchor: 'Danach gehe ich ins Bett.', prerequisites: ['places.kontraksiyon.ins'] },
+  { id: 'daily-routine.aksam.spazieren', sectionId: 'daily-routine.evening', label: 'spazieren gehen = yürüyüş yapmak', anchor: 'spazieren gehen = yürüyüş yapmak' },
+  { id: 'daily-routine.tam.model', sectionId: 'daily-routine.full', label: 'Mein Tag kanonik A1 modeli (16 cümle)', anchor: 'Ich wache um sieben Uhr auf.', prerequisites: ['daily-routine.sabah.zaehne', 'daily-routine.gun.hausaufgaben', 'daily-routine.aksam.bett'] },
+  { id: 'daily-routine.tam.sablon', sectionId: 'daily-routine.full', label: 'Mein Tag kopya iskeleti', anchor: 'Ich stehe um ... Uhr auf.', prerequisites: ['daily-routine.tam.model'] },
+  { id: 'daily-routine.tam.uretim', sectionId: 'daily-routine.full', label: 'Erzähle deinen Tag. (serbest üretim)', anchor: 'Erzähle deinen Tag.', prerequisites: ['daily-routine.tam.sablon'] },
+  { id: 'daily-routine.plans', sectionId: 'daily-routine.plans', label: 'Yarın planı: Ich will um sieben Uhr aufstehen.', anchor: 'Ich will um sieben Uhr aufstehen.', prerequisites: ['modal-verbs.trennbar', 'time.um.kural'] },
 
-    { id: 'private.day10.um.kural', topicId: P10_UMU, label: 'um sieben Uhr = saat yedide', anchor: 'um sieben Uhr = saat yedide', prerequisites: ['private.day3.zaman.um-uhr'] },
-    { id: 'private.day10.um.ornek', topicId: P10_UMU, label: 'Ich stehe um sieben Uhr auf.', anchor: 'Ich stehe um sieben Uhr auf.', prerequisites: ['private.day10.um.kural', 'private.day10.verb.aufstehen'] },
+  /* ---------------------------------------------------------------- */
+  /* Ayrılabilen Fiiller                                              */
+  /* ---------------------------------------------------------------- */
+  { id: 'separable-verbs.ayrilabilen.kural', sectionId: 'separable-verbs.rule', label: 'ayrılabilen fiil kuralı: önek cümlenin sonuna gider', anchor: 'önek cümlenin en sonuna gider' },
+  { id: 'separable-verbs.aufstehen', sectionId: 'separable-verbs.rule', label: 'aufstehen = kalkmak', anchor: 'aufstehen = kalkmak', prerequisites: ['separable-verbs.ayrilabilen.kural'] },
+  { id: 'separable-verbs.aufraeumen', sectionId: 'separable-verbs.rule', label: 'aufräumen = toplamak/düzenlemek', anchor: 'aufräumen = toplamak', prerequisites: ['separable-verbs.ayrilabilen.kural'] },
+  { id: 'separable-verbs.zurueckkommen', sectionId: 'separable-verbs.rule', label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['separable-verbs.ayrilabilen.kural'] },
+  { id: 'separable-verbs.fiil.anrufen', sectionId: 'separable-verbs.anrufen', label: 'anrufen = telefonla aramak', anchor: 'anrufen = (telefonla) aramak' },
+  { id: 'separable-verbs.fiil.anrufen-ayrilabilen', sectionId: 'separable-verbs.anrufen', label: 'anrufen ayrılabilen: Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['separable-verbs.ayrilabilen.kural', 'separable-verbs.fiil.anrufen'] },
+  { id: 'separable-verbs.trennbar.kural', sectionId: 'separable-verbs.what', label: 'ayrılabilen fiil kuralı: kök 2. sırada, önek sonda', anchor: 'kök ikinci sırada, önek en sonda', prerequisites: ['separable-verbs.ayrilabilen.kural'] },
+  { id: 'separable-verbs.trennbar.ornek', sectionId: 'separable-verbs.what', label: 'Ich stehe um 7 Uhr auf.', anchor: 'Ich stehe um 7 Uhr auf.', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.trennbar.saat-basta', sectionId: 'separable-verbs.what', label: 'Um 7 Uhr stehe ich auf.', anchor: 'Um 7 Uhr stehe ich auf.', prerequisites: ['separable-verbs.trennbar.kural', 'sentence-building.dizilisi.zaman-basta'] },
+  { id: 'separable-verbs.verb.aufstehen', sectionId: 'separable-verbs.core', label: 'aufstehen = yataktan kalkmak', anchor: 'aufstehen = yataktan kalkmak', prerequisites: ['separable-verbs.aufstehen'] },
+  { id: 'separable-verbs.verb.aufwachen', sectionId: 'separable-verbs.core', label: 'aufwachen = uyanmak', anchor: 'aufwachen = uyanmak', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.uyanma-farki', sectionId: 'separable-verbs.core', label: 'aufwachen (göz açmak) ↔ aufstehen (kalkmak) farkı', anchor: 'gözlerini açmak', prerequisites: ['separable-verbs.verb.aufstehen', 'separable-verbs.verb.aufwachen'] },
+  { id: 'separable-verbs.verb.anziehen', sectionId: 'separable-verbs.core', label: 'sich anziehen = giyinmek', anchor: 'sich anziehen = giyinmek', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.ausziehen', sectionId: 'separable-verbs.core', label: 'sich ausziehen = üstünü çıkarmak', anchor: 'sich ausziehen = üstünü çıkarmak', prerequisites: ['separable-verbs.verb.anziehen'] },
+  { id: 'separable-verbs.verb.anziehen-chunk', sectionId: 'separable-verbs.core', label: 'Ich ziehe mich an. (hazır kalıp)', anchor: 'Ich ziehe mich an.', prerequisites: ['separable-verbs.verb.anziehen', 'verbs.refleksif.temel'] },
+  { id: 'separable-verbs.verb.einkaufen', sectionId: 'separable-verbs.core', label: 'einkaufen = alışveriş yapmak', anchor: 'einkaufen = alışveriş yapmak', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.einkaufen-cumle', sectionId: 'separable-verbs.core', label: 'Ich kaufe ein.', anchor: 'Ich kaufe ein.', prerequisites: ['separable-verbs.verb.einkaufen'] },
+  { id: 'separable-verbs.verb.aufraeumen', sectionId: 'separable-verbs.core', label: 'aufräumen = odayı toplamak', anchor: 'aufräumen = odayı toplamak', prerequisites: ['separable-verbs.aufraeumen'] },
+  { id: 'separable-verbs.verb.aufraeumen-cumle', sectionId: 'separable-verbs.core', label: 'Ich räume auf.', anchor: 'Ich räume auf.', prerequisites: ['separable-verbs.verb.aufraeumen'] },
+  { id: 'separable-verbs.verb.anrufen', sectionId: 'separable-verbs.core', label: 'anrufen = telefonla aramak', anchor: 'anrufen = telefonla aramak', prerequisites: ['separable-verbs.fiil.anrufen'] },
+  { id: 'separable-verbs.verb.anrufen-cumle', sectionId: 'separable-verbs.core', label: 'Ich rufe dich an.', anchor: 'Ich rufe dich an.', prerequisites: ['separable-verbs.verb.anrufen', 'separable-verbs.fiil.anrufen-ayrilabilen'] },
+  { id: 'separable-verbs.verb.fernsehen', sectionId: 'separable-verbs.core', label: 'fernsehen = televizyon izlemek', anchor: 'fernsehen = televizyon izlemek', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.fernsehen-cumle', sectionId: 'separable-verbs.core', label: 'Ich sehe am Abend fern.', anchor: 'Ich sehe am Abend fern.', prerequisites: ['separable-verbs.verb.fernsehen'] },
+  { id: 'separable-verbs.verb.aufhoeren', sectionId: 'separable-verbs.core', label: 'aufhören = bırakmak', anchor: 'aufhören = bırakmak', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.vorbereiten', sectionId: 'separable-verbs.core', label: 'vorbereiten = hazırlamak', anchor: 'vorbereiten = hazırlamak', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.einladen', sectionId: 'separable-verbs.core', label: 'einladen = davet etmek', anchor: 'einladen = davet etmek', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.mitbringen', sectionId: 'separable-verbs.core', label: 'mitbringen = beraberinde getirmek', anchor: 'mitbringen = beraberinde getirmek', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.aufsetzen', sectionId: 'separable-verbs.core', label: 'aufsetzen = takmak', anchor: 'aufsetzen = takmak', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.zurueckkommen', sectionId: 'separable-verbs.core', label: 'zurückkommen = geri dönmek', anchor: 'zurückkommen = geri dönmek', prerequisites: ['separable-verbs.zurueckkommen'] },
+  { id: 'separable-verbs.verb.achtgeben', sectionId: 'separable-verbs.core', label: 'achtgeben = dikkat etmek', anchor: 'achtgeben = dikkat etmek', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.verb.gern-sorular', sectionId: 'separable-verbs.core', label: 'Was machst du gern? / Wann stehst du auf?', anchor: 'Was machst du gern?', prerequisites: ['likes.gern.kullanim'] },
+  { id: 'separable-verbs.karsi.besuchen', sectionId: 'separable-verbs.compare', label: 'besuchen ayrılmaz: Ich besuche dich.', anchor: 'Ich besuche dich.', prerequisites: ['separable-verbs.verb.anrufen-cumle'] },
+  { id: 'separable-verbs.karsi.ipucu', sectionId: 'separable-verbs.compare', label: 'ayrılmayan başlangıçlar: be-, emp-, er-, ver-, zer-', anchor: 'be-, emp-, er-, ver-, zer-', prerequisites: ['separable-verbs.karsi.besuchen'] },
+  { id: 'separable-verbs.karsi.liste', sectionId: 'separable-verbs.compare', label: 'empfinden/erklären/vergessen/zerstören/zerreißen tanıma', anchor: 'zerstören = tahrip etmek', prerequisites: ['separable-verbs.karsi.ipucu'] },
+  { id: 'separable-verbs.frage', sectionId: 'separable-verbs.question-negation', label: 'Soru: Stehst du früh auf? (önek sonda kalır)', anchor: 'Stehst du früh auf?', prerequisites: ['separable-verbs.trennbar.kural'] },
+  { id: 'separable-verbs.nicht', sectionId: 'separable-verbs.question-negation', label: 'Olumsuz: nicht önekten önce gelir', anchor: 'nicht önekten önce gelir', prerequisites: ['separable-verbs.trennbar.kural', 'articles.olumsuzluk.nicht'] },
+  { id: 'separable-verbs.mit-modal', sectionId: 'separable-verbs.with-modal', label: 'Modalverb ile tek parça: Ich will früh aufstehen.', anchor: 'Ich will früh aufstehen.', prerequisites: ['separable-verbs.trennbar.kural', 'modal-verbs.kural'] },
+  { id: 'separable-verbs.einnehmen', sectionId: 'separable-verbs.with-modal', label: 'einnehmen = (ilaç) almak', anchor: 'einnehmen — (ilaç) almak', prerequisites: ['separable-verbs.trennbar.kural'] },
 
-    { id: 'private.day10.tam.model', topicId: P10_TAM, label: 'Mein Tag kanonik A1 modeli (16 cümle)', anchor: 'Ich wache um sieben Uhr auf.', prerequisites: ['private.day10.sabah.zaehne', 'private.day10.gun.hausaufgaben', 'private.day10.aksam.bett'] },
-    { id: 'private.day10.tam.sablon', topicId: P10_TAM, label: 'Mein Tag kopya iskeleti', anchor: 'Ich stehe um ... Uhr auf.', prerequisites: ['private.day10.tam.model'] },
-    { id: 'private.day10.tam.uretim', topicId: P10_TAM, label: 'Erzähle deinen Tag. (serbest üretim)', anchor: 'Erzähle deinen Tag.', prerequisites: ['private.day10.tam.sablon'] },
+  /* ---------------------------------------------------------------- */
+  /* Modalverben                                                      */
+  /* ---------------------------------------------------------------- */
+  { id: 'modal-verbs.moechten.cekim', sectionId: 'modal-verbs.moechten', label: 'möchten çekimi: ich möchte, du möchtest ...', anchor: 'ich möchte' },
+  { id: 'modal-verbs.moechten-infinitiv', sectionId: 'modal-verbs.rule', label: 'möchte + ... + fiil (mastar) cümle sonunda', anchor: 'mastar halinde cümlenin en sonuna gider', prerequisites: ['modal-verbs.moechten.cekim'] },
+  { id: 'modal-verbs.anlamlar', sectionId: 'modal-verbs.what', label: 'Modalverb anlamları: können, möchten, wollen, sollen, dürfen', anchor: 'können = -ebilmek' },
+  { id: 'modal-verbs.ich-er-ayni', sectionId: 'modal-verbs.what', label: 'ich ve er/sie/es biçimi aynı: ich kann = er kann', anchor: 'ich ve er/sie/es biçimleri aynıdır', prerequisites: ['modal-verbs.anlamlar'] },
+  { id: 'modal-verbs.kural', sectionId: 'modal-verbs.rule', label: 'Özne + Modalverb (2. sıra) + … + mastar (sonda)', anchor: 'Özne + Modalverb + … + Mastar', prerequisites: ['sentence-building.dizilisi.verb-ikinci'] },
+  { id: 'modal-verbs.koennen.cekim', sectionId: 'modal-verbs.koennen', label: 'können çekimi: ich kann, du kannst …', anchor: 'du kannst' },
+  { id: 'modal-verbs.koennen.kullanim', sectionId: 'modal-verbs.koennen', label: 'können = -ebilmek: Ich kann Deutsch sprechen.', anchor: 'Ich kann Deutsch sprechen.', prerequisites: ['modal-verbs.koennen.cekim', 'modal-verbs.kural'] },
+  { id: 'modal-verbs.moechten.kullanim', sectionId: 'modal-verbs.moechten', label: 'möchten + mastar: Ich möchte Deutsch lernen.', anchor: 'Ich möchte Deutsch lernen.', prerequisites: ['modal-verbs.moechten.cekim', 'modal-verbs.kural'] },
+  { id: 'modal-verbs.wollen.cekim', sectionId: 'modal-verbs.wollen', label: 'wollen çekimi: ich will, du willst …', anchor: 'du willst' },
+  { id: 'modal-verbs.wollen.kullanim', sectionId: 'modal-verbs.wollen', label: 'wollen = niyet / plan: Mein Vater will ein Haus kaufen.', anchor: 'Mein Vater will ein Haus kaufen.', prerequisites: ['modal-verbs.wollen.cekim', 'modal-verbs.kural'] },
+  { id: 'modal-verbs.wollen-moechten', sectionId: 'modal-verbs.wollen', label: 'möchten (kibar istek) ↔ wollen (doğrudan niyet)', anchor: 'möchten = kibar istek', prerequisites: ['modal-verbs.wollen.kullanim', 'modal-verbs.moechten.kullanim'] },
+  { id: 'modal-verbs.sollen.cekim', sectionId: 'modal-verbs.sollen', label: 'sollen çekimi: ich soll, du sollst …', anchor: 'du sollst' },
+  { id: 'modal-verbs.sollen.kullanim', sectionId: 'modal-verbs.sollen', label: 'sollen = -meli / -malı: Ich soll meine Hausaufgaben machen.', anchor: 'Ich soll meine Hausaufgaben machen.', prerequisites: ['modal-verbs.sollen.cekim', 'modal-verbs.kural'] },
+  { id: 'modal-verbs.duerfen.cekim', sectionId: 'modal-verbs.duerfen', label: 'dürfen çekimi: ich darf, du darfst …', anchor: 'du darfst' },
+  { id: 'modal-verbs.man', sectionId: 'modal-verbs.duerfen', label: 'man = insan / kişi (3. tekil)', anchor: 'man = insan' },
+  { id: 'modal-verbs.duerfen.verbot', sectionId: 'modal-verbs.duerfen', label: 'dürfen + nicht = yasak: Hier darf man nicht parken.', anchor: 'Hier darf man nicht parken.', prerequisites: ['modal-verbs.duerfen.cekim', 'modal-verbs.man'] },
+  { id: 'modal-verbs.duerfen.frage', sectionId: 'modal-verbs.duerfen', label: 'İzin sorma: Darf ich hier parken?', anchor: 'Darf ich hier parken?', prerequisites: ['modal-verbs.duerfen.cekim'] },
+  { id: 'modal-verbs.moegen.anlam', sectionId: 'modal-verbs.moegen-muessen', label: 'mögen = bir şeyi sevmek (Modalverb olarak tanıma)', anchor: 'mögen = bir şeyi sevmek', prerequisites: ['likes.mogen.cekim'] },
+  { id: 'modal-verbs.muessen.anlam', sectionId: 'modal-verbs.moegen-muessen', label: 'müssen = zorunluluk (yalnızca anlam)', anchor: 'müssen = zorunluluk' },
+  { id: 'modal-verbs.frage', sectionId: 'modal-verbs.questions', label: 'Soru: Modalverb + Özne + … + Mastar?', anchor: 'Modalverb + Özne + … + Mastar ?', prerequisites: ['modal-verbs.kural', 'questions.sorular.evet-hayir-yapi'] },
+  { id: 'modal-verbs.ja-nein', sectionId: 'modal-verbs.questions', label: 'Tam cevap: Ja, ich kann kochen. / Nein, ich kann nicht kochen.', anchor: 'Ja, ich kann kochen.', prerequisites: ['modal-verbs.frage'] },
+  { id: 'modal-verbs.nicht', sectionId: 'modal-verbs.negation', label: 'Olumsuz: nicht sondaki mastarın önüne gelir', anchor: 'nicht sondaki mastarın önüne gelir', prerequisites: ['modal-verbs.kural', 'articles.olumsuzluk.nicht'] },
+  { id: 'modal-verbs.trennbar', sectionId: 'modal-verbs.separable', label: 'Modalverb + ayrılabilen fiil: fiil bölünmez (Ich will früh aufstehen.)', anchor: 'ayrılabilen fiil bölünmez', prerequisites: ['modal-verbs.kural', 'separable-verbs.ayrilabilen.kural'] },
+  { id: 'modal-verbs.akkusativ', sectionId: 'modal-verbs.akkusativ', label: 'Modalverb + Akkusativ: Ich möchte einen Kuchen kaufen.', anchor: 'Ich möchte einen Kuchen kaufen.', prerequisites: ['modal-verbs.kural', 'akkusativ.ein-einen'] },
 
-    { id: 'private.day10.wort.ruhig', topicId: P10_WOR, label: 'ruhig / nur / beide', anchor: 'ruhig = sessiz' },
-    { id: 'private.day10.wort.beide', topicId: P10_WOR, label: 'beide = ikisi de', anchor: 'beide = ikisi de', prerequisites: ['private.day10.wort.ruhig'] },
-    { id: 'private.day10.wort.badewanne', topicId: P10_WOR, label: 'die Badewanne = küvet', anchor: 'die Badewanne = küvet' },
-    { id: 'private.day10.wort.zimmer-satz', topicId: P10_WOR, label: 'Das Zimmer ist zehn Quadratmeter groß.', anchor: 'zehn Quadratmeter groß', prerequisites: ['private.day7.tarif.gross-klein'] },
-    { id: 'private.day10.wort.kosten', topicId: P10_WOR, label: 'Es kostet nur 180 Euro im Monat.', anchor: 'Es kostet nur 180 Euro im Monat.', prerequisites: ['private.day7.fiyat.kosten'] },
-    { id: 'private.day10.wort.ziemlich', topicId: P10_WOR, label: 'ziemlich = oldukça', anchor: 'ziemlich = oldukça' },
-    { id: 'private.day10.wort.frueh-lange', topicId: P10_WOR, label: 'früh = erken, lange = uzun', anchor: 'früh = erken' },
-  ]),
-];
+  /* ---------------------------------------------------------------- */
+  /* Kelime Haznesi                                                   */
+  /* ---------------------------------------------------------------- */
+  { id: 'vocabulary.hava.ifadeler', sectionId: 'vocabulary.weather-animals', label: 'Wetter ifadeleri: schön, warm, kalt', anchor: 'Das Wetter ist' },
+  { id: 'vocabulary.hayvanlar.kelime', sectionId: 'vocabulary.weather-animals', label: 'Hayvan kelimeleri: die Katze, der Hund, das Tier', anchor: 'die Katze' },
+  { id: 'vocabulary.hobiler.kelime', sectionId: 'vocabulary.weather-animals', label: 'Hobi kelimeleri: schwimmen, Fußball, lesen, fotografieren', anchor: 'gern Fußball' },
+  { id: 'vocabulary.kelime.leider', sectionId: 'vocabulary.small-words', label: 'leider = maalesef, ne yazık ki', anchor: 'leider' },
+  { id: 'vocabulary.kelime.mehr', sectionId: 'vocabulary.small-words', label: 'mehr = daha fazla', anchor: 'mehr' },
+  { id: 'vocabulary.kelime.geschwister', sectionId: 'vocabulary.small-words', label: 'die Geschwister = kardeşler', anchor: 'Geschwister' },
+  { id: 'vocabulary.kelime.seit', sectionId: 'vocabulary.small-words', label: 'seit = -den beri', anchor: 'seit', prerequisites: ['places.mit-dativ'] },
+  { id: 'vocabulary.kelime.flughafen', sectionId: 'vocabulary.small-words', label: 'der Flughafen = havaalanı', anchor: 'Flughafen' },
+  { id: 'vocabulary.kelime.moment', sectionId: 'vocabulary.small-words', label: 'der Moment / Moment! = an, bir dakika', anchor: 'Moment' },
+  { id: 'vocabulary.kelime.gluecklich', sectionId: 'vocabulary.daily-words', label: 'glücklich = mutlu, der Traum = hayal', anchor: 'glücklich = mutlu' },
+  { id: 'vocabulary.kelime.gast-leute', sectionId: 'vocabulary.daily-words', label: 'der Gast / die Gäste, die Leute, in der Mensa', anchor: 'der Gast = misafir' },
+  { id: 'vocabulary.kelime.fuer-dafuer', sectionId: 'vocabulary.daily-words', label: 'für = için, dafür = bunun için', anchor: 'für = için' },
+  { id: 'vocabulary.kelime.nur-etwas-viele', sectionId: 'vocabulary.daily-words', label: 'nur = sadece, etwas = bir şey, viele = bir çok', anchor: 'nur = sadece' },
+  { id: 'vocabulary.kelime.dazu-fertig-schmeckt', sectionId: 'vocabulary.daily-words', label: 'dazu = ayrıca, fertig = hazır, schmeckt = tadı güzel', anchor: 'fertig = hazır' },
+  { id: 'vocabulary.kelime.zusammen-dort', sectionId: 'vocabulary.daily-words', label: 'zusammen = birlikte, dort = orada', anchor: 'zusammen = birlikte' },
+  { id: 'vocabulary.kelime.auch', sectionId: 'vocabulary.daily-words', label: 'auch = de, da, ayrıca', anchor: 'auch = de / da' },
+  { id: 'vocabulary.wort.ruhig', sectionId: 'vocabulary.more-words', label: 'ruhig / nur / beide', anchor: 'ruhig = sessiz' },
+  { id: 'vocabulary.wort.beide', sectionId: 'vocabulary.more-words', label: 'beide = ikisi de', anchor: 'beide = ikisi de', prerequisites: ['vocabulary.wort.ruhig'] },
+  { id: 'vocabulary.wort.ziemlich', sectionId: 'vocabulary.more-words', label: 'ziemlich = oldukça', anchor: 'ziemlich = oldukça' },
+  { id: 'vocabulary.wort.frueh-lange', sectionId: 'vocabulary.more-words', label: 'früh = erken, lange = uzun', anchor: 'früh = erken' },
+  { id: 'vocabulary.tasche-zeitung', sectionId: 'vocabulary.things', label: 'die Tasche = çanta, die Zeitung = gazete', anchor: 'die Tasche — çanta' },
+  { id: 'vocabulary.brief', sectionId: 'vocabulary.things', label: 'der Brief = mektup', anchor: 'der Brief — mektup' },
+  { id: 'vocabulary.ticket', sectionId: 'vocabulary.things', label: 'das Ticket = bilet', anchor: 'das Ticket — bilet' },
+  { id: 'vocabulary.schluessel', sectionId: 'vocabulary.things', label: 'der Schlüssel = anahtar', anchor: 'der Schlüssel — anahtar' },
+  { id: 'vocabulary.spielzeug-seil', sectionId: 'vocabulary.things', label: 'das Spielzeug = oyuncak, das Seil = ip', anchor: 'das Seil — ip' },
+  { id: 'vocabulary.maeppchen', sectionId: 'vocabulary.things', label: 'das Mäppchen = kalem kutusu', anchor: 'das Mäppchen — kalem kutusu' },
+  { id: 'vocabulary.lied-kleid', sectionId: 'vocabulary.things', label: 'das Lied = şarkı, das Kleid = elbise', anchor: 'das Lied — şarkı' },
+  { id: 'vocabulary.museum', sectionId: 'vocabulary.things', label: 'das Museum = müze', anchor: 'das Museum — müze' },
+  { id: 'vocabulary.baby-nachbar', sectionId: 'vocabulary.things', label: 'das Baby = bebek, der Nachbar = komşu', anchor: 'der Nachbar — komşu' },
+  { id: 'vocabulary.nehmen', sectionId: 'vocabulary.new-verbs', label: 'nehmen = almak (du nimmst, er nimmt)', anchor: 'nehmen — almak' },
+  { id: 'vocabulary.benutzen', sectionId: 'vocabulary.new-verbs', label: 'benutzen = kullanmak', anchor: 'benutzen — kullanmak' },
+  { id: 'vocabulary.schicken', sectionId: 'vocabulary.new-verbs', label: 'schicken = göndermek', anchor: 'schicken — göndermek' },
+  { id: 'vocabulary.warten', sectionId: 'vocabulary.new-verbs', label: 'warten = beklemek (warten auf: Ich warte auf dich.)', anchor: 'warten — beklemek' },
+  { id: 'vocabulary.wissen', sectionId: 'vocabulary.new-verbs', label: 'wissen = bilmek (ich weiß — Ich weiß nicht.)', anchor: 'wissen — bilmek' },
+  { id: 'vocabulary.halten-tragen', sectionId: 'vocabulary.new-verbs', label: 'halten = tutmak, tragen = taşımak', anchor: 'tragen — taşımak' },
+  { id: 'vocabulary.verlieren', sectionId: 'vocabulary.new-verbs', label: 'verlieren = kaybetmek', anchor: 'verlieren — kaybetmek' },
+  { id: 'vocabulary.reparieren', sectionId: 'vocabulary.new-verbs', label: 'reparieren = tamir etmek', anchor: 'reparieren — tamir etmek' },
+  { id: 'vocabulary.malen-tanzen', sectionId: 'vocabulary.new-verbs', label: 'malen = resim yapmak, tanzen = dans etmek', anchor: 'malen — resim yapmak' },
+  { id: 'vocabulary.kontrollieren-untersuchen', sectionId: 'vocabulary.new-verbs', label: 'kontrollieren = kontrol etmek, untersuchen = muayene etmek', anchor: 'untersuchen — muayene etmek' },
+  { id: 'vocabulary.schneiden', sectionId: 'vocabulary.new-verbs', label: 'schneiden = kesmek', anchor: 'schneiden — kesmek' },
+  { id: 'vocabulary.wort-satz', sectionId: 'vocabulary.classroom', label: 'das Wort / die Wörter = kelime(ler), der Satz = cümle', anchor: 'das Wort — kelime' },
+  { id: 'vocabulary.frage-antwort', sectionId: 'vocabulary.classroom', label: 'die Frage = soru, die Antwort = cevap, antworten', anchor: 'die Frage — soru' },
+  { id: 'vocabulary.uebersetzen-wiederholen', sectionId: 'vocabulary.classroom', label: 'übersetzen = çevirmek, wiederholen = tekrar etmek', anchor: 'übersetzen — çevirmek' },
+  { id: 'vocabulary.erzaehlen-erklaeren', sectionId: 'vocabulary.classroom', label: 'erzählen (anlatmak) ↔ erklären (açıklamak)', anchor: 'erklären — açıklamak' },
+  { id: 'vocabulary.fehler-falsch', sectionId: 'vocabulary.classroom', label: 'der Fehler = hata, falsch = yanlış, korrigieren = düzeltmek', anchor: 'der Fehler — hata' },
+]);
 
 export const CONCEPT_INDEX = new Map(CONCEPTS.map((item) => [item.id, item]));
 
-export function conceptsForDay(day: number): Concept[] {
-  return CONCEPTS.filter((item) => item.day === day);
-}
-
 export function conceptsForTopic(topicId: string): Concept[] {
   return CONCEPTS.filter((item) => item.topicId === topicId);
+}
+
+export function conceptsForSection(sectionId: string): Concept[] {
+  return CONCEPTS.filter((item) => item.sectionId === sectionId);
 }

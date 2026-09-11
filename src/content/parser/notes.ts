@@ -40,7 +40,8 @@ export function sectionToNote(section: RawSection): LessonNote | null {
       fence.push(raw);
       continue;
     }
-    if (!line) {
+    // Boş satır ve yatay çizgi (`---`) yalnızca ayraçtır; metin olarak gösterilmez.
+    if (!line || /^-{3,}$/.test(line)) {
       closeList();
       closeTable();
       continue;
@@ -72,7 +73,8 @@ export function sectionToNote(section: RawSection): LessonNote | null {
     if (bullet) {
       closeTable();
       list ??= [];
-      list.push(bullet[1].trim());
+      // Kontrol listesi kutucuğu (`- [ ] …`) metne sızmasın.
+      list.push(bullet[1].replace(/^\[[ xX]?\]\s*/, '').trim());
       continue;
     }
     closeList();
