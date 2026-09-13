@@ -387,6 +387,10 @@ function ExerciseStep({
       // Kutlama gorunurken tus yalnizca kutlamayi kapatir; ayni basisla soru
       // atlanmaz.
       if (celebratingRef.current) return;
+      // Bilesen (orn. yazi girdisi) Enter'i zaten isleyip `preventDefault`
+      // dediyse iki kez isleme: ilk basista kontrol edilir, ikincide ilerlenir.
+      // Yoksa ayni basis hem cevabi gosterir hem de soruyu atlar.
+      if (event.defaultPrevented) return;
       if (event.key === 'Enter' && resultRef.current) {
         event.preventDefault();
         continueToNext();

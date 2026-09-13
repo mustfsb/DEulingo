@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { allExercises, reviewBank, topicMasteryDefs, topics } from '../lib/content';
 import { computeTopicMastery } from '../lib/mastery';
+import { summarizeVocab } from '../lib/vocab/mastery';
+import { VOCABULARY } from '../content/vocabulary/inventory';
 import { REVIEW_MODES, type ReviewMode } from '../lib/general-review';
 import { previewReviewSize, startMistakeSession, startReviewSession } from '../lib/start-review';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -31,8 +33,15 @@ export function GeneralReviewScreen({
     () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
     [progress],
   );
+  const vocab = useMemo(() => summarizeVocab(progress), [progress]);
 
   const launch = (mode: ReviewMode, topicId?: string) => {
+    // Kelime modu tek kanonik havuzdan (244) beslenir: yeni Kelime Çalışması.
+    // Eski gr-vocab bankası ilerleme/hatalar için korunur ama birincil yol değildir.
+    if (mode === 'vocab' && !topicId) {
+      navigate({ name: 'vocab' });
+      return;
+    }
     const ok = startReviewSession(api, navigate, { mode, topicId });
     if (!ok) setNotice('Bu başlık için henüz yeterli soru yok.');
   };
@@ -73,23 +82,47 @@ export function GeneralReviewScreen({
         </p>
       )}
 
+      <button
+        type="button"
+        className="card mt-7 flex w-full items-center justify-between gap-4 p-5 text-left anim-pop"
+        style={{ borderColor: 'var(--color-good)', boxShadow: '0 5px 0 0 var(--color-good)' }}
+        onClick={() => navigate({ name: 'vocab' })}
+      >
+        <span>
+          <span className="eyebrow" style={{ color: 'var(--color-good)' }}>
+            Kelime Çalışması · kapalı havuz
+          </span>
+          <span className="mt-1 block text-xl font-bold">244 Kelimeyi Çalış</span>
+          <span className="text-[0.95rem] text-ink-soft">
+            {VOCABULARY.length} kelime · {vocab.mastered} öğrenildi · {vocab.weak} zayıf — de↔tr, eşleştirme,
+            yazma, dinleme
+          </span>
+        </span>
+        <span className="numeral text-2xl" aria-hidden="true">
+          →
+        </span>
+      </button>
+
       <section className="mt-10">
         <h2 className="eyebrow mb-4">Nasıl çalışmak istersin?</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODE_ORDER.map((mode) => {
             const meta = REVIEW_MODES.find((entry) => entry.mode === mode)!;
             const count = previewReviewSize(mode);
+            const isVocab = mode === 'vocab';
             return (
               <button
                 key={mode}
                 type="button"
                 className="card mode-card p-4 text-left"
-                disabled={count === 0}
+                disabled={!isVocab && count === 0}
                 onClick={() => launch(mode)}
               >
                 <p className="text-lg font-bold">{meta.title}</p>
                 <p className="text-[0.92rem] text-ink-soft">{meta.description}</p>
-                <p className="numeral mt-2 text-sm text-ink-faint">~{count} soru</p>
+                <p className="numeral mt-2 text-sm text-ink-faint">
+                  {isVocab ? `${VOCABULARY.length} kelime` : `~${count} soru`}
+                </p>
               </button>
             );
           })}

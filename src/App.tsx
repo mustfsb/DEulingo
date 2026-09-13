@@ -13,10 +13,14 @@ import { StatsScreen } from './screens/StatsScreen';
 import { ReviewSummaryScreen, SummaryTopicScreen } from './screens/SummaryTopicScreen';
 import { SummaryIndexScreen } from './screens/SummaryIndexScreen';
 import { TopicScreen } from './screens/TopicScreen';
+import { VocabHomeScreen } from './screens/VocabHomeScreen';
+import { VocabListScreen } from './screens/VocabListScreen';
+import { VocabStudyScreen } from './screens/VocabStudyScreen';
 
 const NAV: Array<{ route: Route; label: string; matches: Route['name'][] }> = [
   { route: { name: 'home' }, label: 'Dersler', matches: ['home', 'topic'] },
   { route: { name: 'general-review' }, label: 'Genel Tekrar', matches: ['general-review'] },
+  { route: { name: 'vocab' }, label: 'Kelime', matches: ['vocab', 'vocab-list', 'vocab-study'] },
   { route: { name: 'summaries' }, label: 'Özetler', matches: ['summaries', 'summary', 'review-summary'] },
   { route: { name: 'mistakes' }, label: 'Hatalarım', matches: ['mistakes'] },
   { route: { name: 'stats' }, label: 'İstatistik', matches: ['stats'] },
@@ -44,8 +48,25 @@ function AppContents({
 }) {
 
   // Ders modunda kabuk gizlenir: dikkat dagitan gezinme olmaz.
-  const isLesson = route.name === 'lesson' || route.name === 'review' || route.name === 'mistake-review';
+  // Kelime oturumu da ayni odagi ister.
+  const isLesson =
+    route.name === 'lesson' ||
+    route.name === 'review' ||
+    route.name === 'mistake-review' ||
+    route.name === 'vocab-study';
   if (isLesson) {
+    if (route.name === 'vocab-study') {
+      return (
+        <VocabStudyScreen
+          key={hrefFor(route)}
+          kind={(route.kind ?? 'mixed') as Parameters<typeof VocabStudyScreen>[0]['kind']}
+          topicId={route.topicId}
+          size={route.size}
+          api={api}
+          navigate={navigate}
+        />
+      );
+    }
     return (
       <LessonScreen
         // `key` kritik: ders rotalari ayni bileseni paylasir. Anahtar olmadan
@@ -84,6 +105,8 @@ function AppContents({
       {route.name === 'home' && <HomeScreen api={api} navigate={navigate} />}
       {route.name === 'topic' && <TopicScreen key={route.topicId} topicId={route.topicId} api={api} navigate={navigate} />}
       {route.name === 'general-review' && <GeneralReviewScreen api={api} navigate={navigate} />}
+      {route.name === 'vocab' && <VocabHomeScreen api={api} navigate={navigate} />}
+      {route.name === 'vocab-list' && <VocabListScreen api={api} navigate={navigate} />}
       {route.name === 'summaries' && <SummaryIndexScreen api={api} navigate={navigate} />}
       {route.name === 'summary' && (
         <SummaryTopicScreen

@@ -343,4 +343,59 @@ describe('LessonScreen Enter devam akışı', () => {
     expect(view.getProgress().activeLesson?.index).toBe(1);
     act(() => view.root.unmount());
   });
+
+  it('yazı girdisinde Enter önce kontrol eder, soruyu atlamaz', () => {
+    const blanks = allExercises.filter(
+      (exercise) => exercise.type === 'fill-blank' && Boolean(exercise.answer) && !exercise.reviewOnly,
+    );
+    if (blanks.length < 2) throw new Error('Test için iki boşluk-doldurma egzersizi bulunamadı.');
+    const [first, second] = blanks;
+    const view = mountLesson({
+      mode: 'topic',
+      topicId: first.topicId,
+      sessionMode: 'normal',
+      queue: [
+        { exerciseId: first.id, presentationReason: 'primary' },
+        { exerciseId: second.id, presentationReason: 'primary' },
+      ],
+      index: 0,
+      startedAt: '2026-08-17T09:00:00.000Z',
+      results: [],
+      retries: {},
+      streak: { current: 0, best: 0, firedMilestones: [] },
+    });
+
+    const doc = view.dom.window.document;
+    const input = doc.querySelector('input.field') as HTMLInputElement | null;
+    if (!input) throw new Error('Test için yazı girdisi bulunamadı.');
+    const position = () => doc.querySelector('[role="progressbar"]')?.getAttribute('aria-label');
+
+    act(() => {
+      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
+      setter?.call(input, first.answer ?? '');
+      input.dispatchEvent(new view.dom.window.Event('input', { bubbles: true }));
+    });
+    expect(position()).toBe('1 / 2');
+
+    // Fareyle "Kontrol Et"e basmakla aynı olmalı: geri bildirim gelir, soru değişmez.
+    act(() => {
+      input.dispatchEvent(
+        new view.dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      );
+    });
+    expect(doc.querySelector('.feedback-panel')).not.toBeNull();
+    expect(position()).toBe('1 / 2');
+    expect(view.getProgress().exercises[first.id]?.attempts.length).toBe(1);
+
+    // İkinci Enter fareyle Devam'a basmakla aynıdır: ilerler.
+    act(() => {
+      doc.body.dispatchEvent(
+        new view.dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      );
+    });
+    expect(view.getProgress().activeLesson?.index).toBe(1);
+    view.rerender();
+    expect(position()).toBe('2 / 2');
+    act(() => view.root.unmount());
+  });
 });

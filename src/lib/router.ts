@@ -26,6 +26,9 @@ export type Route =
   | { name: 'general-review' }
   | { name: 'mistakes' }
   | { name: 'stats' }
+  | { name: 'vocab' }
+  | { name: 'vocab-list' }
+  | { name: 'vocab-study'; kind: string; topicId?: string; size?: string }
   | { name: 'debug' };
 
 const MODE_SLUGS: Record<string, SessionMode> = {
@@ -61,6 +64,13 @@ const SLUG_BY_MODE: Record<SessionMode, string> = {
 };
 
 const FIRST_TOPIC_ID = TOPICS[0].id;
+
+/** Kelime çalışması türleri (ekran `lib/vocab/questions.ts` ile aynı kümeyi kullanır). */
+const VOCAB_KINDS = new Set([
+  'mixed', 'detr', 'trde', 'match', 'type', 'listen', 'weak', 'flash', 'marathon', 'topic',
+]);
+
+const VOCAB_SIZES = new Set(['quick', 'normal', 'full', 'marathon']);
 
 /** Sayı değilse undefined (bozuk segment güvenli varsayılan değil, yok sayılır). */
 function parseLegacyDay(segment: string | undefined): number | undefined {
@@ -140,6 +150,25 @@ export function parseHash(hash: string): Route {
       return { name: 'review' };
     case 'genel-tekrar':
       return { name: 'general-review' };
+    case 'kelime': {
+      if (rest[0] === 'liste') return { name: 'vocab-list' };
+      if (rest[0] === 'calisma') {
+        const kind = VOCAB_KINDS.has(rest[1] ?? '') ? (rest[1] as string) : 'mixed';
+        const topicId = topicFromSegment(rest[2]);
+        const size = VOCAB_SIZES.has(rest[3] ?? '') ? (rest[3] as string) : rest[2] && VOCAB_SIZES.has(rest[2]) ? (rest[2] as string) : undefined;
+        // `#/kelime/calisma/topic/<slug>` kısayolu: kind=topic.
+        if ((rest[1] === 'konu' || rest[1] === 'topic') && topicId) {
+          return { name: 'vocab-study', kind: 'topic', topicId, ...(size ? { size } : {}) };
+        }
+        return {
+          name: 'vocab-study',
+          kind,
+          ...(topicId ? { topicId } : {}),
+          ...(size ? { size } : {}),
+        };
+      }
+      return { name: 'vocab' };
+    }
     case 'hata-tekrari':
       // #/hata-tekrari — eski #/hata-tekrari/2 biçimi de buraya düşer.
       return { name: 'mistake-review' };
@@ -201,6 +230,16 @@ export function hrefFor(route: Route): string {
       return route.sectionId ? `#/ozet/genel/${encodeURIComponent(route.sectionId)}` : '#/ozet/genel';
     case 'general-review':
       return '#/genel-tekrar';
+    case 'vocab':
+      return '#/kelime';
+    case 'vocab-list':
+      return '#/kelime/liste';
+    case 'vocab-study': {
+      const base = `#/kelime/calisma/${encodeURIComponent(route.kind)}`;
+      const topic = route.topicId ? `/${slugFor(route.topicId)}` : '';
+      const size = route.size ? `/${route.size}` : '';
+      return `${base}${topic}${size}`;
+    }
     case 'mistakes':
       return '#/hatalarim';
     case 'stats':

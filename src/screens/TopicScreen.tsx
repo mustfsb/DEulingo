@@ -19,6 +19,7 @@ import {
   type SessionMode,
 } from '../lib/session';
 import { previewReviewSize, startReviewSession } from '../lib/start-review';
+import { vocabPoolForTopic } from '../lib/vocab/questions';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
@@ -82,6 +83,7 @@ export function TopicScreen({
   };
   const sessions = progress.topics[topicId]?.sessionsCompleted ?? 0;
   const reviewSize = previewReviewSize('topic', topicId);
+  const vocabCount = vocabPoolForTopic(topicId).length;
   const relatedTopicIds = [
     ...new Set(pool.flatMap((item) => [item.topicId, ...(item.secondaryTopicIds ?? [])])),
   ].filter((id) => id !== topicId);
@@ -170,6 +172,15 @@ export function TopicScreen({
               onClick={() => startReviewSession(api, navigate, { mode: 'topic', topicId })}
             >
               🔁 Genel Tekrar'da çalış (~{reviewSize} soru)
+            </button>
+          )}
+          {vocabCount > 0 && (
+            <button
+              type="button"
+              className="btn w-full"
+              onClick={() => navigate({ name: 'vocab-study', kind: 'topic', topicId })}
+            >
+              📚 Bu Konunun Kelimeleri ({vocabCount} kelime)
             </button>
           )}
         </div>
