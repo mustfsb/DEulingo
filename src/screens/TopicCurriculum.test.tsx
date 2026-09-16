@@ -57,17 +57,17 @@ function setup(initial: UserProgress = createEmptyProgress()) {
 }
 
 describe('Dersler (ana sayfa)', () => {
-  it('gun kartlari yerine 20 konu kartini ad, aciklama ve ustalikla gosterir', () => {
+  it('gun kartlari yerine 21 konu kartini ad, aciklama ve ustalikla gosterir', () => {
     const view = setup();
     view.render(HomeScreen);
     const cards = view.dom.window.document.querySelectorAll('.topic-tile');
     expect(cards).toHaveLength(topics.length);
-    expect(topics).toHaveLength(20);
+    expect(topics).toHaveLength(21);
     for (const topic of topics) {
       expect(view.text()).toContain(topic.title);
       expect(view.text()).toContain(topic.description);
     }
-    expect(view.dom.window.document.querySelectorAll('[aria-label$="ustalığı"]')).toHaveLength(20);
+    expect(view.dom.window.document.querySelectorAll('[aria-label$="ustalığı"]')).toHaveLength(21);
     expect(view.text()).not.toMatch(/\d+\.\s*Gün/);
     expect(view.text()).not.toContain('Ders günü');
     act(() => view.root.unmount());
@@ -113,7 +113,7 @@ describe('Özetler dizini', () => {
   it('konu ozetlerini listeler; Modalverben ozetine gider', () => {
     const view = setup();
     view.render(SummaryIndexScreen);
-    expect(view.dom.window.document.querySelectorAll('.topic-tile')).toHaveLength(20);
+    expect(view.dom.window.document.querySelectorAll('.topic-tile')).toHaveLength(21);
     expect(view.text()).not.toMatch(/\d+\.\s*Gün/);
     const modal = view.buttons().find((button) => button.textContent?.includes('Modalverben'));
     act(() => modal!.click());
@@ -134,7 +134,7 @@ describe('Genel Tekrar ekrani', () => {
       expect(text, label).toContain(label);
     }
     const cards = [...view.dom.window.document.querySelectorAll('li.card')];
-    expect(cards).toHaveLength(20);
+    expect(cards).toHaveLength(21);
     for (const title of ['Modalverben', 'Saatler ve Zaman', 'Ayrılabilen Fiiller', 'Essen und Trinken']) {
       expect(cards.some((card) => card.textContent?.includes(title)), title).toBe(true);
     }

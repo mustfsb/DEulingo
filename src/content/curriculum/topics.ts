@@ -167,6 +167,12 @@ export const TOPICS: CurriculumTopicDef[] = [
     description: 'können, möchten, wollen, sollen, dürfen + sonda mastar.',
     keywords: 'Ich kann Deutsch sprechen. · Hier darf man nicht parken.',
   }),
+  topic('perfekt', {
+    title: 'Perfekt — Geçmiş Zaman',
+    emoji: '⏪',
+    description: 'Dünü anlatmak: haben/sein + Partizip II ile geçmiş zaman.',
+    keywords: 'Ich habe Sport gemacht. · Ich bin zur Schule gegangen. · Was hast du gestern gemacht?',
+  }),
   topic('vocabulary', {
     title: 'Kelime Haznesi',
     emoji: '📚',
@@ -196,6 +202,7 @@ export const T = {
   dailyRoutine: 'topic.daily-routine',
   separableVerbs: 'topic.separable-verbs',
   modalVerbs: 'topic.modal-verbs',
+  perfekt: 'topic.perfekt',
   vocabulary: 'topic.vocabulary',
 } as const;
 
@@ -362,6 +369,21 @@ export const SUMMARY_SECTIONS: SummarySectionDef[] = [
   section('modal-verbs', 'akkusativ', 'Modalverb + Akkusativ', { related: ['akkusativ'] }),
   section('modal-verbs', 'mistakes', 'Sık Hatalar'),
 
+  // ⏪ Perfekt — Geçmiş Zaman
+  section('perfekt', 'formula', 'Temel Formül', { related: ['sentence-building'] }),
+  section('perfekt', 'haben', 'haben ile Perfekt', { related: ['verbs'] }),
+  section('perfekt', 'sein', 'sein ile Perfekt', { related: ['verbs'] }),
+  section('perfekt', 'choice', 'haben mı sein mı?', { related: ['verbs'] }),
+  section('perfekt', 'regular', 'Düzenli Partizip II — ge-...-t'),
+  section('perfekt', 'et', '-d / -t Fiiller — -et'),
+  section('perfekt', 'ieren', '-ieren Fiiller — ge- Yok'),
+  section('perfekt', 'separable', 'Ayrılabilen Fiillerde Perfekt', { related: ['separable-verbs'] }),
+  section('perfekt', 'irregular', 'Ezberlenecek Düzensiz Partizipler'),
+  section('perfekt', 'questions', 'Perfekt ile Soru', { related: ['questions'] }),
+  section('perfekt', 'negation', 'Olumsuz Perfekt', { related: ['articles'] }),
+  section('perfekt', 'gestern', 'Gestern — Mein Tag im Perfekt', { related: ['daily-routine', 'time'] }),
+  section('perfekt', 'mistakes', 'Sık Hatalar'),
+
   // 📚 Kelime Haznesi
   section('vocabulary', 'small-words', 'Faydalı Küçük Kelimeler'),
   section('vocabulary', 'daily-words', 'Günlük Hayattan Kelimeler'),
@@ -431,6 +453,7 @@ export const REVIEW_SECTIONS: ReviewSectionDef[] = [
   review('mein-tag', 'Mein Tag', { topic: 'daily-routine' }),
   review('dann-danach', 'dann / danach / und / aber', { topic: 'sentence-building' }),
   review('modalverben', 'Modalverben', { topic: 'modal-verbs' }, ['Modalverben — können, möchten, wollen, sollen, dürfen', 'Modalverben']),
+  review('perfekt', 'Perfekt — Geçmiş Zaman', { topic: 'perfekt' }),
   review('kelimeler', 'En Önemli Kelimeler', { topic: 'vocabulary' }),
   review('kaliplar', 'Konuşma Kalıpları', { mode: 'mixed' }),
   review('hizli-tekrar', 'Hızlı Özet Turu', { mode: 'quick' }),

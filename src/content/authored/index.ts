@@ -25,6 +25,7 @@ import { TIME_EXERCISES } from './topics/time.ts';
 import { DAILY_ROUTINE_EXERCISES } from './topics/daily-routine.ts';
 import { SEPARABLE_VERBS_EXERCISES } from './topics/separable-verbs.ts';
 import { MODAL_VERBS_EXERCISES } from './topics/modal-verbs.ts';
+import { PERFEKT_EXERCISES } from './topics/perfekt.ts';
 import { VOCABULARY_EXERCISES } from './topics/vocabulary.ts';
 import { GENERAL_REVIEW_EXERCISES } from './review/index.ts';
 import type { AuthoredExercise } from './types.ts';
@@ -50,6 +51,7 @@ export const TOPIC_EXERCISES: AuthoredExercise[] = [
   ...DAILY_ROUTINE_EXERCISES,
   ...SEPARABLE_VERBS_EXERCISES,
   ...MODAL_VERBS_EXERCISES,
+  ...PERFEKT_EXERCISES,
   ...VOCABULARY_EXERCISES,
 ];
 

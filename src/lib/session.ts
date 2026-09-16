@@ -82,6 +82,8 @@ export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, 
   'topic.modal-verbs': { normal: 22, full: 52, quick: 10, challenge: 18 },
   // ~105 alistirmalik havuz (Mein Tag ve Modalverben ile ortak cumleler dahil).
   'topic.separable-verbs': { normal: 20, full: 50, challenge: 16 },
+  // ~140 alistirmalik, uretim agirlikli Perfekt havuzu.
+  'topic.perfekt': { normal: 22, full: 52, quick: 10, challenge: 18 },
 };
 
 const LESSON_MODES = new Set<SessionMode>(['normal', 'full', 'quick', 'challenge']);
@@ -111,6 +113,10 @@ export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, s
   'topic.modal-verbs': {
     full: ['mv-free-morgen'],
     challenge: ['mv-free-morgen'],
+  },
+  'topic.perfekt': {
+    full: ['pf-gestern-free-tam-anlatim'],
+    challenge: ['pf-gestern-free-tam-anlatim'],
   },
 };
 

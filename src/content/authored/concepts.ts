@@ -506,6 +506,40 @@ export const CONCEPTS: Array<Concept & { anchor: string }> = build([
   { id: 'vocabulary.uebersetzen-wiederholen', sectionId: 'vocabulary.classroom', label: 'übersetzen = çevirmek, wiederholen = tekrar etmek', anchor: 'übersetzen — çevirmek' },
   { id: 'vocabulary.erzaehlen-erklaeren', sectionId: 'vocabulary.classroom', label: 'erzählen (anlatmak) ↔ erklären (açıklamak)', anchor: 'erklären — açıklamak' },
   { id: 'vocabulary.fehler-falsch', sectionId: 'vocabulary.classroom', label: 'der Fehler = hata, falsch = yanlış, korrigieren = düzeltmek', anchor: 'der Fehler — hata' },
+
+  /* ---------------------------------------------------------------- */
+  /* Perfekt — Geçmiş Zaman                                           */
+  /* ---------------------------------------------------------------- */
+  { id: 'perfekt.formula.kural', sectionId: 'perfekt.formula', label: 'Perfekt formülü: Özne + haben/sein + … + Partizip II', anchor: 'Özne + haben/sein', prerequisites: ['verbs.haben.tablo', 'verbs.verben.sein'] },
+  { id: 'perfekt.formula.ornek', sectionId: 'perfekt.formula', label: 'Ich habe Sport gemacht. (merkez örnek)', anchor: 'Ich habe Sport gemacht.', prerequisites: ['perfekt.formula.kural'] },
+  { id: 'perfekt.haben.cekim', sectionId: 'perfekt.haben', label: 'haben çekimi yardımcı fiil olarak: habe, hast, hat …', anchor: 'ich habe, du hast, er hat', prerequisites: ['verbs.haben.tablo'] },
+  { id: 'perfekt.haben.cumle', sectionId: 'perfekt.haben', label: 'haben ile olumlu Perfekt cümlesi', anchor: 'Ich habe Musik gehört.', prerequisites: ['perfekt.haben.cekim', 'perfekt.formula.kural'] },
+  { id: 'perfekt.sein.cekim', sectionId: 'perfekt.sein', label: 'sein çekimi yardımcı fiil olarak: bin, bist, ist …', anchor: 'ich bin, du bist, er ist', prerequisites: ['verbs.verben.sein'] },
+  { id: 'perfekt.sein.cumle', sectionId: 'perfekt.sein', label: 'sein ile olumlu Perfekt cümlesi', anchor: 'Ich bin zur Schule gegangen.', prerequisites: ['perfekt.sein.cekim', 'perfekt.formula.kural'] },
+  { id: 'perfekt.secim.haben-cogunluk', sectionId: 'perfekt.choice', label: 'çoğu fiil haben kullanır', anchor: 'Bu dersteki fiillerin çoğu haben kullanır', prerequisites: ['perfekt.haben.cumle'] },
+  { id: 'perfekt.secim.sein-hareket', sectionId: 'perfekt.choice', label: 'hareket ve yön değiştiren fiiller sein kullanır', anchor: 'hareket ve yön değiştiren fiiller sein kullanır', prerequisites: ['perfekt.sein.cumle'] },
+  { id: 'perfekt.duzenli.kural', sectionId: 'perfekt.regular', label: 'düzenli Partizip II: ge + kök + t', anchor: 'ge + fiil kökü + t', prerequisites: ['perfekt.formula.kural'] },
+  { id: 'perfekt.duzenli.ornekler', sectionId: 'perfekt.regular', label: 'machen → gemacht, hören → gehört, sagen → gesagt', anchor: 'machen → gemacht', prerequisites: ['perfekt.duzenli.kural'] },
+  { id: 'perfekt.et.kural', sectionId: 'perfekt.et', label: '-d/-t fiillerde -et: geantwortet, geredet, gearbeitet', anchor: 'geantwortet', prerequisites: ['perfekt.duzenli.kural'] },
+  { id: 'perfekt.ieren.kural', sectionId: 'perfekt.ieren', label: '-ieren fiillerinde ge- yoktur', anchor: '-ieren fiillerinde ge- yoktur', prerequisites: ['perfekt.duzenli.kural'] },
+  { id: 'perfekt.ieren.ornek', sectionId: 'perfekt.ieren', label: 'studieren → studiert, probieren → probiert', anchor: 'studieren → studiert', prerequisites: ['perfekt.ieren.kural'] },
+  { id: 'perfekt.ayrilabilen.kural', sectionId: 'perfekt.separable', label: 'ayrılabilen fiilde önek + ge + fiil', anchor: 'önek + ge + fiil', prerequisites: ['separable-verbs.ayrilabilen.kural', 'perfekt.duzenli.kural'] },
+  { id: 'perfekt.ayrilabilen.aufstehen', sectionId: 'perfekt.separable', label: 'aufstehen → aufgestanden (sein ile)', anchor: 'aufstehen → aufgestanden', prerequisites: ['perfekt.ayrilabilen.kural', 'perfekt.secim.sein-hareket'] },
+  { id: 'perfekt.ayrilabilen.einkaufen', sectionId: 'perfekt.separable', label: 'einkaufen → eingekauft (haben ile)', anchor: 'einkaufen → eingekauft', prerequisites: ['perfekt.ayrilabilen.kural', 'perfekt.secim.haben-cogunluk'] },
+  { id: 'perfekt.ayrilabilen.hata', sectionId: 'perfekt.separable', label: 'geaufstanden değil aufgestanden', anchor: 'geaufstanden yanlıştır', prerequisites: ['perfekt.ayrilabilen.aufstehen'] },
+  { id: 'perfekt.duzensiz.genel', sectionId: 'perfekt.irregular', label: 'düzensiz Partizip II ezberlenir', anchor: 'düzensiz Partizip II ezberlenir', prerequisites: ['perfekt.duzenli.kural'] },
+  { id: 'perfekt.duzensiz.essen-sprechen', sectionId: 'perfekt.irregular', label: 'gegessen, gesprochen, getroffen, gelesen, gewaschen', anchor: 'essen → gegessen', prerequisites: ['perfekt.duzensiz.genel'] },
+  { id: 'perfekt.duzensiz.gehen-kommen', sectionId: 'perfekt.irregular', label: 'gegangen, gekommen, begonnen', anchor: 'gehen → gegangen', prerequisites: ['perfekt.duzensiz.genel'] },
+  { id: 'perfekt.soru.evet-hayir', sectionId: 'perfekt.questions', label: 'evet/hayır sorusu: Hast du …? / Bist du …?', anchor: 'Hast du Sport gemacht?', prerequisites: ['perfekt.haben.cumle', 'perfekt.sein.cumle'] },
+  { id: 'perfekt.soru.was', sectionId: 'perfekt.questions', label: 'Was hast du gestern gemacht?', anchor: 'Was hast du gestern gemacht?', prerequisites: ['perfekt.soru.evet-hayir'] },
+  { id: 'perfekt.olumsuz.nicht', sectionId: 'perfekt.negation', label: 'nicht ile olumsuz Perfekt', anchor: 'hat gestern nicht gearbeitet', prerequisites: ['perfekt.haben.cumle', 'articles.olumsuzluk.nicht'] },
+  { id: 'perfekt.olumsuz.kein', sectionId: 'perfekt.negation', label: 'kein ile olumsuz Perfekt', anchor: 'keine Musik gehört', prerequisites: ['perfekt.olumsuz.nicht'] },
+  { id: 'perfekt.zaman.gestern', sectionId: 'perfekt.gestern', label: 'gestern / gestern Abend / letzte Woche', anchor: 'gestern Abend', prerequisites: ['perfekt.formula.kural'] },
+  { id: 'perfekt.zaman.um', sectionId: 'perfekt.gestern', label: 'um + saat ile Perfekt', anchor: 'um sieben Uhr aufgestanden', prerequisites: ['perfekt.zaman.gestern', 'time.um.kural'] },
+  { id: 'perfekt.gestern.sabah', sectionId: 'perfekt.gestern', label: 'sabah rutini Perfekt ile: Zähne, Gesicht, Dusche', anchor: 'Ich habe meine Zähne geputzt.', prerequisites: ['perfekt.haben.cumle', 'daily-routine.sabah.zaehne'] },
+  { id: 'perfekt.gestern.tam', sectionId: 'perfekt.gestern', label: 'Gestern kanonik mini anlatım', anchor: 'Gestern bin ich um sieben Uhr aufgestanden.', prerequisites: ['perfekt.gestern.sabah', 'perfekt.zaman.um', 'daily-routine.tam.model'] },
+  { id: 'perfekt.gestern.uretim', sectionId: 'perfekt.gestern', label: 'Erzähle deinen gestrigen Tag. (serbest üretim)', anchor: 'Erzähle deinen gestrigen Tag.', prerequisites: ['perfekt.gestern.tam'] },
+  { id: 'perfekt.mistakes.kutu', sectionId: 'perfekt.mistakes', label: 'sık Perfekt hataları: yardımcı, Partizip, ge', anchor: 'sonda Partizip II olur', prerequisites: ['perfekt.formula.kural', 'perfekt.ayrilabilen.hata'] },
 ]);
 
 export const CONCEPT_INDEX = new Map(CONCEPTS.map((item) => [item.id, item]));

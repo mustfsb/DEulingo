@@ -152,9 +152,9 @@ describe('boru hatti', () => {
     expect(bundle.warnings).toContainEqual(expect.objectContaining({ level: 'error', code: 'no-topic-summary' }));
   });
 
-  it('kanonik konu haritasini her zaman 20 konuyla uretir', () => {
+  it('kanonik konu haritasini her zaman 21 konuyla uretir', () => {
     const bundle = parseContent([{ name: 'Konu Özetleri.md', markdown: TOPIC_FIXTURE, role: 'topic-summary' }]);
-    expect(bundle.topics).toHaveLength(20);
+    expect(bundle.topics).toHaveLength(21);
     expect(bundle.summaries.map((summary) => summary.topicId)).toEqual([T.modalVerbs]);
   });
 });

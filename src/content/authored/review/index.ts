@@ -13,6 +13,7 @@ import { GENERAL_REVIEW_SENTENCES } from './sentences.ts';
 import { GENERAL_REVIEW_LIFE } from './life.ts';
 import { GENERAL_REVIEW_TOPUP } from './topup.ts';
 import { GENERAL_REVIEW_MODAL } from './modal.ts';
+import { GENERAL_REVIEW_PERFEKT } from './perfekt.ts';
 
 export const GENERAL_REVIEW_EXERCISES: AuthoredExercise[] = [
   ...GENERAL_REVIEW_VOCAB,
@@ -21,4 +22,5 @@ export const GENERAL_REVIEW_EXERCISES: AuthoredExercise[] = [
   ...GENERAL_REVIEW_LIFE,
   ...GENERAL_REVIEW_TOPUP,
   ...GENERAL_REVIEW_MODAL,
+  ...GENERAL_REVIEW_PERFEKT,
 ];

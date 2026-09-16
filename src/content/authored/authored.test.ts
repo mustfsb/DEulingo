@@ -66,7 +66,7 @@ describe('paket saglik durumu', () => {
     expect(bundle.warnings.filter((warning) => warning.level === 'warn')).toEqual([]);
   });
 
-  it('kanonik konu haritasi 20 konu olarak, kararli kimlikleriyle ve sirayla uretilir', () => {
+  it('kanonik konu haritasi 21 konu olarak, kararli kimlikleriyle ve sirayla uretilir', () => {
     expect(bundle.topics.map((topic) => topic.id)).toEqual(TOPICS.map((topic) => topic.id));
     expect(bundle.topics.map((topic) => topic.order)).toEqual(TOPICS.map((_, index) => index));
     for (const topic of bundle.topics) expect(topic.id).toMatch(/^topic\.[a-z-]+$/);
@@ -725,10 +725,11 @@ describe('Ev ve Mobilyalar (eski 7. Gün içeriği)', () => {
 });
 
 describe('Mein Tag, Saatler ve Ayrılabilen Fiiller (eski 10. Gün içeriği)', () => {
-  const routine = [...new Set([...topicPool(T.dailyRoutine), ...topicPool(T.separableVerbs), ...topicPool(T.time)])];
+  const routine = [...new Set([...topicPool(T.dailyRoutine), ...topicPool(T.separableVerbs), ...topicPool(T.time)])]
+    .filter((exercise) => exercise.topicId !== T.perfekt);
 
-  it('öğretilmemiş dilbilgisi (karşılaştırma, yan cümle, Perfekt) cevap anahtarında geçmez', () => {
-    const forbidden = /\b(größer|kleiner|heller|dunkler|schöner|besser|als\s+mein|weil|dass|obwohl|würde|hätte|wäre|habe\s+\w+ge\w+|bin\s+\w+gegangen)\b/i;
+  it('öğretilmemiş dilbilgisi (karşılaştırma, yan cümle) cevap anahtarında geçmez', () => {
+    const forbidden = /\b(größer|kleiner|heller|dunkler|schöner|besser|als\s+mein|weil|dass|obwohl|würde|hätte|wäre)\b/i;
     for (const exercise of routine) {
       const surfaces = [
         exercise.answer,
@@ -909,7 +910,7 @@ describe('Modalverben', () => {
 
   it('Akkusativ pekiştirmesi ayrı bir ders açmadan yeni malzemenin %10–15\'i kadardır', () => {
     const newMaterial = bundle.exercises.filter(
-      (exercise) => (!exercise.reviewOnly && exercise.legacyDay === undefined) || exercise.id.startsWith('gr-mv-') || exercise.id.startsWith('gr-yaz-mv-'),
+      (exercise) => exercise.id.startsWith('mv-') || exercise.id.startsWith('gr-mv-') || exercise.id.startsWith('gr-yaz-mv-'),
     );
     const akk = newMaterial.filter((exercise) =>
       exercise.conceptIds.some((id) => id === 'modal-verbs.akkusativ' || id.startsWith('akkusativ.')),
@@ -1003,6 +1004,110 @@ describe('Modalverben', () => {
   });
 });
 
+describe('Perfekt — Geçmiş Zaman (defterdeki A1 Perfekt dersi)', () => {
+  const perfekt = primary(T.perfekt);
+  const pool = topicPool(T.perfekt);
+
+  it('en az 120 benzersiz alıştırma içerir', () => {
+    expect(perfekt.length).toBeGreaterThanOrEqual(120);
+    expect(new Set(perfekt.map((exercise) => exercise.id)).size).toBe(perfekt.length);
+    for (const exercise of perfekt) expect(exercise.topicId).toBe(T.perfekt);
+  });
+
+  it('zorluk dağılımı A1 üretim bandındadır (kolay ~%30, orta ~%45, zor ~%25)', () => {
+    const share = (difficulty: string) =>
+      perfekt.filter((exercise) => exercise.difficulty === difficulty).length / perfekt.length;
+    expect(share('easy')).toBeGreaterThanOrEqual(0.15);
+    expect(share('easy')).toBeLessThanOrEqual(0.5);
+    expect(share('medium')).toBeGreaterThanOrEqual(0.3);
+    expect(share('medium')).toBeLessThanOrEqual(0.6);
+    expect(share('hard')).toBeGreaterThanOrEqual(0.08);
+    expect(share('hard')).toBeLessThanOrEqual(0.36);
+  });
+
+  it('Partizip, yardımcı fiil, cümle, dönüşüm, üretim ve dinleme dengelidir', () => {
+    const byConcepts = (...ids: string[]) =>
+      perfekt.filter((exercise) => exercise.conceptIds.some((id) => ids.includes(id)));
+    expect(byConcepts('perfekt.duzenli.kural', 'perfekt.duzenli.ornekler', 'perfekt.et.kural', 'perfekt.ieren.kural', 'perfekt.ieren.ornek', 'perfekt.duzensiz.genel', 'perfekt.duzensiz.essen-sprechen', 'perfekt.duzensiz.gehen-kommen').length).toBeGreaterThanOrEqual(24);
+    expect(byConcepts('perfekt.haben.cekim', 'perfekt.sein.cekim', 'perfekt.secim.haben-cogunluk', 'perfekt.secim.sein-hareket').length).toBeGreaterThanOrEqual(15);
+    expect(byConcepts('perfekt.formula.kural', 'perfekt.formula.ornek', 'perfekt.haben.cumle', 'perfekt.sein.cumle').length).toBeGreaterThanOrEqual(15);
+    expect(pool.filter((exercise) => ['listen-choice', 'dictation'].includes(exercise.type)).length).toBeGreaterThanOrEqual(5);
+    expect(perfekt.filter((exercise) => exercise.type === 'error-correction').length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('defterdeki örnekler kanonik Almanca ile öğretilir', () => {
+    const joined = surfaceText(pool, [answers, spoken]);
+    for (const sentence of [
+      'Ich habe Sport gemacht.',
+      'Ich habe Musik gehört.',
+      'Meine Mutter hat gestern Abend gekocht.',
+      'Ich habe diese E-Mail beantwortet.',
+      'Ich bin zur Schule gegangen.',
+      'Ich bin um 8 Uhr aufgestanden.',
+      'Was hast du gestern gemacht?',
+      'Mein Vater hat gestern nicht gearbeitet.',
+      'Ich habe keine Musik gehört.',
+    ]) {
+      expect(joined, sentence).toContain(sentence);
+    }
+  });
+
+  it('defterdeki hatalı biçimler hiçbir alıştırmanın kanonik cevabı olamaz', () => {
+    const wrong = /geaufstanden|geeinkauft|gemachen\.|gestudiert|Ich habe (gestern )?zur Schule gegangen|Ich bin .*gehört|Ich habe .*aufgestanden/;
+    expect(pool.filter((exercise) => wrong.test(exercise.answer ?? '')).map((exercise) => exercise.id)).toEqual([]);
+  });
+
+  it('einkaufen haben, aufstehen sein kullanır (defter şüphesi kanonik çözüldü)', () => {
+    const joined = surfaceText(pool, [answers]);
+    expect(joined).toContain('Mein Vater hat Lebensmittel eingekauft.');
+    expect(joined).toContain('Ich bin um 8 Uhr aufgestanden.');
+    expect(pool.filter((exercise) => /Ich (habe|hat).*aufgestanden|Ich bin.*eingekauft/.test(exercise.answer ?? ''))).toEqual([]);
+  });
+
+  it('Perfekt; Mein Tag, Ayrılabilen Fiiller ve Saatler ile çapraz etiketlidir', () => {
+    for (const topicId of [T.dailyRoutine, T.separableVerbs, T.time]) {
+      const cross = perfekt.filter((exercise) => exercise.secondaryTopicIds?.includes(topicId));
+      expect(cross.length, topicId).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('oturum boyutları hedef bantlarda kalır (Normal 20–25, Tam 45–60, Hızlı 8–12, Zor 15–20)', () => {
+    const bands: Record<string, [number, number]> = { normal: [20, 25], full: [45, 60], quick: [8, 12], challenge: [15, 20] };
+    for (const [mode, [low, high]] of Object.entries(bands)) {
+      const ids = plan(T.perfekt, mode as SessionMode, `pf-size:${mode}`);
+      expect(ids.length, mode).toBeGreaterThanOrEqual(low);
+      expect(ids.length, mode).toBeLessThanOrEqual(high);
+    }
+  });
+
+  it('Tam Çalışma ve Zor Sorular her tohumda Gestern üretim göreviyle biter', () => {
+    for (const mode of ['full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        expect(plan(T.perfekt, mode, `pf-close:${mode}:${seed}`).at(-1), `${mode}#${seed}`).toBe(
+          'pf-gestern-free-tam-anlatim',
+        );
+      }
+    }
+  });
+
+  it('Normal / Tam / Zor oturumları 50 tohumda birincil ID tekrarı üretmez ve challenge hazırdır', () => {
+    for (const mode of ['normal', 'full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        const ids = plan(T.perfekt, mode, `pf:${mode}:${seed}`);
+        expect(new Set(ids).size, `${mode}#${seed}`).toBe(ids.length);
+      }
+    }
+    expect(challengeReadiness(pool).ready).toBe(true);
+  });
+
+  it('Zor Sorular ağırlıklı olarak çoktan seçmeli değildir', () => {
+    const byId = new Map(lesson.map((exercise) => [exercise.id, exercise]));
+    const chosen = plan(T.perfekt, 'challenge', 'pf-challenge-mc').map((id) => byId.get(id)!);
+    const recognition = chosen.filter((exercise) => !isProductionTask(exercise)).length;
+    expect(recognition / chosen.length).toBeLessThanOrEqual(CHALLENGE_MAX_RECOGNITION_RATIO + 0.01);
+  });
+});
+
 describe('Genel Tekrar bankasi (kumulatif, ayni taksonomi)', () => {
   const lessonPairs = new Map<string, string>();
   const normalize = (value: string) =>
@@ -1037,12 +1142,18 @@ describe('Genel Tekrar bankasi (kumulatif, ayni taksonomi)', () => {
     }
   });
 
-  it('Cümle Kurma ve Writing modları Modalverben içerir', () => {
+  it('Cümle Kurma ve Writing modları Modalverben ve Perfekt içerir', () => {
     const sentence = reviewPoolFor(bank, 'sentence').filter(touches(T.modalVerbs));
     const writing = reviewPoolFor(bank, 'writing').filter(touches(T.modalVerbs));
     expect(sentence.length).toBeGreaterThanOrEqual(10);
     expect(writing.length).toBeGreaterThanOrEqual(3);
     expect(writing.some((exercise) => exercise.instruction.includes('Neler yapabildiğini 4 cümleyle anlat'))).toBe(true);
+    const pfSentence = reviewPoolFor(bank, 'sentence').filter(touches(T.perfekt));
+    const pfWriting = reviewPoolFor(bank, 'writing').filter(touches(T.perfekt));
+    const pfListening = reviewPoolFor(bank, 'listening').filter(touches(T.perfekt));
+    expect(pfSentence.length).toBeGreaterThanOrEqual(8);
+    expect(pfWriting.length).toBeGreaterThanOrEqual(3);
+    expect(pfListening.length).toBeGreaterThanOrEqual(3);
   });
 
   it('ders sorularinin kopyasi degildir (yeni birlesimler)', () => {
