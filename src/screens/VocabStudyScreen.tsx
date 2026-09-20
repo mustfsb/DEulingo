@@ -18,11 +18,12 @@ import { emptyInput, hasInput } from '../components/exercise/types';
 import { FeedbackPanel } from '../components/FeedbackPanel';
 import { AudioButton } from '../components/AudioButton';
 import { Markup } from '../components/Markup';
-import { VOCAB_BY_ID } from '../content/vocabulary/inventory';
+import { VOCAB_BY_ID, VOCABULARY } from '../content/vocabulary/inventory';
 import { topicTitle } from '../lib/content';
 import { recordAttempt } from '../lib/progress';
-import { evaluateExercise, type ExerciseInput, type ValidationResult } from '../lib/validation';
-import { validateDetrTyping, validateVocabTyping } from '../lib/vocab/validate';
+import type { ExerciseInput, ValidationResult } from '../lib/validation';
+import { deterministicValidate, hybridToValidation, validateAnswer } from '../lib/semantic/validate-answer';
+import { isSemanticFallbackEligible } from '../lib/semantic/policy';
 import { buildVocabSession, type VocabKind, type VocabQuestion } from '../lib/vocab/questions';
 import { audioController } from '../lib/audio/playback';
 import type { GermanVoiceId, SpeechSpeed } from '../lib/audio/tts';
@@ -39,20 +40,12 @@ const KIND_LABEL: Record<VocabKind, string> = {
   listen: 'Dinleme',
   weak: 'Zayıf Kelimeler',
   flash: 'Kartlar',
-  marathon: '244 Kelime Taraması',
+  marathon: `${VOCABULARY.length} Kelime Taraması`,
   topic: 'Konu Kelimeleri',
 };
 
-function isVocabTyping(question: VocabQuestion): boolean {
-  const id = question.exercise.id;
-  return (
-    (question.exercise.type === 'free-text' || question.exercise.type === 'dictation') &&
-    (id.endsWith('-trde-type') || id.endsWith('-listen-type'))
-  );
-}
-
-function isDetrTyping(question: VocabQuestion): boolean {
-  return question.exercise.type === 'free-text' && question.exercise.id.endsWith('-detr-type');
+function isFlashExercise(question: VocabQuestion): boolean {
+  return question.exercise.type === 'spoken';
 }
 
 export function VocabStudyScreen({
@@ -243,9 +236,10 @@ function VocabStep({
   const { exercise } = question;
   const [input, setInput] = useState<ExerciseInput>(() => emptyInput(exercise));
   const [result, setResult] = useState<ValidationResult | null>(null);
+  const [checking, setChecking] = useState(false);
   const [flashBack, setFlashBack] = useState(false);
   const audioContextId = `vocab:${exercise.id}:${position}`;
-  const isFlash = exercise.type === 'spoken';
+  const isFlash = isFlashExercise(question) || exercise.type === 'spoken';
 
   useEffect(() => {
     audioController.activate(audioContextId);
@@ -258,21 +252,30 @@ function VocabStep({
   const listenHidden = exercise.type === 'listen-choice' || exercise.type === 'dictation';
 
   const check = () => {
-    if (result) return;
+    if (result || checking) return;
     if (!isFlash && !hasInput(exercise, input)) return;
     if (isFlash) return;
-    let evaluation: ValidationResult;
-    if (isVocabTyping(question) && typeof input === 'string') {
-      evaluation = validateVocabTyping(question.primaryVocabId, input);
-    } else if (isDetrTyping(question) && typeof input === 'string') {
-      evaluation = validateDetrTyping(question.primaryVocabId, input);
-    } else {
-      evaluation = evaluateExercise(exercise, input);
+    const commitStatus = (evaluation: ValidationResult) => {
+      setResult(evaluation);
+      const status: AttemptResult =
+        evaluation.status === 'correct' ? 'correct' : evaluation.status === 'minor-typo' ? 'minor-typo' : 'incorrect';
+      onCommit(question, status, evaluation, input);
+    };
+    // Hızlı yol eşzamanlı; Jev yalnızca gerçek uyuşmazlık + uygunlukta.
+    const local = deterministicValidate(exercise, input);
+    const eligible =
+      local.status === 'incorrect' &&
+      typeof input === 'string' &&
+      isSemanticFallbackEligible(exercise, input);
+    if (!eligible) {
+      commitStatus(local);
+      return;
     }
-    setResult(evaluation);
-    const status: AttemptResult =
-      evaluation.status === 'correct' ? 'correct' : evaluation.status === 'minor-typo' ? 'minor-typo' : 'incorrect';
-    onCommit(question, status, evaluation, input);
+    setChecking(true);
+    void validateAnswer(exercise, input)
+      .then((hybrid) => commitStatus(hybridToValidation(exercise, input, hybrid)))
+      .catch(() => commitStatus(local))
+      .finally(() => setChecking(false));
   };
 
   const gradeFlash = (grade: AttemptResult) => {
@@ -303,6 +306,10 @@ function VocabStep({
       // Yazi girdisi Enter'i zaten isledi (`preventDefault`): ayni basista
       // hem kontrol hem ilerleme yapilmamasi icin burada dur.
       if (event.defaultPrevented) return;
+      if (checking) {
+        if (event.key === 'Enter') event.preventDefault();
+        return;
+      }
       if (event.key === 'Enter' && result) {
         event.preventDefault();
         next();
@@ -316,7 +323,7 @@ function VocabStep({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result, input, isFlash]);
+  }, [result, input, isFlash, checking]);
 
   const entry = VOCAB_BY_ID.get(question.primaryVocabId);
 
@@ -388,7 +395,7 @@ function VocabStep({
               value={input}
               onChange={setInput}
               onSubmit={check}
-              locked={result !== null}
+              locked={result !== null || checking}
               result={result}
               audioContextId={audioContextId}
               speechSpeed={speechSpeed}
@@ -422,10 +429,10 @@ function VocabStep({
               <button
                 type="button"
                 className={`btn flex-1 ${result ? (result.status === 'incorrect' ? 'btn-bad' : 'btn-good') : 'btn-primary'}`}
-                disabled={!result && !hasInput(exercise, input)}
+                disabled={checking || (!result && !hasInput(exercise, input))}
                 onClick={() => (result ? next() : check())}
               >
-                {result ? 'Devam' : 'Kontrol Et'}
+                {result ? 'Devam' : checking ? 'Kontrol ediliyor…' : 'Kontrol Et'}
               </button>
             )}
             {isFlash && result && (

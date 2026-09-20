@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Kelime oturum denetimi: çeşitlilik + 244 erişilebilirlik.
+ * Kelime oturum denetimi: çeşitlilik + tam havuz erişilebilirliği.
  *
  *   50 tohum × {mixed, topic, trde, match, type} → yinelenme oranları
- *   Yeterli oturum simülasyonu → 244/244 erişilebilirlik (öksüz liste)
+ *   Yeterli oturum simülasyonu → tüm havuz erişilebilir (öksüz liste yok)
  *
  * Kullanım: tsx scripts/audit-vocab.ts
  */
@@ -73,7 +73,7 @@ for (const kind of KINDS) {
   if (ambiguousSets > 0) fail(`${kind}: belirsiz (yinelenen anlamlı) eşleştirme seti var`);
 }
 
-console.log('\n[audit:vocab] erişilebilirlik (244 hedef)');
+console.log('\n[audit:vocab] erişilebilirlik (tüm havuz)');
 const reachable = new Set<string>();
 for (const kind of ['mixed', 'detr', 'trde', 'match', 'type', 'listen', 'weak', 'marathon'] as VocabKind[]) {
   for (let seed = 0; seed < SEEDS; seed++) {

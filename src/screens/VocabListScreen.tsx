@@ -1,5 +1,5 @@
 /**
- * Master kelime listesi — 244 öğenin tamamı.
+ * Master kelime listesi — tüm öğeler.
  *
  * Arama yalnızca envanterde yapılır; filtreler gerçek ustalık durumundan
  * gelir (All / Learning / Weak / Mastered / By Topic).

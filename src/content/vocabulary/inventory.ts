@@ -1,7 +1,7 @@
 /**
  * Kanonik kelime envanteri — TEK DOĞRULUK KAYNAĞI.
  *
- * CURRENT_VOCABULARY = bu listedeki 244 benzersiz öğe.
+ * CURRENT_VOCABULARY = bu listedeki 256 benzersiz öğe (244 kanıtlı + 12 kullanıcı eklemesi).
  * Tüm kelime öğrenme oturumları (Genel Tekrar › Kelime Çalışması, konuya göre,
  * de↔tr, eşleştirme, yazma, dinleme, zayıf kelimeler, master liste) SADECE
  * bu listeden beslenir. Ayrı elle tutulan kelime listeleri YASAKTIR.
@@ -21,6 +21,10 @@
  *   cümle/yer/zaman dilbilgisi alıştırmalarıyla çalışılır).
  * - Dışarıda tutulanlar silinmedi: gramer cümlelerinde bağlam olarak
  *   kullanılmaya devam eder, sadece kelime-hedefi olmazlar.
+ * - 12 KULLANICI EKLEMESİ (aşağıda `Kullanıcı eklemeleri` bölümü): vault
+ *   notlarında henüz belgelenmemiş, kullanıcının doğrudan verdiği kelimeler.
+ *   Kaynak `Kullanıcı eklemesi`; yazılı nota girdiğinde normal kanıtlı öğeye
+ *   dönüşür.
  * - Yeni kelime öğrenildiğinde BU liste genişletilir; paralel sistem açılmaz.
  */
 
@@ -70,9 +74,10 @@ function v(entry: VocabEntry): VocabEntry {
 }
 
 /**
- * 244 benzersiz öğe. Sıra: selamlaşma → kişisel → sayılar → fiiller →
- * ayrılabilen → modal → yiyecek → alışveriş → ev → sıfat → zaman →
- * günlük rutin → hava/hayvan/hobi → eşyalar → derste → küçük kelimeler.
+ * 256 benzersiz öğe: 244 kanıtlı + 12 kullanıcı eklemesi. Sıra: selamlaşma →
+ * kişisel → sayılar → fiiller → ayrılabilen → modal → yiyecek → alışveriş →
+ * ev → sıfat → zaman → günlük rutin → hava/hayvan/hobi → eşyalar → derste →
+ * küçük kelimeler → kullanıcı eklemeleri.
  */
 export const VOCABULARY: VocabEntry[] = [
   /* ---------------- Selamlaşma ve Nezaket (11) ---------------- */
@@ -352,12 +357,26 @@ export const VOCABULARY: VocabEntry[] = [
   v({ id: 'v-beide', german: 'beide', base: 'beide', turkish: 'ikisi de', type: 'other', topicIds: ['topic.vocabulary'], ttsText: 'beide', source: 'Konu Özetleri.md › Kelime Haznesi › Diğer Kelimeler' }),
   v({ id: 'v-ziemlich', german: 'ziemlich', base: 'ziemlich', turkish: 'oldukça', type: 'adverb', topicIds: ['topic.vocabulary'], ttsText: 'ziemlich', source: 'Konu Özetleri.md › Kelime Haznesi › Diğer Kelimeler' }),
   v({ id: 'v-gern', german: 'gern', base: 'gern', turkish: 'severek', type: 'adverb', topicIds: ['topic.likes', 'topic.food', 'topic.vocabulary'], ttsText: 'gern', source: 'Konu Özetleri.md › Sevmek ve Beğenmek' }),
+
+  /* ---------------- Kullanıcı eklemeleri (12) ---------------- */
+  v({ id: 'v-wecker', german: 'der Wecker', base: 'Wecker', turkish: 'çalar saat (alarm)', type: 'noun', article: 'der', topicIds: ['topic.daily-routine'], ttsText: 'der Wecker', source: 'Kullanıcı eklemesi › Günlük rutin' }),
+  v({ id: 'v-klingeln', german: 'klingeln', base: 'klingeln', turkish: '(zil/alarm) çalmak', type: 'verb', topicIds: ['topic.daily-routine'], ttsText: 'klingeln', source: 'Kullanıcı eklemesi › Günlük rutin' }),
+  v({ id: 'v-schlummern', german: 'schlummern', base: 'schlummern', turkish: 'uyuklamak', type: 'verb', topicIds: ['topic.daily-routine'], ttsText: 'schlummern', source: 'Kullanıcı eklemesi › Günlük rutin' }),
+  v({ id: 'v-gurgeln', german: 'gurgeln', base: 'gurgeln', turkish: 'gargara yapmak', type: 'verb', topicIds: ['topic.daily-routine'], ttsText: 'gurgeln', source: 'Kullanıcı eklemesi › Günlük rutin' }),
+  v({ id: 'v-haare', german: 'die Haare', base: 'Haare', turkish: 'saç(lar)', type: 'noun', article: 'die', topicIds: ['topic.daily-routine'], ttsText: 'die Haare', source: 'Kullanıcı eklemesi › Günlük rutin' }),
+  v({ id: 'v-wieder', german: 'wieder', base: 'wieder', turkish: 'tekrar / yeniden', type: 'adverb', topicIds: ['topic.vocabulary'], ttsText: 'wieder', source: 'Kullanıcı eklemesi › Faydalı kelimeler' }),
+  v({ id: 'v-erste', german: 'erste', base: 'erste', turkish: 'ilk (birinci)', type: 'adjective', topicIds: ['topic.vocabulary'], ttsText: 'erste', source: 'Kullanıcı eklemesi › Faydalı kelimeler' }),
+  v({ id: 'v-beispiel', german: 'das Beispiel', base: 'Beispiel', turkish: 'örnek', type: 'noun', article: 'das', topicIds: ['topic.vocabulary'], ttsText: 'das Beispiel', source: 'Kullanıcı eklemesi › Faydalı kelimeler' }),
+  v({ id: 'v-klamotten', german: 'die Klamotten', base: 'Klamotten', turkish: 'kıyafetler', type: 'noun', article: 'die', topicIds: ['topic.home', 'topic.vocabulary'], ttsText: 'die Klamotten', source: 'Kullanıcı eklemesi › Ev ve giyim' }),
+  v({ id: 'v-vielleicht', german: 'vielleicht', base: 'vielleicht', turkish: 'belki', type: 'adverb', topicIds: ['topic.vocabulary'], ttsText: 'vielleicht', source: 'Kullanıcı eklemesi › Faydalı kelimeler' }),
+  v({ id: 'v-duenn', german: 'dünn', base: 'dünn', turkish: 'ince / zayıf', type: 'adjective', topicIds: ['topic.adjectives', 'topic.vocabulary'], ttsText: 'dünn', source: 'Kullanıcı eklemesi › Sıfatlar' }),
+  v({ id: 'v-ohne', german: 'ohne', base: 'ohne', turkish: 'olmadan / -sız', type: 'preposition', topicIds: ['topic.akkusativ', 'topic.vocabulary'], ttsText: 'ohne', source: 'Kullanıcı eklemesi › Akkusativ edatı' }),
 ];
 
 export const VOCAB_BY_ID = new Map(VOCABULARY.map((entry) => [entry.id, entry]));
 
 /** Beklenen kanonik büyüklük (görev şartı). */
-export const EXPECTED_VOCABULARY_SIZE = 244;
+export const EXPECTED_VOCABULARY_SIZE = 256;
 
 export function vocabById(id: string): VocabEntry | undefined {
   return VOCAB_BY_ID.get(id);

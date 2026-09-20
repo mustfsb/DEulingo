@@ -21,7 +21,13 @@ import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { ActiveLesson, AttemptResult, LessonKind, SessionMode } from '../lib/storage';
 import type { Exercise } from '../content/types';
-import { evaluateExercise, type ExerciseInput, type ValidationResult } from '../lib/validation';
+import type { ExerciseInput, ValidationResult } from '../lib/validation';
+import {
+  deterministicValidate,
+  hybridToValidation,
+  validateAnswer,
+} from '../lib/semantic/validate-answer';
+import { isSemanticFallbackEligible } from '../lib/semantic/policy';
 import { shouldAutoplayPrompt } from '../lib/audio/tts';
 import { audioController, type SoundEffect } from '../lib/audio/playback';
 
@@ -309,12 +315,14 @@ function ExerciseStep({
 }: ExerciseStepProps) {
   const [input, setInputState] = useState<ExerciseInput>(() => emptyInput(exercise));
   const [result, setResultState] = useState<ValidationResult | null>(null);
+  const [checking, setCheckingState] = useState(false);
   const [milestone, setMilestone] = useState<number | null>(null);
   // Bir seçim ve onu izleyen Enter aynı tarayıcı olayı içinde gelebilir.
   // Ref'ler React yeniden çizimini beklemeden en güncel cevabı/geri bildirimi
   // klavye kısayoluna verir.
   const inputRef = useRef<ExerciseInput>(input);
   const resultRef = useRef<ValidationResult | null>(result);
+  const checkingRef = useRef(false);
   const celebratingRef = useRef(false);
   const setInput = useCallback((next: ExerciseInput) => {
     inputRef.current = next;
@@ -323,6 +331,10 @@ function ExerciseStep({
   const setResult = useCallback((next: ValidationResult | null) => {
     resultRef.current = next;
     setResultState(next);
+  }, []);
+  const setChecking = useCallback((next: boolean) => {
+    checkingRef.current = next;
+    setCheckingState(next);
   }, []);
   const startedAt = useRef(Date.now());
   // Kimlik hem soru ID'sini hem oturum sırasını taşır: aynı soru retry ile
@@ -347,7 +359,7 @@ function ExerciseStep({
   }, [onAdvance, stopAudio]);
 
   const check = useCallback(() => {
-    if (resultRef.current) return;
+    if (resultRef.current || checkingRef.current) return;
     const currentInput = inputRef.current;
     const elapsed = Date.now() - startedAt.current;
     if (exercise.type === 'spoken') {
@@ -356,14 +368,42 @@ function ExerciseStep({
       return;
     }
     if (!hasInput(exercise, currentInput)) return;
-    const evaluation = evaluateExercise(exercise, currentInput);
-    setResult(evaluation);
-    const reached = onCommit(exercise, evaluation.status, evaluation, currentInput, elapsed);
-    if (reached) {
-      celebratingRef.current = true;
-      setMilestone(reached);
+    // Hızlı yol: deterministik sonuç (doğru/küçük-hata ya da Jev'e uygun
+    // olmayan yanlış) eşzamanlı biter; Jev yalnızca gerçek uyuşmazlıkta
+    // ve politika izin verirse asenkron çağrılır.
+    const local = deterministicValidate(exercise, currentInput);
+    const eligible =
+      local.status === 'incorrect' &&
+      typeof currentInput === 'string' &&
+      isSemanticFallbackEligible(exercise, currentInput);
+    if (!eligible) {
+      setResult(local);
+      const reached = onCommit(exercise, local.status, local, currentInput, elapsed);
+      if (reached) {
+        celebratingRef.current = true;
+        setMilestone(reached);
+      }
+      return;
     }
-  }, [exercise, onCommit, continueToNext, setResult]);
+    setChecking(true);
+    void validateAnswer(exercise, currentInput)
+      .then((hybrid) => {
+        if (resultRef.current) return;
+        const evaluation = hybridToValidation(exercise, currentInput, hybrid);
+        setResult(evaluation);
+        const reached = onCommit(exercise, evaluation.status, evaluation, currentInput, elapsed);
+        if (reached) {
+          celebratingRef.current = true;
+          setMilestone(reached);
+        }
+      })
+      .catch(() => {
+        if (resultRef.current) return;
+        setResult(local);
+        onCommit(exercise, local.status, local, currentInput, elapsed);
+      })
+      .finally(() => setChecking(false));
+  }, [exercise, onCommit, continueToNext, setResult, setChecking]);
 
   const selfOverride = useCallback(() => {
     const currentResult = resultRef.current;
@@ -387,6 +427,11 @@ function ExerciseStep({
       // Kutlama gorunurken tus yalnizca kutlamayi kapatir; ayni basisla soru
       // atlanmaz.
       if (celebratingRef.current) return;
+      // Semantik geri dönüş beklenirken yinelenen gönderimi engelle.
+      if (checkingRef.current) {
+        if (event.key === 'Enter') event.preventDefault();
+        return;
+      }
       // Bilesen (orn. yazi girdisi) Enter'i zaten isleyip `preventDefault`
       // dediyse iki kez isleme: ilk basista kontrol edilir, ikincide ilerlenir.
       // Yoksa ayni basis hem cevabi gosterir hem de soruyu atlar.
@@ -427,7 +472,7 @@ function ExerciseStep({
         }`
         : `${topicTitle(lesson.topicId)} · ${MODE_LABEL[lesson.sessionMode ?? 'normal']}`;
   const summarySection = summarySectionForExercise(exercise);
-  const canCheck = exercise.type === 'spoken' || hasInput(exercise, input);
+  const canCheck = (exercise.type === 'spoken' || hasInput(exercise, input)) && !checking;
   const showPromptAbove = exercise.type === 'multiple-choice' && Boolean(exercise.prompt);
   const streak = lesson.streak?.current ?? 0;
   const milestoneEffect: SoundEffect | undefined = milestone
@@ -532,7 +577,7 @@ function ExerciseStep({
             value={input}
             onChange={setInput}
             onSubmit={check}
-            locked={result !== null}
+            locked={result !== null || checking}
             result={result}
             audioContextId={audioContextId}
             speechSpeed={speechSpeed}
@@ -588,7 +633,7 @@ function ExerciseStep({
               disabled={!canCheck}
               onClick={() => (result ? continueToNext() : check())}
             >
-              {result ? 'Devam' : exercise.type === 'spoken' ? 'Tamamladım' : 'Kontrol Et'}
+              {result ? 'Devam' : checking ? 'Kontrol ediliyor…' : exercise.type === 'spoken' ? 'Tamamladım' : 'Kontrol Et'}
             </button>
           </div>
         </div>

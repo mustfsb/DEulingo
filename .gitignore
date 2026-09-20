@@ -6,3 +6,7 @@ generated/*.wav
 .DS_Store
 *.log
 .playwright-mcp
+.env
+.env.*
+!.env.example
+docs/*.local.json

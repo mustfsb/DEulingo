@@ -29,7 +29,7 @@ const normGerman = (value: string) =>
   value.toLocaleLowerCase('de').replace(/[.!?]+$/g, '').trim();
 
 describe('kanonik envanter', () => {
-  it('tam 244 benzersiz öğe içerir', () => {
+  it('beklenen sayıda benzersiz öğe içerir', () => {
     expect(VOCABULARY.length).toBe(EXPECTED_VOCABULARY_SIZE);
     expect(new Set(VOCABULARY.map((e) => e.id)).size).toBe(EXPECTED_VOCABULARY_SIZE);
   });
@@ -199,7 +199,7 @@ describe('oturum niteliği', () => {
     expect(covered.length).toBe(VOCABULARY.length);
   });
 
-  it('yeterli simülasyonda 244/244 erişilebilir', () => {
+  it('yeterli simülasyonda tüm havuz erişilebilir', () => {
     const reachable = new Set<string>();
     const kinds: VocabKind[] = ['mixed', 'detr', 'trde', 'match', 'type', 'listen'];
     for (const kind of kinds) {
@@ -215,7 +215,7 @@ describe('oturum niteliği', () => {
 
 describe('ustalık', () => {
   const empty: UserProgress = createEmptyProgress();
-  it('başlangıçta 0/244 öğrenildi', () => {
+  it('başlangıçta 0 öğrenildi', () => {
     expect(summarizeVocab(empty).mastered).toBe(0);
     expect(summarizeVocab(empty).total).toBe(VOCABULARY.length);
   });

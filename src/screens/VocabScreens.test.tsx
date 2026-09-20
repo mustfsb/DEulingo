@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEmptyProgress, type UserProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
+import { VOCABULARY } from '../content/vocabulary/inventory';
 import { VocabHomeScreen } from './VocabHomeScreen';
 import { VocabListScreen } from './VocabListScreen';
 import { VocabStudyScreen } from './VocabStudyScreen';
@@ -54,13 +55,13 @@ function harness() {
 }
 
 describe('Kelime Çalışması ekranları', () => {
-  it('ana sayfa 244 sayısını ve 8 modu gösterir', () => {
+  it('ana sayfa havuz sayısını ve 8 modu gösterir', () => {
     const h = harness();
     act(() => {
       h.root.render(createElement(VocabHomeScreen, { api: h.api, navigate: h.navigate }));
     });
     expect(h.text()).toContain('Kelime Çalışması');
-    expect(h.text()).toContain('244');
+    expect(h.text()).toContain(String(VOCABULARY.length));
     for (const label of ['Tüm Kelimeler', 'Almanca → Türkçe', 'Türkçe → Almanca', 'Eşleştirme', 'Yazma', 'Dinleme', 'Zayıf Kelimeler']) {
       expect(h.text(), label).toContain(label);
     }
@@ -88,7 +89,7 @@ describe('Kelime Çalışması ekranları', () => {
     const search = h.dom.window.document.querySelector('input[type="search"]') as HTMLInputElement;
     expect(search).not.toBeNull();
     const count = () => h.dom.window.document.querySelectorAll('ul li').length;
-    expect(count()).toBe(244);
+    expect(count()).toBe(VOCABULARY.length);
     act(() => {
       const setter = Object.getOwnPropertyDescriptor(
         Object.getPrototypeOf(search),
@@ -98,7 +99,7 @@ describe('Kelime Çalışması ekranları', () => {
       search.dispatchEvent(new h.dom.window.Event('input', { bubbles: true }));
     });
     expect(h.text()).toContain('der Schlüssel');
-    expect(count()).toBeLessThan(244);
+    expect(count()).toBeLessThan(VOCABULARY.length);
     act(() => {
       const setter = Object.getOwnPropertyDescriptor(
         Object.getPrototypeOf(search),
@@ -144,7 +145,7 @@ describe('Kelime Çalışması ekranları', () => {
     expect(h.text()).toContain('Konu Kelimeleri');
   });
 
-  it('yazı girdisinde Enter önce kontrol eder, ikinci Enter ilerletir', () => {
+  it('yazı girdisinde Enter önce kontrol eder, ikinci Enter ilerletir', async () => {
     const h = harness();
     act(() => {
       h.root.render(
@@ -164,10 +165,14 @@ describe('Kelime Çalışması ekranları', () => {
       input!.dispatchEvent(new h.dom.window.Event('input', { bubbles: true }));
     });
     expect(positionIndex()).toBe('1');
-    act(() => {
+    // 'xyz' deterministikte yanlış + semantik-uygun olduğundan sonuç
+    // asenkron gelir (Jev yedeği / muhafazakâr geri dönüş).
+    await act(async () => {
       input!.dispatchEvent(
         new h.dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
       );
+      await Promise.resolve();
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
     // Geri bildirim görünür ve AYNI soruda kalınır (atlama yok).
     expect(doc.querySelector('.feedback-panel')).not.toBeNull();

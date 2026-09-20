@@ -7,6 +7,9 @@
 import { useMemo, useState } from 'react';
 import { allExercises, content, exercisesForTopic, reviewBank, summaries, topics } from '../lib/content';
 import { auditExerciseContent } from '../lib/content-audit';
+import { semanticMetricsSummary } from '../lib/semantic/metrics';
+import { JEV_ACCEPT_THRESHOLD, JEV_MODEL_ID, JEV_TIMEOUT_MS } from '../lib/semantic/threshold';
+import { validationMatrix } from '../lib/semantic/policy';
 import type { Difficulty, Skill } from '../content/types';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
@@ -22,6 +25,9 @@ const SKILL_LABEL: Record<Skill, string> = {
 
 export function DebugScreen() {
   const [showAll, setShowAll] = useState(false);
+  const [metricsTick, setMetricsTick] = useState(0);
+  const metrics = useMemo(() => semanticMetricsSummary(), [metricsTick]);
+  const matrix = useMemo(() => validationMatrix(), []);
   const errors = content.warnings.filter((warning) => warning.level === 'error');
   const warns = content.warnings.filter((warning) => warning.level === 'warn');
 
@@ -179,6 +185,48 @@ export function DebugScreen() {
           </p>
         </div>
         {sourcesBlock(reviewBank)}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="font-display text-2xl">Semantik Doğrulama (Jev yedeği)</h2>
+        <p className="mt-1 text-ink-soft">
+          model: {JEV_MODEL_ID} · eşik: {JEV_ACCEPT_THRESHOLD} · zaman aşımı: {JEV_TIMEOUT_MS}ms
+        </p>
+        <div className="mt-3 rounded-xl bg-sunk px-3 py-2 text-[0.84rem] leading-relaxed text-ink-soft">
+          <p>
+            kontrol: {metrics.totalChecked} · deterministik kabul: {metrics.deterministicAccepts} · deterministik ret:{' '}
+            {metrics.deterministicRejects}
+          </p>
+          <p>
+            jev çağrı: {metrics.jevCalls} · kabul: {metrics.jevAccepts} · ret: {metrics.jevRejects} · hata:{' '}
+            {metrics.jevErrors} · zaman aşımı: {metrics.jevTimeouts} · önbellek: {metrics.cacheHits}
+          </p>
+          <p>
+            geri-dönüş oranı: %{(metrics.fallbackRate * 100).toFixed(1)} · medyan:{' '}
+            {metrics.medianJevMs ?? '—'}ms · p95: {metrics.p95JevMs ?? '—'}ms
+          </p>
+        </div>
+        <button type="button" className="btn mt-3" onClick={() => setMetricsTick((t) => t + 1)}>
+          Sayaçları yenile
+        </button>
+        <table className="mt-3 w-full border-collapse">
+          <thead>
+            <tr className="border-b-2 border-line text-left">
+              <th className="py-1 pr-2">alıştırma</th>
+              <th className="py-1 pr-2">yerel</th>
+              <th className="py-1">jev yedeği</th>
+            </tr>
+          </thead>
+          <tbody>
+            {matrix.map((row) => (
+              <tr key={row.exercise} className="border-b border-line">
+                <td className="py-1 pr-2">{row.exercise}</td>
+                <td className="py-1 pr-2">{row.local}</td>
+                <td className="py-1">{row.jevFallback}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </main>
   );

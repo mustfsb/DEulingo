@@ -15,7 +15,7 @@ import type { Route } from '../lib/router';
 import type { VocabKind } from '../lib/vocab/questions';
 
 const MODES: Array<{ kind: VocabKind; title: string; description: string; icon: string }> = [
-  { kind: 'mixed', title: 'Tüm Kelimeler', description: '244 kelimeden karışık tekrar', icon: '📚' },
+  { kind: 'mixed', title: 'Tüm Kelimeler', description: `${VOCABULARY.length} kelimeden karışık tekrar`, icon: '📚' },
   { kind: 'detr', title: 'Almanca → Türkçe', description: 'Tanıma: anlamı bul', icon: '🇩🇪' },
   { kind: 'trde', title: 'Türkçe → Almanca', description: 'Üretim: artikeliyle yaz', icon: '🇹🇷' },
   { kind: 'match', title: 'Eşleştirme', description: '4–8 çift, iki yönlü', icon: '🔗' },
@@ -117,7 +117,7 @@ export function VocabHomeScreen({
             <span className="eyebrow" style={{ color: 'var(--color-signal)' }}>
               Özel tarama · ara sıra
             </span>
-            <span className="mt-1 block text-xl font-bold">244 Kelime Taraması</span>
+            <span className="mt-1 block text-xl font-bold">{VOCABULARY.length} Kelime Taraması</span>
             <span className="text-[0.95rem] text-ink-soft">Her kelime bir kez, kontrollü tanımayla havuzu denetle.</span>
           </span>
           <span className="numeral text-2xl" aria-hidden="true">→</span>
@@ -169,7 +169,7 @@ export function VocabHomeScreen({
           className="btn btn-quiet w-full"
           onClick={() => navigate({ name: 'vocab-list' })}
         >
-          📖 Tüm 244 kelimeyi listele ve ara →
+          📖 Tüm {VOCABULARY.length} kelimeyi listele ve ara →
         </button>
       </section>
     </main>

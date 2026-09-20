@@ -36,7 +36,7 @@ export function GeneralReviewScreen({
   const vocab = useMemo(() => summarizeVocab(progress), [progress]);
 
   const launch = (mode: ReviewMode, topicId?: string) => {
-    // Kelime modu tek kanonik havuzdan (244) beslenir: yeni Kelime Çalışması.
+    // Kelime modu tek kanonik havuzdan beslenir: yeni Kelime Çalışması.
     // Eski gr-vocab bankası ilerleme/hatalar için korunur ama birincil yol değildir.
     if (mode === 'vocab' && !topicId) {
       navigate({ name: 'vocab' });
@@ -92,7 +92,7 @@ export function GeneralReviewScreen({
           <span className="eyebrow" style={{ color: 'var(--color-good)' }}>
             Kelime Çalışması · kapalı havuz
           </span>
-          <span className="mt-1 block text-xl font-bold">244 Kelimeyi Çalış</span>
+          <span className="mt-1 block text-xl font-bold">{VOCABULARY.length} Kelimeyi Çalış</span>
           <span className="text-[0.95rem] text-ink-soft">
             {VOCABULARY.length} kelime · {vocab.mastered} öğrenildi · {vocab.weak} zayıf — de↔tr, eşleştirme,
             yazma, dinleme

@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { loadConfig, resolveSourcePaths, syncContent } from './scripts/sync-content.ts';
 import { AUDIO_CACHE_DIRECTORY, createTtsService, ttsHealth, voiceFileFor } from './scripts/tts-service.ts';
 import { germanVoiceProfile, validateSpeechRequest, type GermanVoiceId } from './src/lib/audio/tts.ts';
+import { loadLocalEnv } from './server/env.ts';
+import { handleValidate } from './server/validate-handler.ts';
 
 /**
  * Obsidian icerigini dev sunucusu baslarken ve build oncesi senkronlar;
@@ -140,7 +142,56 @@ function localTts(): Plugin {
   };
 }
 
+/**
+ * Hibrit semantik doğrulama için küçük sunucu sınırı (yalnızca dev).
+ * Üretimde aynı mantık `api/validate-answer.ts` (Vercel Serverless) ile
+ * sunulur. Anahtar tarayıcıya hiç inmez; istemci yalnızca
+ * `{ exerciseId, userAnswer }` gönderir.
+ */
+function semanticValidation(): Plugin {
+  const json = (response: import('node:http').ServerResponse, status: number, value: unknown) => {
+    response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+    response.end(JSON.stringify(value));
+  };
+
+  return {
+    name: 'almanca-semantic-validation',
+    configureServer(server) {
+      loadLocalEnv();
+      server.middlewares.use('/api/validate-answer', async (request, response) => {
+        if (request.method !== 'POST') return json(response, 405, { error: 'Yalnızca POST desteklenir.' });
+        let body = '';
+        let oversized = false;
+        request.setEncoding('utf8');
+        request.on('data', (chunk) => {
+          body += chunk;
+          if (body.length > 8_192) oversized = true;
+        });
+        request.on('end', async () => {
+          if (oversized) return json(response, 413, { error: 'İstek çok büyük.' });
+          let parsed: unknown;
+          try {
+            parsed = body ? JSON.parse(body) : {};
+          } catch {
+            return json(response, 400, { error: 'Geçersiz JSON isteği.' });
+          }
+          try {
+            const result = await handleValidate(
+              parsed as { exerciseId?: unknown; userAnswer?: unknown },
+              request.socket?.remoteAddress ?? 'dev',
+            );
+            return json(response, result.status, result.json);
+          } catch (error) {
+            server.config.logger.warn(`[jev] işleyici hatası: ${(error as Error).message}`);
+            return json(response, 502, { error: 'Semantik değerlendirme şu anda kullanılamıyor.' });
+          }
+        });
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), obsidianContent(), localTts()],
+  plugins: [react(), tailwindcss(), obsidianContent(), localTts(), semanticValidation()],
   server: { host: '127.0.0.1', port: 5183, open: false },
 });

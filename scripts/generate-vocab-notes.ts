@@ -4,7 +4,7 @@
  *
  * `src/content/vocabulary/inventory.ts` TEK doğruluk kaynağıdır; bu betik
  * yalnızca insan-okunur YANSIMALARI üretir:
- *   - `Kelime Havuzu.md` (konulara göre 244 öğe)
+ *   - `Kelime Havuzu.md` (konulara göre tüm öğeler)
  *   - `Kelime Alıştırmaları.md` (örnek alıştırmalar, temsilî seçki)
  *
  * Elle iki kopya tutulmaz: içerik değişince betik yeniden çalıştırılır.
@@ -73,7 +73,7 @@ function alistirmalar(): string {
     '# ✏️ Kelime Alıştırmaları',
     '',
     '> Temsilî seçki — tamamı uygulamada interaktif çalışılır (Kelime Çalışması).',
-    '> Hedeflerin tamamı kapalı 244 kelimelik havuzdandır; dış kelime YOKTUR.',
+    `> Hedeflerin tamamı kapalı ${VOCABULARY.length} kelimelik havuzdandır; dış kelime YOKTUR.`,
     '',
     '## Almanca → Türkçe',
     '',
@@ -90,7 +90,7 @@ function alistirmalar(): string {
   lines.push('', '## Karışık Tekrar (uygulamada)', '');
   lines.push(
     '- Tüm Kelimeler (karışık) → Konulara Göre → Türkçe→Almanca → Eşleştirme → Yazma → Dinleme → Zayıf Kelimeler',
-    '- 244 Kelime Taraması: her kelime bir kez, ara sıra yapılan havuz denetimi.',
+    `- ${VOCABULARY.length} Kelime Taraması: her kelime bir kez, ara sıra yapılan havuz denetimi.`,
     '',
   );
   return `${lines.join('\n').trim()}\n`;
