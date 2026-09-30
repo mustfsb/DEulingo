@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Markup } from '../Markup';
 import { AudioButton } from '../AudioButton';
-import { findGermanAudioTarget } from '../../lib/audio/targets';
+import { findEnglishAudioTarget, findGermanAudioTarget } from '../../lib/audio/targets';
+import { languageOfExerciseId } from '../../lib/language';
 import type { ExerciseViewProps } from './types';
 
 /**
@@ -11,6 +12,10 @@ import type { ExerciseViewProps } from './types';
 export function SpokenView({ exercise, locked, audioContextId, speechSpeed = 'normal', speechVoice }: ExerciseViewProps) {
   const [showSample, setShowSample] = useState(false);
   const [done, setDone] = useState<Set<number>>(new Set());
+  const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
+  const sampleTarget =
+    findGermanAudioTarget(exercise, exercise.sampleAnswer) ??
+    findEnglishAudioTarget(exercise, exercise.sampleAnswer);
 
   const toggle = (index: number) => {
     setDone((current) => {
@@ -60,11 +65,11 @@ export function SpokenView({ exercise, locked, audioContextId, speechSpeed = 'no
             <div className="card p-4 anim-pop">
               <p className="eyebrow mb-2">Örnek cevap</p>
               <div className="pronunciation-hover-target">
-                <span className="pronunciation-hover-text whitespace-pre-line text-ink-soft" lang="de">
-                  <Markup text={exercise.sampleAnswer} />
+                <span className="pronunciation-hover-text whitespace-pre-line text-ink-soft" lang={targetLang}>
+                  <Markup text={exercise.sampleAnswer} lang={targetLang} />
                 </span>
-                {findGermanAudioTarget(exercise, exercise.sampleAnswer) && (
-                  <AudioButton target={findGermanAudioTarget(exercise, exercise.sampleAnswer)!} contextId={audioContextId ?? `spoken:${exercise.id}`} speed={speechSpeed} voice={speechVoice} compact revealOnHover />
+                {sampleTarget && (
+                  <AudioButton target={sampleTarget} contextId={audioContextId ?? `spoken:${exercise.id}`} speed={speechSpeed} voice={speechVoice} compact revealOnHover />
                 )}
               </div>
             </div>

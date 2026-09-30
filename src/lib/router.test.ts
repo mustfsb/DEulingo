@@ -67,6 +67,34 @@ describe('konu rotalari', () => {
       expect(href).not.toContain('gun');
     }
   });
+
+  it('İngilizce konu slug ile uretilir ve cozülür (Almanca etkilenmez)', () => {
+    const topic: Route = { name: 'topic', topicId: 'en.present-perfect' };
+    expect(hrefFor(topic)).toBe('#/konu/present-perfect');
+    expect(parseHash('#/konu/present-perfect')).toEqual(topic);
+    expect(parseHash('#/konu/en.present-perfect')).toEqual(topic);
+
+    const lesson: Route = { name: 'lesson', topicId: 'en.present-perfect', mode: 'normal' };
+    expect(hrefFor(lesson)).toBe('#/ders/present-perfect/normal');
+    expect(parseHash('#/ders/present-perfect/normal')).toEqual(lesson);
+
+    const section: Route = {
+      name: 'lesson', topicId: 'en.present-perfect', mode: 'section', sectionId: 'present-perfect.for-since',
+    };
+    expect(parseHash('#/ders/present-perfect/bolum/present-perfect.for-since')).toEqual(section);
+    // Başka dilin bölümü kabul edilmez.
+    expect(parseHash('#/ders/present-perfect/bolum/modal-verbs.rule')).toEqual(topic);
+
+    const summary: Route = { name: 'summary', topicId: 'en.present-perfect', sectionId: 'present-perfect.v3' };
+    expect(hrefFor(summary)).toBe('#/ozet/present-perfect/present-perfect.v3');
+    expect(parseHash('#/ozet/present-perfect/present-perfect.v3')).toEqual(summary);
+  });
+
+  it('İngilizce konu kelime çalışması rotası iki yönde çözülür', () => {
+    const route: Route = { name: 'vocab-study', kind: 'topic', topicId: 'en.present-perfect' };
+    expect(hrefFor(route)).toBe('#/kelime/calisma/topic/present-perfect');
+    expect(parseHash('#/kelime/calisma/topic/present-perfect')).toEqual(route);
+  });
 });
 
 describe('gun tabanli eski baglantilar (yonlendirme)', () => {

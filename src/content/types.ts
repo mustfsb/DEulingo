@@ -35,6 +35,17 @@ export interface ExerciseValidation {
   /** Yazim hatasi toleransini tamamen kapatir (orn. artikel testleri). */
   noTypoTolerance?: boolean;
   /**
+   * İngilizce kısaltma normalizasyonu (Present Perfect alıştırmaları).
+   *
+   * Aktifken karşılaştırma öncesi iki taraf da genişletilir:
+   * `I've` → `I have`, `haven't` → `have not`, `hasn't` → `has not`,
+   * `it's` → `it has` (Present Perfect bağlamında). Böylece
+   * `I haven't seen it.` ile `I have not seen it.` aynı sayılır; ama
+   * `I haven't see it.` (yanlış V3) hâlâ yanlıştır. Yalnızca İngilizce
+   * (`en.*`) alıştırmalarda kullanılır; Almanca davranışı değişmez.
+   */
+  englishContractions?: boolean;
+  /**
    * "Yaklasik okunus" gibi TEK DOGRU YAZIMI OLMAYAN cevaplar icin.
    *
    * Turkce yazim Almanca sesleri birebir veremez — uygulama bunu ogrenciye de
@@ -49,6 +60,12 @@ export interface ExerciseValidation {
    * Kullanici Almanca klavye olmadan da dogru cevap verebilir.
    */
   keyboardTolerance?: boolean;
+  /**
+   * Yazım toleransı SÖZCÜK başına uygulanır: tek bir sözcükte ≤7 harfte en
+   * fazla 1, daha uzunda en fazla 2 düzenleme. Böylece `Zug` ↔ `Bus` ya da
+   * `spiele` ↔ `spreche` gibi farklı kelimeler "küçük yazım hatası" sayılmaz.
+   */
+  strictTokenTypos?: boolean;
 }
 
 export interface ExercisePair {
@@ -56,7 +73,7 @@ export interface ExercisePair {
   right: string;
 }
 
-export type TranslationDirection = 'de-to-tr' | 'tr-to-de';
+export type TranslationDirection = 'de-to-tr' | 'tr-to-de' | 'en-to-tr' | 'tr-to-en';
 
 export interface WordBankToken {
   /** Yinelenen kelimelerde dahi kararlı seçim kimliği. */
@@ -69,7 +86,7 @@ export interface WordBankTranslation {
   direction: TranslationDirection;
   /** Öğrenciye gösterilen, zaten bilinen kaynak cümle. */
   sourceText: string;
-  targetLanguage: 'de' | 'tr';
+  targetLanguage: 'de' | 'tr' | 'en';
   tokens: WordBankToken[];
   /** Kanonik sıra ilk sıradır; doğal Türkçe alternatifleri sonrakilerdir. */
   acceptedSequences: string[][];
@@ -82,11 +99,29 @@ export interface GermanAudioTarget {
   role: 'prompt' | 'canonical-answer' | 'example' | 'vocabulary';
 }
 
+/**
+ * İngilizce (en-GB) ses hedefi — yerel Piper modelİ YOKTUR (`.piper/voices`
+ * yalnızca `de_DE` içerir); oynatma her zaman tarayıcı Web Speech
+ * (`en-GB` tercihi) üzerinden yapılır. Almanca akışına dokunmaz.
+ */
+export interface EnglishAudioTarget {
+  text: string;
+  language: 'en-GB';
+  role: 'prompt' | 'canonical-answer' | 'example' | 'vocabulary';
+}
+
+/** İçerikte açıkça işaretlenmiş konuşma hedefi (Almanca ya da İngilizce). */
+export type SpeechAudioTarget = GermanAudioTarget | EnglishAudioTarget;
+
+export function isEnglishAudioTarget(target: SpeechAudioTarget): target is EnglishAudioTarget {
+  return target.language === 'en-GB';
+}
+
 export interface ExerciseAudio {
-  prompt?: GermanAudioTarget;
-  canonicalAnswer?: GermanAudioTarget;
-  /** İçerik yazarı tarafından açıkça Almanca olarak işaretlenmiş ek yüzeyler. */
-  targets?: GermanAudioTarget[];
+  prompt?: SpeechAudioTarget;
+  canonicalAnswer?: SpeechAudioTarget;
+  /** İçerik yazarı tarafından açıkça işaretlenmiş ek yüzeyler. */
+  targets?: SpeechAudioTarget[];
 }
 
 /** Alistirmanin bilissel yuku. A1 sinirlari icinde kalir. */

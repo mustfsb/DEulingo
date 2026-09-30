@@ -58,11 +58,29 @@ const CLOSED_GRAMMAR_SETS: string[][] = [
   ['darf', 'darfst', 'dürfen', 'dürft'],
   ['mag', 'magst', 'mögen', 'mögt'],
   ['möchte', 'möchtest', 'möchten', 'möchtet'],
+  // İyelik (hâl + cinsiyet eki): meinem ↔ meinen ↔ meiner …
+  ['mein', 'meine', 'meinen', 'meinem', 'meiner'],
+  ['dein', 'deine', 'deinen', 'deinem', 'deiner'],
+  ['sein', 'seine', 'seinen', 'seinem', 'seiner'],
+  ['ihr', 'ihre', 'ihren', 'ihrem', 'ihrer'],
+  ['unser', 'unsere', 'unseren', 'unserem', 'unserer'],
+  // Zamirlerin hâl biçimleri: mir ↔ mich ↔ ich …
+  ['ich', 'mir', 'mich'],
+  ['du', 'dir', 'dich'],
+  ['er', 'ihm', 'ihn'],
+  ['sie', 'ihr', 'ihnen'],
+  ['wir', 'uns'],
+  // Dativ edatları ve kısaltmaları: zum ↔ zur, bei ↔ beim …
+  ['mit', 'zu', 'bei', 'von', 'aus', 'nach', 'seit', 'zum', 'zur', 'beim', 'vom'],
 ];
 
-const CLOSED_INDEX = new Map<string, number>();
+/** Bir biçim birden çok kümede olabilir (`ihr` hem zamir hem iyelik, `sein` hem fiil hem iyelik). */
+const CLOSED_INDEX = new Map<string, Set<number>>();
 CLOSED_GRAMMAR_SETS.forEach((group, index) => {
-  for (const form of group) CLOSED_INDEX.set(form.toLocaleLowerCase('de'), index);
+  for (const form of group) {
+    const key = form.toLocaleLowerCase('de');
+    CLOSED_INDEX.set(key, new Set([...(CLOSED_INDEX.get(key) ?? []), index]));
+  }
 });
 
 function closedGrammarSwap(a: string, b: string): boolean {
@@ -75,11 +93,187 @@ function closedGrammarSwap(a: string, b: string): boolean {
   if (na.includes(' ') || nb.includes(' ')) return false;
   const ia = CLOSED_INDEX.get(na);
   const ib = CLOSED_INDEX.get(nb);
-  if (ia !== undefined && ib !== undefined && ia === ib) return true;
+  if (ia && ib && na !== nb && [...ia].some((group) => ib.has(group))) return true;
   // sein↔haben yardımcı-fiil değişimi kümeler arasıdır ama yine dilbilgisidir.
   const AUX = new Set(['bin', 'bist', 'ist', 'sind', 'seid', 'habe', 'hast', 'hat', 'haben', 'habt']);
   if (AUX.has(na) && AUX.has(nb) && na !== nb) return true;
   return false;
+}
+
+/* ------------------------------------------------------------------ */
+/* İngilizce Present Perfect: dilbilgisi hedefi deterministik korunur    */
+/* ------------------------------------------------------------------ */
+
+import { EN_CLOSED_SETS, expandEnglishContractions } from '../validation';
+
+/** Bu alıştırma İngilizce Present Perfect ölçüyor mu? */
+export function isPresentPerfectTested(exercise: Exercise): boolean {
+  return (
+    exercise.topicId === 'en.present-perfect' ||
+    exercise.topicId.startsWith('en.') ||
+    exercise.id.startsWith('en-') ||
+    exercise.conceptIds.some((id) => id.startsWith('pp.'))
+  );
+}
+
+const EN_CLOSED_INDEX = new Map<string, Set<number>>();
+EN_CLOSED_SETS.forEach((group, index) => {
+  for (const form of group) {
+    const key = form.toLowerCase();
+    EN_CLOSED_INDEX.set(key, new Set([...(EN_CLOSED_INDEX.get(key) ?? []), index]));
+  }
+});
+
+function enTokens(value: string): string[] {
+  return expandEnglishContractions(value)
+    .toLowerCase()
+    .replace(/[.!?,;:"„“”'’()]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/** Kapalı küme üyeleri + işaret kelimeleri: cümlenin dilbilgisi imzası. */
+const EN_MARKERS = new Set([
+  'have', 'has', 'had', 'not', 'for', 'since', 'ever', 'never', 'already', 'yet', 'just',
+  ...EN_CLOSED_SETS.flat(),
+]);
+
+function enGrammarSignature(value: string): string {
+  return enTokens(value)
+    .filter((token) => EN_MARKERS.has(token))
+    .sort()
+    .join(' ');
+}
+
+/**
+ * Present Perfect korumalı alıştırmada kullanıcı cevabı her beklenen cevapla
+ * dilbilgisi imzasında ayrılıyorsa (yanlış yardımcı, yanlış V3, yanlış
+ * for/since, eksik have/has, Simple Past kullanımı) Jev'e sorulmaz —
+ * deterministik yanlıştır. Anlamca anlaşılır olması hedefi değiştirmez.
+ * Kelime sırası ve eşanlamlı içerik kelimesi farkları korumadan geçer.
+ */
+export function presentPerfectFormMismatch(exercise: Exercise, userAnswer: string): boolean {
+  const expected = [exercise.answer ?? '', ...(exercise.acceptedAnswers ?? [])].filter(Boolean);
+  if (!expected.length) return false;
+  const userSignature = enGrammarSignature(userAnswer);
+  const userTokens = enTokens(userAnswer);
+  return expected.every((candidate) => {
+    if (enGrammarSignature(candidate) !== userSignature) return true;
+    const candidateTokens = enTokens(candidate);
+    const known = new Set(candidateTokens);
+    // Aynı fiil ailesinin farklı üyesi (see↔seen, have↔has, go↔gone…).
+    return userTokens.some((token) => {
+      if (known.has(token)) return false;
+      const groups = EN_CLOSED_INDEX.get(token);
+      if (!groups) return false;
+      return candidateTokens.some((want) => {
+        const wantGroups = EN_CLOSED_INDEX.get(want);
+        return Boolean(wantGroups && [...groups].some((group) => wantGroups.has(group)));
+      });
+    });
+  });
+}
+
+/**
+ * Tek sözcüklü kapalı-küme değişimi (have↔has, for↔since, see↔seen):
+ * Jev'e sorulmadan deterministik yanlıştır.
+ */
+function englishClosedGrammarSwap(a: string, b: string): boolean {
+  const norm = (s: string) => expandEnglishContractions(s).toLowerCase().replace(/[.!?;:,]+$/g, '').trim();
+  const na = norm(a);
+  const nb = norm(b);
+  if (na.includes(' ') || nb.includes(' ')) return false;
+  const ia = EN_CLOSED_INDEX.get(na);
+  const ib = EN_CLOSED_INDEX.get(nb);
+  return Boolean(ia && ib && na !== nb && [...ia].some((group) => ib.has(group)));
+}
+
+/* ------------------------------------------------------------------ */
+/* Dativ: hâl biçimi deterministik korunur                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Alıştırma Dativ biçimini ölçüyor mu? (Dativ konusu, `dativ.*` kavramı ya da
+ * yönergede açıkça "Dativ".) Akkusativ ↔ Dativ karşıtlık soruları da Dativ
+ * konusunda yaşadığı için aynı korumayı alır.
+ */
+export function isDativeTested(exercise: Exercise): boolean {
+  return (
+    exercise.topicId === 'topic.dativ' ||
+    exercise.conceptIds.some((id) => id.startsWith('dativ.')) ||
+    /dativ/i.test(exercise.instruction ?? '')
+  );
+}
+
+const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser', 'euer', 'eur'];
+const POSSESSIVE_ENDINGS = ['', 'e', 'en', 'em', 'er', 'es'];
+
+/** Hâl taşıyan kapalı-sınıf biçimler: artikel, iyelik, zamir, edat. */
+const CASE_FORMS = new Set<string>([
+  'der', 'die', 'das', 'den', 'dem', 'des',
+  'ein', 'eine', 'einen', 'einem', 'einer', 'eines',
+  'kein', 'keine', 'keinen', 'keinem', 'keiner', 'keines',
+  ...POSSESSIVE_STEMS.flatMap((stem) => POSSESSIVE_ENDINGS.map((ending) => `${stem}${ending}`)),
+  'ich', 'mir', 'mich', 'du', 'dir', 'dich', 'er', 'ihm', 'ihn', 'sie', 'ihnen', 'es', 'wir', 'uns', 'euch',
+  'mit', 'zu', 'bei', 'von', 'aus', 'nach', 'seit', 'in', 'an', 'auf', 'für', 'ohne',
+]);
+
+/** Kısaltmalar açılır: `zum Arzt` ile `zu dem Arzt` aynı hâl imzasını taşır. */
+const CONTRACTION_EXPANSIONS: Record<string, string[]> = {
+  zum: ['zu', 'dem'],
+  zur: ['zu', 'der'],
+  beim: ['bei', 'dem'],
+  vom: ['von', 'dem'],
+  im: ['in', 'dem'],
+  ins: ['in', 'das'],
+  am: ['an', 'dem'],
+};
+
+function caseTokens(value: string): string[] {
+  return value
+    .normalize('NFC')
+    .toLocaleLowerCase('de')
+    .replace(/[.!?,;:"„“”'’()]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((token) => CONTRACTION_EXPANSIONS[token] ?? [token]);
+}
+
+/** Cümlenin hâl imzası: hâl taşıyan biçimlerin sıralı çoklu kümesi (kelime sırası önemsiz). */
+export function caseSignature(value: string): string {
+  return caseTokens(value)
+    .filter((token) => CASE_FORMS.has(token))
+    .sort()
+    .join(' ');
+}
+
+/** `Freund` ↔ `Freunden`, `Kinder` ↔ `Kindern`, `Monate` ↔ `Monaten`: yalnızca ek farkı. */
+function endingOnlyDifference(a: string, b: string): boolean {
+  if (a === b) return false;
+  const [short, long] = a.length < b.length ? [a, b] : [b, a];
+  if (short.length < 3 || !long.startsWith(short)) return false;
+  return ['n', 'en', 'e'].includes(long.slice(short.length));
+}
+
+/**
+ * Dativ korumalı alıştırmada kullanıcı cevabı her beklenen cevaptan hâl
+ * biçimiyle ayrılıyorsa (yanlış artikel/iyelik/zamir/edat ya da isim eki),
+ * cevap anlamca anlaşılır olsa bile Jev'e sorulmaz — deterministik yanlıştır.
+ * Kelime sırası ve eşanlamlı içerik kelimesi farkları korumadan geçer.
+ */
+export function dativeFormMismatch(exercise: Exercise, userAnswer: string): boolean {
+  const expected = [exercise.answer ?? '', ...(exercise.acceptedAnswers ?? [])].filter(Boolean);
+  if (!expected.length) return false;
+  const userSignature = caseSignature(userAnswer);
+  const userTokens = caseTokens(userAnswer);
+  return expected.every((candidate) => {
+    if (caseSignature(candidate) !== userSignature) return true;
+    const candidateTokens = caseTokens(candidate);
+    const known = new Set(candidateTokens);
+    return userTokens.some(
+      (token) => !known.has(token) && candidateTokens.some((want) => endingOnlyDifference(token, want)),
+    );
+  });
 }
 
 function looksNumericExercise(exercise: Exercise): boolean {
@@ -193,6 +387,43 @@ export function semanticPolicyFor(exercise: Exercise): SemanticPolicy {
       tested.push('accusative_case');
       forbidden.push('nominative/accusative swap (ein/einen, mein/meinen)');
     }
+    if (isPresentPerfectTested(exercise)) {
+      tested.push('present_perfect_auxiliary', 'past_participle_v3', 'for_since_selection');
+      allowed.push(
+        'different but valid word order where grammar allows (For three years, I have lived here.)',
+        'contracted or uncontracted auxiliaries with the same grammar (I\'ve = I have, haven\'t = have not)',
+      );
+      forbidden.unshift(
+        'have/has auxiliary swap or missing auxiliary (She have finished, I seen it)',
+        'wrong past participle (see/saw/seen, go/went/gone, write/wrote/written)',
+        'for/since swap (since three years, for 2024)',
+        'Simple Past where Present Perfect is tested and vice versa (I saw him yesterday vs I have seen him yesterday)',
+        'negation change',
+      );
+    }
+    if (isDativeTested(exercise)) {
+      // Tek/iki sözcüklü Dativ biçim soruları (`mit ___ Freund` → `dem`) tamamen
+      // deterministiktir: biçimin kendisi ölçülür, anlam değil.
+      if (words <= 2) {
+        base.enabled = false;
+        base.mode = 'exact';
+        base.testedConcepts = ['dative_case', 'article_form'];
+        return base;
+      }
+      tested.push('dative_case', 'article_form', 'possessive_form', 'dative_preposition');
+      allowed.unshift(
+        'valid alternative word order with the same Dativ forms (Mit meinem Freund gehe ich.)',
+        'uncontracted preposition + article when the contraction itself is not tested (zu dem Arzt = zum Arzt)',
+        'synonymous content word that keeps the tested Dativ group intact',
+      );
+      forbidden.unshift(
+        'any wrong Dativ article or ending (dem/den/der, einem/einen, meinem/meinen/meine/meiner)',
+        'Akkusativ form where Dativ is required, or Dativ where Akkusativ is required',
+        'wrong Dativ pronoun (mir/mich, dir/dich, ihm/ihn)',
+        'missing Dativ plural -n (Freunden, Kindern, Monaten)',
+        'wrong or missing preposition (mit/zu/bei/von/aus/nach/seit)',
+      );
+    }
     if (looksNumericExercise(exercise)) {
       tested.push('clock_number_value');
     }
@@ -236,6 +467,18 @@ export function isSemanticFallbackEligible(exercise: Exercise, userAnswer: strin
     if (expected && closedGrammarSwap(raw, expected)) return false;
   }
 
+  // Dativ: yanlış hâl biçimi (anlam anlaşılsa bile) deterministik olarak yanlıştır.
+  if (isDativeTested(exercise) && dativeFormMismatch(exercise, raw)) return false;
+
+  // Present Perfect: yanlış yardımcı/V3/for-since/zaman (anlam anlaşılsa
+  // bile) deterministik olarak yanlıştır; Jev'e sorulmaz.
+  if (isPresentPerfectTested(exercise)) {
+    for (const expected of expectedList) {
+      if (expected && englishClosedGrammarSwap(raw, expected)) return false;
+    }
+    if (presentPerfectFormMismatch(exercise, raw)) return false;
+  }
+
   // Saat/sayı alıştırmasında sayısal görünüm deterministik解析'e aittir:
   // her iki taraf da büyük ölçüde sayısal ise Jev'e gitme.
   if (looksNumericExercise(exercise)) {
@@ -268,6 +511,7 @@ export function validationMatrix(): Array<{ exercise: string; local: string; jev
     { exercise: 'approximation (yaklaşık okunuş)', local: 'evet (ses eşitliği)', jevFallback: 'asla' },
     { exercise: 'vocab detr-type (de→tr yazma)', local: 'evet', jevFallback: 'evet' },
     { exercise: 'vocab trde-type (tr→de yazma)', local: 'evet (artikel politikası)', jevFallback: 'evet (artikel politikasıyla)' },
+    { exercise: 'en present-perfect (have/has/V3/for-since)', local: 'evet (kısaltma normalizasyonu + kapalı küme)', jevFallback: 'koşullu (yardımcı/V3/for-since/zaman hariç)' },
     { exercise: 'clock/number parsing', local: 'evet (deterministik)', jevFallback: 'nadiren/asla' },
   ];
 }

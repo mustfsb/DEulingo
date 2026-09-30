@@ -118,8 +118,11 @@ describe('konu onceligi ve boyut', () => {
     expect(sessionSize('normal', 500, T.modalVerbs)).toBe(22);
     expect(sessionSize('normal', 500, T.greetings)).toBe(18);
     expect(sessionSize('gr-mixed', 500, T.modalVerbs)).toBe(28);
+    expect(SESSION_SIZE_OVERRIDES['en.present-perfect']?.normal).toBe(28);
+    expect(sessionSize('normal', 500, 'en.present-perfect')).toBe(28);
+    expect(sessionSize('gr-mixed', 500, 'en.present-perfect')).toBe(28);
     for (const key of [...Object.keys(SESSION_SIZE_OVERRIDES), ...Object.keys(SESSION_CLOSING_TASKS)]) {
-      expect(key).toMatch(/^topic\./);
+      expect(key).toMatch(/^(topic\.|en\.)/);
     }
   });
 

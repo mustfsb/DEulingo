@@ -8,7 +8,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { exercisesById, exercisesForTopic, getTopicSummary, topics, topicsById, topicTitle } from '../lib/content';
+import { contentFor, enContent } from '../lib/content-en';
+import { topicTitle as germanTopicTitle } from '../lib/content';
 import { audioController } from '../lib/audio/playback';
 import { goalProgress, markGoalCelebrated } from '../lib/daily-goal';
 import { MOTION, prefersReducedMotion } from '../lib/motion';
@@ -30,6 +31,8 @@ const NEEDS_WORK = 0.7;
 
 export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteScreenProps) {
   const { progress, update } = api;
+  const C = contentFor(api.language ?? 'de');
+  const { exercisesById, exercisesForTopic, getTopicSummary, topics, topicsById } = C;
   const reduced = useMemo(prefersReducedMotion, []);
   const [revealed, setRevealed] = useState(reduced);
   const [pending, setPending] = useState<string | null>(null);
@@ -336,6 +339,13 @@ export function LessonCompleteScreen({ result, api, navigate }: LessonCompleteSc
   );
 }
 
+/** Sonuç başlığındaki konu adı — dilimden bağımsız çözülür (başlık `lastResult`'tan gelir). */
+function titleForResult(topicId: string | undefined): string {
+  if (!topicId) return 'Konu';
+  if (topicId.startsWith('en.')) return enContent.topicTitle(topicId);
+  return germanTopicTitle(topicId);
+}
+
 export function resultHeadline(
   result: LessonResult,
   accuracy: number | null,
@@ -352,7 +362,7 @@ export function resultHeadline(
     };
   }
   const label =
-    result.mode === 'topic' && result.topicId ? topicTitle(result.topicId) : result.mode === 'review' ? 'Genel Tekrar' : 'Tekrar';
+    result.mode === 'topic' && result.topicId ? titleForResult(result.topicId) : result.mode === 'review' ? 'Genel Tekrar' : 'Tekrar';
   if (result.perfect) {
     return { title: 'Mükemmel ders!', subtitle: `${label} · ${answered} · tüm sorular doğru.` };
   }

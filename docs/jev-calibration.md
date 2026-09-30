@@ -54,3 +54,41 @@ Gerekçe:
 - `gateway.zeroDataRetention: true` yalnızca `JEV_ZERO_DATA_RETENTION=true`
   ise gönderilir; mevcut hobby planda Gateway bu bayrağı reddeder
   (400: "yalnızca Pro/Enterprise").
+
+## Dativ vakaları (2026-09-24)
+
+> Ham olasılıklar `docs/jev-calibration.dativ.local.json` (gitignored).
+> Komut: `npm run jev:calibrate -- --dativ`
+
+- Etiketli set: `src/lib/semantic/calibration.dativ.fixtures.ts` — **53 vaka**
+  (20 kabul, 33 ret), gerçek Dativ alıştırmalarına bağlı. Kategoriler:
+  kelime sırası 13, kısaltma 5, eşanlamlı 2, yanlış biçim 22, yanlış edat 4,
+  anlam farkı 7. (Toplam set artık 205 vaka.)
+- Karar yolları:
+  - 26 biçim/edat hatası → **deterministik ret**, Jev'e hiç gitmez
+    (her şeyi kabul eden Jev taklidiyle bile; `dativ-policy.test.ts`).
+  - 5 kabul (4 kısaltma açık yazımı + 1 kabul edilen tam cümle) → deterministik kabul.
+  - `Wir gehen mit meinem Freund.` (özne) → hâl imzası farklı, deterministik ret.
+  - Kalan **20 vaka Jev'e gider** (13 kelime sırası + 1 eşanlamlı kabul, 6 anlam reti).
+
+### Canlı Jev (n=20, eşik 0.72)
+
+| Eşik | Doğruluk | FAR | FRR | Kabul | Ret |
+|---|---|---|---|---|---|
+| 0.50 | 1.000 | 0.000 | 0.000 | 14 | 6 |
+| 0.70 | 0.950 | 0.000 | 0.071 | 13 | 7 |
+| 0.80 | 0.950 | 0.000 | 0.071 | 13 | 7 |
+| 0.90 | 0.900 | 0.000 | 0.143 | 12 | 8 |
+
+- Üretim eşiğinde (0.72): geçerli alternatiflerin **13/14**'ü kabul, anlam
+  hatalarının **6/6**'sı ret, **yanlış kabul 0**.
+- Tek yanlış ret: `Meinen Freund sehe ich.` (Akkusativ nesne başta) 0.55 —
+  muhafazakâr yön, kabul edilebilir.
+- En yüksek ret olasılığı 0.04; eşik değiştirilmedi.
+- Gecikme: medyan 367ms, p95 852ms.
+
+### Savunma derinliği (tek seferlik ölçüm)
+
+Deterministik koruma atlanıp 26 biçim/edat hatası doğrudan Jev'e soruldu
+(Dativ yönergesiyle): **0/26** kabul (en yüksek `zu Berlin` 0.42, diğerleri
+≤ 0.07). Yani yanlış Dativ biçimi iki bağımsız katmanda reddedilir.

@@ -857,10 +857,14 @@ export function isValidProgress(value: unknown): value is UserProgress {
 /* Okuma / yazma                                                       */
 /* ------------------------------------------------------------------ */
 
-export function loadProgress(storage: Storage = localStorage, context?: MigrationContext): UserProgress {
+export function loadProgress(
+  storage: Storage = localStorage,
+  context?: MigrationContext,
+  key: string = STORAGE_KEY,
+): UserProgress {
   let raw: string | null = null;
   try {
-    raw = storage.getItem(STORAGE_KEY);
+    raw = storage.getItem(key);
   } catch {
     return createEmptyProgress();
   }
@@ -881,10 +885,14 @@ export function loadProgress(storage: Storage = localStorage, context?: Migratio
   return createEmptyProgress();
 }
 
-export function saveProgress(progress: UserProgress, storage: Storage = localStorage): void {
+export function saveProgress(
+  progress: UserProgress,
+  storage: Storage = localStorage,
+  key: string = STORAGE_KEY,
+): void {
   const next = { ...progress, updatedAt: new Date().toISOString() };
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(next));
+    storage.setItem(key, JSON.stringify(next));
   } catch {
     /* kota dolu — sessizce devam et, oturum calismaya devam eder */
   }

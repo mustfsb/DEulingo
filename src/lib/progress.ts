@@ -112,6 +112,23 @@ function isoDate(date = new Date()): string {
 
 export function classifyMistake(exercise: Exercise, result: AttemptResult): MistakeType {
   if (result === 'minor-typo') return 'spelling';
+  // İngilizce Present Perfect: boşluk/sıralama/serbest üretim dilbilgisi ölçer.
+  if (exercise.topicId.startsWith('en.') || exercise.id.startsWith('en-')) {
+    switch (exercise.type) {
+      case 'error-correction':
+      case 'ordering':
+      case 'sentence-builder':
+      case 'fill-blank':
+      case 'free-text':
+        return 'grammar';
+      case 'multiple-choice':
+      case 'listen-choice':
+      case 'dictation':
+        return 'vocabulary';
+      default:
+        return 'unknown';
+    }
+  }
   const topic = exercise.topic.toLocaleLowerCase('tr');
   const isArticle =
     exercise.topicId === 'topic.articles' ||

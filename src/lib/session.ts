@@ -84,6 +84,10 @@ export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, 
   'topic.separable-verbs': { normal: 20, full: 50, challenge: 16 },
   // ~140 alistirmalik, uretim agirlikli Perfekt havuzu.
   'topic.perfekt': { normal: 22, full: 52, quick: 10, challenge: 18 },
+  // ~150 alistirmalik, uretim agirlikli Dativ havuzu.
+  'topic.dativ': { normal: 22, full: 52, quick: 10, challenge: 18 },
+  // ~155 alistirmalik, uretim agirlikli İngilizce Present Perfect havuzu.
+  'en.present-perfect': { normal: 28, full: 55, quick: 12, challenge: 22 },
 };
 
 const LESSON_MODES = new Set<SessionMode>(['normal', 'full', 'quick', 'challenge']);
@@ -117,6 +121,14 @@ export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, s
   'topic.perfekt': {
     full: ['pf-gestern-free-tam-anlatim'],
     challenge: ['pf-gestern-free-tam-anlatim'],
+  },
+  'topic.dativ': {
+    full: ['dat-free-kiminle'],
+    challenge: ['dat-free-kiminle'],
+  },
+  'en.present-perfect': {
+    full: ['en-pp-write-experience'],
+    challenge: ['en-pp-write-experience'],
   },
 };
 

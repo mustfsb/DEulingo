@@ -5,12 +5,12 @@ import type { NoteBlock } from '../content/types';
  * Ozet gövde bloklarini render eder.
  * Ham HTML KULLANILMAZ — her blok turu acikca ele alinir.
  */
-export function NoteBlockView({ block }: { block: NoteBlock }) {
+export function NoteBlockView({ block, lang = 'de' }: { block: NoteBlock; lang?: string }) {
   switch (block.kind) {
     case 'paragraph':
       return (
         <p>
-          <Markup text={block.text} />
+          <Markup text={block.text} lang={lang} />
         </p>
       );
     case 'callout':
@@ -19,7 +19,7 @@ export function NoteBlockView({ block }: { block: NoteBlock }) {
           className="rounded-xl px-3.5 py-2.5"
           style={{ background: 'var(--color-warn-soft)', color: 'var(--color-ink)' }}
         >
-          <Markup text={block.text} />
+          <Markup text={block.text} lang={lang} />
         </p>
       );
     case 'list':
@@ -27,7 +27,7 @@ export function NoteBlockView({ block }: { block: NoteBlock }) {
         <ul className="ml-4 flex list-disc flex-col gap-1">
           {block.items.map((item, index) => (
             <li key={index}>
-              <Markup text={item} />
+              <Markup text={item} lang={lang} />
             </li>
           ))}
         </ul>
@@ -36,7 +36,7 @@ export function NoteBlockView({ block }: { block: NoteBlock }) {
       return (
         <pre
           className="overflow-x-auto rounded-xl bg-sunk p-3.5 font-mono text-[0.9rem] leading-relaxed"
-          lang="de"
+          lang={lang}
         >
           {block.lines.join('\n')}
         </pre>
@@ -49,7 +49,7 @@ export function NoteBlockView({ block }: { block: NoteBlock }) {
               <tr>
                 {block.head.map((cell, index) => (
                   <th key={index} className="border-b-2 border-line px-2.5 py-2 text-left">
-                    <Markup text={cell} />
+                    <Markup text={cell} lang={lang} />
                   </th>
                 ))}
               </tr>
@@ -59,7 +59,7 @@ export function NoteBlockView({ block }: { block: NoteBlock }) {
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
                     <td key={cellIndex} className="border-b border-line px-2.5 py-2 align-top">
-                      <Markup text={cell} />
+                      <Markup text={cell} lang={lang} />
                     </td>
                   ))}
                 </tr>

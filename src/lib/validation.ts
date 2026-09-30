@@ -43,6 +43,41 @@ export interface NormalizeOptions {
   punctuationSensitive?: boolean;
   /** Alman özel harfleri (ß/ä/ö/ü) icin klavye toleransi: ASCII yaklasimi tam dogru sayilir. */
   keyboardTolerance?: boolean;
+  /** Yazim toleransi sozcuk basina (bkz. `ExerciseValidation.strictTokenTypos`). */
+  strictTokenTypos?: boolean;
+  /** İngilizce kısaltmaları karşılaştırma öncesi genişlet (`haven't` → `have not`). */
+  englishContractions?: boolean;
+}
+
+/**
+ * İngilizce kısaltma genişletme (yalnızca `englishContractions` işaretli
+ * Present Perfect alıştırmalarında).
+ *
+ * Her iki tarafa da uygulanır; böylece `I've`/`I have`, `haven't`/`have not`,
+ * `hasn't`/`has not` çiftleri aynı sayılır. Dilbilgisi hedefi korunur:
+ * `haven't see` genişleyince `have not see` olur ve V3 korumasına takılır.
+ */
+const EN_CONTRACTIONS: Array<[RegExp, string]> = [
+  [/\bi've\b/gi, 'i have'],
+  [/\byou've\b/gi, 'you have'],
+  [/\bwe've\b/gi, 'we have'],
+  [/\bthey've\b/gi, 'they have'],
+  [/\bhe's\b/gi, 'he has'],
+  [/\bshe's\b/gi, 'she has'],
+  [/\bit's\b/gi, 'it has'],
+  [/\bhasn't\b/gi, 'has not'],
+  [/\bhaven't\b/gi, 'have not'],
+  [/\bwhat's\b/gi, 'what has'],
+  [/\bwho's\b/gi, 'who has'],
+];
+
+export function expandEnglishContractions(value: string): string {
+  // Mobil klavyeler kıvırcık kesme işareti üretir — önce düzleştir.
+  let text = ` ${value.replace(/[‘’‚]/g, "'")} `;
+  for (const [pattern, replacement] of EN_CONTRACTIONS) {
+    text = text.replace(pattern, ` ${replacement} `);
+  }
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 export function normalizeAnswer(value: string, options: NormalizeOptions = {}): string {
@@ -93,14 +128,24 @@ const FORM_GROUPS: string[][] = [
   ['wohne', 'wohnst', 'wohnt', 'wohnen'],
   ['heiße', 'heißt', 'heißen', 'heisse', 'heisst', 'heissen'],
   ['trinke', 'trinkst', 'trinkt', 'trinken'],
-  ['aus', 'in', 'an', 'nach', 'von', 'bei', 'zu', 'mit'],
+  // Edatlar + Dativ kısaltmaları: `zum` ↔ `zur` bir harf ama farklı artikeldir.
+  ['aus', 'in', 'an', 'nach', 'von', 'bei', 'zu', 'mit', 'seit', 'zum', 'zur', 'beim', 'vom', 'im', 'ins', 'am'],
   ['wie', 'wo', 'woher', 'wer', 'was', 'wann'],
   ['guten morgen', 'guten tag', 'guten abend', 'gute nacht'],
   ['auf wiedersehen', 'auf wiederhören', 'auf wiederhoeren'],
   // Belirsiz / olumsuz / iyelik artikelleri: hâl ve cinsiyet eki dilbilgisidir (ein → einen).
   ['ein', 'eine', 'einen', 'einem', 'einer'],
   ['kein', 'keine', 'keinen', 'keinem', 'keiner'],
-  ['mein', 'meine', 'meinen', 'meinem', 'meiner', 'dein', 'deine', 'deinen', 'sein', 'seine', 'seinen', 'ihr', 'ihre', 'ihren', 'unser', 'unsere', 'unseren', 'Ihr', 'Ihre', 'Ihren'],
+  [
+    'mein', 'meine', 'meinen', 'meinem', 'meiner',
+    'dein', 'deine', 'deinen', 'deinem', 'deiner',
+    'sein', 'seine', 'seinen', 'seinem', 'seiner',
+    'ihr', 'ihre', 'ihren', 'ihrem', 'ihrer',
+    'unser', 'unsere', 'unseren', 'unserem', 'unserer',
+    'Ihr', 'Ihre', 'Ihren', 'Ihrem', 'Ihrer',
+  ],
+  // Zamirlerin hâl biçimleri: `mir` ↔ `mich`, `dir` ↔ `dich`, `ihm` ↔ `ihn` dilbilgisidir.
+  ['ich', 'mir', 'mich', 'du', 'dir', 'dich', 'er', 'ihm', 'ihn', 'wir', 'uns', 'ihr', 'euch', 'sie', 'ihnen', 'es'],
   // Modalverbler: kişi eki dilbilgisidir (kann ↔ kannst).
   ['kann', 'kannst', 'können', 'könnt'],
   ['möchte', 'möchtest', 'möchten', 'möchtet'],
@@ -128,6 +173,78 @@ function inSameFormGroup(a: string, b: string): boolean {
   return [...groupsA].some((group) => groupsB.has(group));
 }
 
+/* ------------------------------------------------------------------ */
+/* İngilizce dilbilgisi korumaları (yalnızca `englishContractions`      */
+/* işaretli Present Perfect alıştırmalarında)                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Kapalı İngilizce kümeler: aynı kümede iki farklı biçim asla "yazım hatası"
+ * sayılmaz. `haven't see` → `have not see` genişlediği için V3 koruması da
+ * genişlemiş biçimde çalışır; `I have seen` ile `I have see` arasındaki tek
+ * harf farkı yazım hatası DEĞİLDİR.
+ */
+export const EN_CLOSED_SETS: string[][] = [
+  ['have', 'has', 'had'],
+  ['be', 'am', 'is', 'are', 'was', 'were', 'been'],
+  ['for', 'since'],
+  ['ever', 'never'],
+  ['see', 'sees', 'saw', 'seen'],
+  ['go', 'goes', 'went', 'gone'],
+  ['do', 'does', 'did', 'done'],
+  ['know', 'knows', 'knew', 'known'],
+  ['make', 'makes', 'made'],
+  ['take', 'takes', 'took', 'taken'],
+  ['write', 'writes', 'wrote', 'written'],
+  ['speak', 'speaks', 'spoke', 'spoken'],
+  ['eat', 'eats', 'ate', 'eaten'],
+  ['drink', 'drinks', 'drank', 'drunk'],
+  ['find', 'finds', 'found'],
+  ['buy', 'buys', 'bought'],
+  ['come', 'comes', 'came'],
+  ['give', 'gives', 'gave', 'given'],
+  ['forget', 'forgets', 'forgot', 'forgotten'],
+  ['think', 'thinks', 'thought'],
+  ['meet', 'meets', 'met'],
+  ['learn', 'learns', 'learned', 'learnt'],
+  ['work', 'works', 'worked'],
+  ['study', 'studies', 'studied'],
+  ['finish', 'finishes', 'finished'],
+  ['visit', 'visits', 'visited'],
+  ['start', 'starts', 'started'],
+  ['live', 'lives', 'lived'],
+];
+
+const EN_CLOSED_INDEX = new Map<string, Set<number>>();
+EN_CLOSED_SETS.forEach((group, index) => {
+  for (const form of group) {
+    const key = form.toLowerCase();
+    EN_CLOSED_INDEX.set(key, new Set([...(EN_CLOSED_INDEX.get(key) ?? []), index]));
+  }
+});
+
+/** Aynı kapalı kümenin iki farklı üyesi mi? (`have` ↔ `has`, `see` ↔ `seen`). */
+export function isEnglishGrammarSwap(a: string, b: string): boolean {
+  const na = a.toLowerCase();
+  const nb = b.toLowerCase();
+  if (na === nb) return false;
+  const ia = EN_CLOSED_INDEX.get(na);
+  const ib = EN_CLOSED_INDEX.get(nb);
+  return Boolean(ia && ib && [...ia].some((group) => ib.has(group)));
+}
+
+/**
+ * Çoğul Dativ `-n` eki: `Kinder` ↔ `Kindern`, `Brüder` ↔ `Brüdern`.
+ * (`Freunde` ↔ `Freunden` zaten fiil-eki kontrolüne takılır.) Yalnızca `-er`
+ * / `-el` ile biten tabanlarda uygulanır; tek harf olsa da yazım hatası değildir.
+ */
+export function isDativePluralVariant(a: string, b: string): boolean {
+  const x = foldGerman(a);
+  const y = foldGerman(b);
+  const [short, long] = x.length < y.length ? [x, y] : [y, x];
+  return short.length >= 4 && long === `${short}n` && /(er|el)$/.test(short);
+}
+
 /** Aynı sayıda sözcükte, herhangi bir sözcük farkı dilbilgisi biçimi değişikliği mi? */
 function hasGrammarFormSwap(input: string, expected: string): boolean {
   const inputTokens = input.split(' ');
@@ -135,7 +252,7 @@ function hasGrammarFormSwap(input: string, expected: string): boolean {
   if (inputTokens.length !== expectedTokens.length) return false;
   return expectedTokens.some((want, index) => {
     const got = inputTokens[index];
-    return want !== got && (inSameFormGroup(want, got) || isConjugationVariant(want, got));
+    return want !== got && (inSameFormGroup(want, got) || isConjugationVariant(want, got) || isDativePluralVariant(want, got));
   });
 }
 
@@ -233,6 +350,19 @@ export function levenshtein(a: string, b: string): number {
   return previous[b.length];
 }
 
+/** Tek sözcükte yazım hatası sayılabilecek en fazla düzenleme (katı mod). */
+export function tokenTypoBudget(expectedToken: string): number {
+  return expectedToken.length <= 7 ? 1 : 2;
+}
+
+/** Katı modda: farklı sözcük çiftlerinden biri sözcük bütçesini aşıyor mu? */
+function exceedsTokenBudget(input: string, expected: string): boolean {
+  const got = input.split(' ');
+  const want = expected.split(' ');
+  if (got.length !== want.length) return true;
+  return want.some((token, index) => token !== got[index] && levenshtein(got[index], token) > tokenTypoBudget(token));
+}
+
 /** Beklenen cevabin uzunluguna gore izin verilen toplam yazim hatasi. */
 export function typoBudget(expected: string): number {
   const length = expected.replace(/\s/g, '').length;
@@ -247,8 +377,14 @@ export function typoBudget(expected: string): number {
 /* ------------------------------------------------------------------ */
 
 function compareOne(input: string, expected: string, options: NormalizeOptions): ValidationResult {
-  const normalizedInput = normalizeAnswer(input, options);
-  const normalizedExpected = normalizeAnswer(expected, options);
+  const normalizedInput = normalizeAnswer(
+    options.englishContractions ? expandEnglishContractions(input) : input,
+    options,
+  );
+  const normalizedExpected = normalizeAnswer(
+    options.englishContractions ? expandEnglishContractions(expected) : expected,
+    options,
+  );
 
   if (!normalizedInput) {
     return { status: 'incorrect', expected, normalizedInput };
@@ -285,7 +421,11 @@ function compareOne(input: string, expected: string, options: NormalizeOptions):
       return { status: 'correct', expected, normalizedInput };
     }
     // Küçük klavye farkı affedilir; ama `möchte` ↔ `möchtest` gibi biçim farkı asla.
-    if (levenshtein(foldedInput, foldedExpected) <= 2 && !hasGrammarFormSwap(foldedInput, foldedExpected)) {
+    if (
+      levenshtein(foldedInput, foldedExpected) <= 2 &&
+      !hasGrammarFormSwap(foldedInput, foldedExpected) &&
+      !(options.strictTokenTypos && exceedsTokenBudget(foldedInput, foldedExpected))
+    ) {
       return { status: 'correct', expected, normalizedInput };
     }
   }
@@ -317,11 +457,20 @@ function compareOne(input: string, expected: string, options: NormalizeOptions):
     const got = inputTokens[i];
     if (want === got) continue;
 
-    if (inSameFormGroup(want, got) || isConjugationVariant(want, got)) {
+    if (inSameFormGroup(want, got) || isConjugationVariant(want, got) || isDativePluralVariant(want, got)) {
+      return { status: 'incorrect', expected, normalizedInput, diff: { got, want } };
+    }
+    // İngilizce Present Perfect: yanlış V3 / have-has / for-since asla yazım
+    // hatası sayılmaz (`see` ↔ `seen` tek harf olsa da dilbilgisidir).
+    if (options.englishContractions && isEnglishGrammarSwap(want, got)) {
       return { status: 'incorrect', expected, normalizedInput, diff: { got, want } };
     }
     mismatches += 1;
-    distance += levenshtein(got, want);
+    const tokenDistance = levenshtein(got, want);
+    if (options.strictTokenTypos && tokenDistance > tokenTypoBudget(want)) {
+      return { status: 'incorrect', expected, normalizedInput, diff: { got, want } };
+    }
+    distance += tokenDistance;
     diff ??= { got, want };
   }
 
@@ -345,6 +494,8 @@ export function evaluateText(
     caseSensitive: validation.caseSensitive ?? false,
     punctuationSensitive: validation.punctuationSensitive ?? false,
     keyboardTolerance: validation.keyboardTolerance ?? false,
+    strictTokenTypos: validation.strictTokenTypos ?? false,
+    englishContractions: validation.englishContractions ?? false,
   };
 
   const candidates = [answer, ...acceptedAnswers];

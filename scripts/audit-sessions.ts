@@ -94,10 +94,14 @@ for (const [reviewMode, sessionMode] of REVIEW_MODES) {
   print(auditPlans(reviewMode, reviewPoolFor(reviewBank, reviewMode), sessionMode));
 }
 
-// Görevin açıkça istediği özet: 50 tohum × (Modalverben Normal/Full/Challenge, Genel Tekrar, Cümle Kurma).
+// Görevin açıkça istediği özet: 50 tohum × (Dativ ve Modalverben Normal/Full/Challenge, Genel Tekrar, Cümle Kurma).
 console.log('\nİstenen özet — birincil ID kopyası');
 const modal = topicPool('topic.modal-verbs');
+const dativ = topicPool('topic.dativ');
 for (const [label, pool, mode, topicId] of [
+  ['Dativ Normal', dativ, 'normal', 'topic.dativ'],
+  ['Dativ Full', dativ, 'full', 'topic.dativ'],
+  ['Dativ Challenge', dativ, 'challenge', 'topic.dativ'],
   ['Modalverben Normal', modal, 'normal', 'topic.modal-verbs'],
   ['Modalverben Full', modal, 'full', 'topic.modal-verbs'],
   ['Modalverben Challenge', modal, 'challenge', 'topic.modal-verbs'],

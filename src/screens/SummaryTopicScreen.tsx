@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Markup } from '../components/Markup';
 import { NoteBlockView } from '../components/NoteBlocks';
 import { AudioButton } from '../components/AudioButton';
-import { exercisesForSection, getTopic, getTopicSummary, reviewSummary, topicTitle } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { reviewSectionAction } from '../lib/general-review';
 import { previewReviewSize, startReviewSession } from '../lib/start-review';
 import { audioController } from '../lib/audio/playback';
@@ -75,9 +75,12 @@ export function SummaryTopicScreen({
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
+  const C = contentFor(api.language ?? 'de');
+  const { exercisesForSection, getTopic, getTopicSummary } = C;
   const summary = getTopicSummary(topicId);
   const topic = getTopic(topicId);
   const { progress } = api;
+  const exampleLang = C.language === 'en' ? 'en-GB' : 'de-DE';
   const audioContextId = `summary:${topicId}`;
   useAudioContext(audioContextId);
   useMarkRead(api, summary?.sections.map((section) => section.id) ?? []);
@@ -148,6 +151,7 @@ export function SummaryTopicScreen({
                     : undefined
                 }
                 footnote={topic.title}
+                exampleLang={exampleLang}
               />
             );
           })}
@@ -161,14 +165,14 @@ export function SummaryTopicScreen({
             <ul className="mt-2 ml-4 flex list-disc flex-col gap-1 text-[0.95rem]">
               {summary.keyPoints.map((point, index) => (
                 <li key={index}>
-                  <Markup text={point} />
+                  <Markup text={point} lang={exampleLang === 'en-GB' ? 'en' : 'de'} />
                 </li>
               ))}
             </ul>
           </section>
         )}
 
-        {summary.recallQuestions.length > 0 && <RecallList items={summary.recallQuestions} />}
+        {summary.recallQuestions.length > 0 && <RecallList items={summary.recallQuestions} lang={exampleLang === 'en-GB' ? 'en' : 'de'} />}
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <button type="button" className="btn btn-primary" onClick={practiceTopic}>
@@ -194,8 +198,11 @@ export function ReviewSummaryScreen({
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
+  const C = contentFor(api.language ?? 'de');
+  const { reviewSummary, topicTitle } = C;
   const summary = reviewSummary;
   const { progress } = api;
+  const exampleLang = C.language === 'en' ? 'en-GB' : 'de-DE';
   const audioContextId = 'summary:genel';
   useAudioContext(audioContextId);
   useMarkRead(api, summary?.sections.map((section) => section.id) ?? []);
@@ -234,8 +241,8 @@ export function ReviewSummaryScreen({
 
         <div className="mt-10 flex flex-col gap-14">
           {summary.sections.map((section) => {
-            const action = reviewSectionAction(section.id);
-            const size = action ? previewReviewSize(action.mode ?? 'topic', action.topicId) : 0;
+            const action = reviewSectionAction(section.id, C.language);
+            const size = action ? previewReviewSize(action.mode ?? 'topic', action.topicId, C.language) : 0;
             return (
               <SectionView
                 key={section.id}
@@ -243,6 +250,7 @@ export function ReviewSummaryScreen({
                 bookmarked={(progress.settings.bookmarks ?? []).includes(section.id)}
                 settings={progress.settings}
                 audioContextId={audioContextId}
+                exampleLang={exampleLang}
                 onToggleBookmark={() => toggleBookmark(api, section.id)}
                 practice={
                   action && size > 0
@@ -312,6 +320,7 @@ function SectionView({
   practice,
   footnote,
   extra,
+  exampleLang = 'de-DE',
 }: {
   section: SummarySection;
   bookmarked: boolean;
@@ -321,8 +330,10 @@ function SectionView({
   practice?: { label: string; detail: string; onClick: () => void };
   footnote: string;
   extra?: React.ReactNode;
+  exampleLang?: 'de-DE' | 'en-GB';
 }) {
   const { showPronunciation, speechSpeed, speechVoice } = settings;
+  const tokenLang = exampleLang === 'en-GB' ? 'en' : 'de';
   return (
     <section id={`bolum-${section.id}`} className="scroll-mt-24">
       <div className="flex items-start justify-between gap-4">
@@ -341,7 +352,7 @@ function SectionView({
 
       <div className="prose-body mt-5 flex flex-col gap-4 text-[1.02rem] leading-[1.7]">
         {section.blocks.map((block, index) => (
-          <NoteBlockView key={index} block={block} />
+          <NoteBlockView key={index} block={block} lang={tokenLang} />
         ))}
       </div>
 
@@ -354,7 +365,7 @@ function SectionView({
               style={{ background: 'var(--color-bad-soft)', borderColor: 'var(--color-bad)' }}
             >
               <span className="font-bold">⚠ Dikkat · </span>
-              <Markup text={warning} />
+              <Markup text={warning} lang={tokenLang} />
             </p>
           ))}
         </div>
@@ -397,10 +408,11 @@ function SectionView({
           speechSpeed={speechSpeed}
           speechVoice={speechVoice}
           audioContextId={audioContextId}
+          exampleLang={exampleLang}
         />
       )}
 
-      {section.recallQuestions && section.recallQuestions.length > 0 && <RecallList items={section.recallQuestions} />}
+      {section.recallQuestions && section.recallQuestions.length > 0 && <RecallList items={section.recallQuestions} lang={tokenLang} />}
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
         {practice && (
@@ -424,13 +436,16 @@ function Examples({
   speechSpeed,
   speechVoice,
   audioContextId,
+  exampleLang = 'de-DE',
 }: {
   items: GermanExample[];
   showPronunciation: boolean;
   speechSpeed: SpeechSpeed;
   speechVoice: GermanVoiceId;
   audioContextId: string;
+  exampleLang?: 'de-DE' | 'en-GB';
 }) {
+  const htmlLang = exampleLang === 'en-GB' ? 'en' : 'de';
   return (
     <div className="mt-6">
       <p className="eyebrow mb-2">Örnekler</p>
@@ -439,11 +454,11 @@ function Examples({
           <li key={index} className="border-l-2 border-line pl-3.5">
             <div>
               <span className="pronunciation-hover-target">
-                <span className="pronunciation-hover-text de text-[1.05rem] font-bold" lang="de">
+                <span className="pronunciation-hover-text de text-[1.05rem] font-bold" lang={htmlLang}>
                   {example.german}
                 </span>
                 <AudioButton
-                  target={{ text: example.german, language: 'de-DE', role: 'example' }}
+                  target={{ text: example.german, language: exampleLang, role: 'example' }}
                   contextId={audioContextId}
                   speed={speechSpeed}
                   voice={speechVoice}
@@ -465,7 +480,7 @@ function Examples({
   );
 }
 
-function RecallList({ items }: { items: RecallQuestion[] }) {
+function RecallList({ items, lang = 'de' }: { items: RecallQuestion[]; lang?: string }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <div className="mt-6">
@@ -480,11 +495,11 @@ function RecallList({ items }: { items: RecallQuestion[] }) {
               onClick={() => setOpen(open === index ? null : index)}
             >
               <span className="font-bold">{open === index ? '▾' : '▸'} </span>
-              <Markup text={item.question} />
+              <Markup text={item.question} lang={lang} />
             </button>
             {open === index && (
               <p className="mt-1 px-3.5 text-[0.95rem] leading-snug text-ink-soft anim-pop">
-                <Markup text={item.answer} />
+                <Markup text={item.answer} lang={lang} />
               </p>
             )}
           </li>

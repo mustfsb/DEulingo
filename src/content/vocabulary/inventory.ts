@@ -1,7 +1,8 @@
 /**
  * Kanonik kelime envanteri — TEK DOĞRULUK KAYNAĞI.
  *
- * CURRENT_VOCABULARY = bu listedeki 256 benzersiz öğe (244 kanıtlı + 12 kullanıcı eklemesi).
+ * CURRENT_VOCABULARY = bu listedeki 268 benzersiz öğe (256 kanıtlı + 12 kullanıcı eklemesi;
+ * kanıtlıların 12'si Dativ konusunun yeni kelimeleridir).
  * Tüm kelime öğrenme oturumları (Genel Tekrar › Kelime Çalışması, konuya göre,
  * de↔tr, eşleştirme, yazma, dinleme, zayıf kelimeler, master liste) SADECE
  * bu listeden beslenir. Ayrı elle tutulan kelime listeleri YASAKTIR.
@@ -51,7 +52,7 @@ export type VocabType =
 export interface VocabEntry {
   /** Kararlı kimlik: `v-<kök>` (asla değişmez, ilerleme buna bağlıdır). */
   id: string;
-  /** Kanonik Almanca (isimlerde artikel + isim: `der Schlüssel`). */
+  /** Kanonik hedef-dil biçimi (Almancada artikel + isim: `der Schlüssel`). */
   german: string;
   /** Artikelsiz yalın biçim (eşleştirme/TTS normalizasyonu için). */
   base: string;
@@ -59,14 +60,16 @@ export interface VocabEntry {
   turkish: string;
   type: VocabType;
   article?: 'der' | 'die' | 'das';
-  /** En az bir kanonik konu (`topic.*`). Çoklu üyelik etikettir, kopya değil. */
+  /** En az bir kanonik konu (`topic.*` ya da `en.*`). Çoklu üyelik etikettir, kopya değil. */
   topicIds: string[];
   aliases?: string[];
-  /** Piper'a gönderilecek Almanca metin (isimlerde artikelli). */
+  /** Seslendirilecek hedef-dil metni (Almancada artikelli). */
   ttsText: string;
   /** Kaynak kanıtı (vault bölümü ya da kavram kimliği). */
   source: string;
   priority?: number;
+  /** Hedef dil; verilmezse `de` (Almanca envanter varsayılanı). */
+  lang?: 'de' | 'en';
 }
 
 function v(entry: VocabEntry): VocabEntry {
@@ -74,7 +77,7 @@ function v(entry: VocabEntry): VocabEntry {
 }
 
 /**
- * 256 benzersiz öğe: 244 kanıtlı + 12 kullanıcı eklemesi. Sıra: selamlaşma →
+ * 268 benzersiz öğe: 256 kanıtlı (12si Dativ) + 12 kullanıcı eklemesi. Sıra: selamlaşma →
  * kişisel → sayılar → fiiller → ayrılabilen → modal → yiyecek → alışveriş →
  * ev → sıfat → zaman → günlük rutin → hava/hayvan/hobi → eşyalar → derste →
  * küçük kelimeler → kullanıcı eklemeleri.
@@ -358,6 +361,20 @@ export const VOCABULARY: VocabEntry[] = [
   v({ id: 'v-ziemlich', german: 'ziemlich', base: 'ziemlich', turkish: 'oldukça', type: 'adverb', topicIds: ['topic.vocabulary'], ttsText: 'ziemlich', source: 'Konu Özetleri.md › Kelime Haznesi › Diğer Kelimeler' }),
   v({ id: 'v-gern', german: 'gern', base: 'gern', turkish: 'severek', type: 'adverb', topicIds: ['topic.likes', 'topic.food', 'topic.vocabulary'], ttsText: 'gern', source: 'Konu Özetleri.md › Sevmek ve Beğenmek' }),
 
+  /* ---------------- Dativ konusu (12) ---------------- */
+  v({ id: 'v-arzt', german: 'der Arzt', base: 'Arzt', turkish: 'doktor', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Arzt', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-bus', german: 'der Bus', base: 'Bus', turkish: 'otobüs', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Bus', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-zug', german: 'der Zug', base: 'Zug', turkish: 'tren', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Zug', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-supermarkt', german: 'der Supermarkt', base: 'Supermarkt', turkish: 'süpermarket', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Supermarkt', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-geschenk', german: 'das Geschenk', base: 'Geschenk', turkish: 'hediye', type: 'noun', article: 'das', topicIds: ['topic.dativ'], ttsText: 'das Geschenk', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-bruder', german: 'der Bruder', base: 'Bruder', turkish: 'erkek kardeş', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Bruder', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-freundin', german: 'die Freundin', base: 'Freundin', turkish: 'kız arkadaş', type: 'noun', article: 'die', topicIds: ['topic.dativ'], ttsText: 'die Freundin', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-monat', german: 'der Monat', base: 'Monat', turkish: 'ay (takvim)', type: 'noun', article: 'der', topicIds: ['topic.dativ'], ttsText: 'der Monat', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-fahren', german: 'fahren', base: 'fahren', turkish: '(araçla) gitmek', type: 'verb', topicIds: ['topic.dativ'], ttsText: 'fahren', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-sehen', german: 'sehen', base: 'sehen', turkish: 'görmek', type: 'verb', topicIds: ['topic.dativ'], ttsText: 'sehen', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-helfen', german: 'helfen', base: 'helfen', turkish: 'yardım etmek', type: 'verb', topicIds: ['topic.dativ'], ttsText: 'helfen', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+  v({ id: 'v-danken', german: 'danken', base: 'danken', turkish: 'teşekkür etmek', type: 'verb', topicIds: ['topic.dativ'], ttsText: 'danken', source: 'Konu Özetleri.md › Dativ › Bu Konunun Yeni Kelimeleri' }),
+
   /* ---------------- Kullanıcı eklemeleri (12) ---------------- */
   v({ id: 'v-wecker', german: 'der Wecker', base: 'Wecker', turkish: 'çalar saat (alarm)', type: 'noun', article: 'der', topicIds: ['topic.daily-routine'], ttsText: 'der Wecker', source: 'Kullanıcı eklemesi › Günlük rutin' }),
   v({ id: 'v-klingeln', german: 'klingeln', base: 'klingeln', turkish: '(zil/alarm) çalmak', type: 'verb', topicIds: ['topic.daily-routine'], ttsText: 'klingeln', source: 'Kullanıcı eklemesi › Günlük rutin' }),
@@ -376,7 +393,7 @@ export const VOCABULARY: VocabEntry[] = [
 export const VOCAB_BY_ID = new Map(VOCABULARY.map((entry) => [entry.id, entry]));
 
 /** Beklenen kanonik büyüklük (görev şartı). */
-export const EXPECTED_VOCABULARY_SIZE = 256;
+export const EXPECTED_VOCABULARY_SIZE = 268;
 
 export function vocabById(id: string): VocabEntry | undefined {
   return VOCAB_BY_ID.get(id);

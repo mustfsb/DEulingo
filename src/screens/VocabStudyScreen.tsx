@@ -18,8 +18,7 @@ import { emptyInput, hasInput } from '../components/exercise/types';
 import { FeedbackPanel } from '../components/FeedbackPanel';
 import { AudioButton } from '../components/AudioButton';
 import { Markup } from '../components/Markup';
-import { VOCAB_BY_ID, VOCABULARY } from '../content/vocabulary/inventory';
-import { topicTitle } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { recordAttempt } from '../lib/progress';
 import type { ExerciseInput, ValidationResult } from '../lib/validation';
 import { deterministicValidate, hybridToValidation, validateAnswer } from '../lib/semantic/validate-answer';
@@ -31,18 +30,20 @@ import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { AttemptResult } from '../lib/storage';
 
-const KIND_LABEL: Record<VocabKind, string> = {
-  mixed: 'Tüm Kelimeler',
-  detr: 'Almanca → Türkçe',
-  trde: 'Türkçe → Almanca',
-  match: 'Eşleştirme',
-  type: 'Yazma',
-  listen: 'Dinleme',
-  weak: 'Zayıf Kelimeler',
-  flash: 'Kartlar',
-  marathon: `${VOCABULARY.length} Kelime Taraması`,
-  topic: 'Konu Kelimeleri',
-};
+function kindLabels(isEnglish: boolean, total: number): Record<VocabKind, string> {
+  return {
+    mixed: 'Tüm Kelimeler',
+    detr: isEnglish ? 'İngilizce → Türkçe' : 'Almanca → Türkçe',
+    trde: isEnglish ? 'Türkçe → İngilizce' : 'Türkçe → Almanca',
+    match: 'Eşleştirme',
+    type: 'Yazma',
+    listen: 'Dinleme',
+    weak: 'Zayıf Kelimeler',
+    flash: 'Kartlar',
+    marathon: `${total} Kelime Taraması`,
+    topic: 'Konu Kelimeleri',
+  };
+}
 
 function isFlashExercise(question: VocabQuestion): boolean {
   return question.exercise.type === 'spoken';
@@ -62,6 +63,8 @@ export function VocabStudyScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress, update } = api;
+  const C = contentFor(api.language ?? 'de');
+  const KIND_LABEL = kindLabels(C.language === 'en', C.vocabulary.length);
   const seedRef = useRef(`${Date.now()}-${Math.floor(Math.random() * 1e9)}`);
   // Oturum BAŞLANGIÇTAKİ ilerlemeyle bir kez kurulur (zayıf-öncelik donar).
   const initial = useRef(progress);
@@ -73,7 +76,9 @@ export function VocabStudyScreen({
         size: size === 'quick' || size === 'normal' || size === 'full' || size === 'marathon' ? size : 'normal',
         seed: seedRef.current,
         progress: initial.current,
+        inventory: C.vocabulary,
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [kind, topicId, size],
   );
 
@@ -132,8 +137,9 @@ export function VocabStudyScreen({
       .filter((q): q is VocabQuestion => Boolean(q))
       .flatMap((q) => q.vocabIds)
       .filter((id, i, arr) => arr.indexOf(id) === i)
-      .map((id) => VOCAB_BY_ID.get(id))
+      .map((id) => C.vocabById.get(id))
       .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+    const htmlLang = C.language === 'en' ? 'en' : 'de';
     return (
       <main className="mx-auto w-full max-w-[640px] px-5 pb-24 pt-10 text-center">
         <p className="eyebrow">Kelime oturumu bitti</p>
@@ -146,7 +152,7 @@ export function VocabStudyScreen({
             <ul className="flex flex-col gap-2">
               {missed.map((entry) => (
                 <li key={entry.id} className="card p-3">
-                  <span className="de font-bold" lang="de">{entry.german}</span>
+                  <span className="de font-bold" lang={htmlLang}>{entry.german}</span>
                   <span aria-hidden="true"> — </span>
                   <span>{entry.turkish}</span>
                 </li>
@@ -167,6 +173,7 @@ export function VocabStudyScreen({
                 size: size === 'quick' || size === 'normal' || size === 'full' || size === 'marathon' ? size : 'normal',
                 seed: seedRef.current,
                 progress: initial.current,
+                inventory: C.vocabulary,
               });
               setQueue(fresh);
               setIndex(0);
@@ -193,7 +200,9 @@ export function VocabStudyScreen({
       question={question}
       position={index + 1}
       total={queue.length}
-      label={`${KIND_LABEL[kind]}${topicId ? ` · ${topicTitle(topicId)}` : ''}`}
+      label={`${KIND_LABEL[kind]}${topicId ? ` · ${C.topicTitle(topicId)}` : ''}`}
+      vocabById={C.vocabById}
+      entryLang={C.language === 'en' ? 'en' : 'de'}
       showPronunciation={progress.settings.showPronunciation}
       soundEffects={progress.settings.soundEffects}
       autoPronunciation={progress.settings.autoPronunciation}
@@ -211,6 +220,8 @@ function VocabStep({
   position,
   total,
   label,
+  vocabById,
+  entryLang,
   showPronunciation,
   soundEffects,
   autoPronunciation,
@@ -224,6 +235,8 @@ function VocabStep({
   position: number;
   total: number;
   label: string;
+  vocabById: Map<string, { german: string; turkish: string }>;
+  entryLang: 'de' | 'en';
   showPronunciation: boolean;
   soundEffects: boolean;
   autoPronunciation: boolean;
@@ -282,7 +295,7 @@ function VocabStep({
     if (result) return;
     const evaluation: ValidationResult = {
       status: grade === 'correct' ? 'correct' : grade === 'minor-typo' ? 'minor-typo' : 'incorrect',
-      expected: `${question.exercise.prompt} — ${VOCAB_BY_ID.get(question.primaryVocabId)?.turkish ?? ''}`,
+      expected: `${question.exercise.prompt} — ${vocabById.get(question.primaryVocabId)?.turkish ?? ''}`,
       normalizedInput: grade,
     };
     setResult(evaluation);
@@ -325,7 +338,7 @@ function VocabStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result, input, isFlash, checking]);
 
-  const entry = VOCAB_BY_ID.get(question.primaryVocabId);
+  const entry = vocabById.get(question.primaryVocabId);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -363,7 +376,7 @@ function VocabStep({
 
           {exercise.prompt && !listenHidden && (
             <div className="mb-6">
-              <span className="font-display text-2xl leading-snug sm:text-[1.75rem]" style={{ fontWeight: 700 }} lang={exercise.type === 'multiple-choice' && question.exercise.id.includes('detr') ? 'de' : undefined}>
+              <span className="font-display text-2xl leading-snug sm:text-[1.75rem]" style={{ fontWeight: 700 }} lang={question.exercise.id.includes('detr') ? entryLang : undefined}>
                 <Markup text={exercise.prompt} />
               </span>
             </div>
@@ -371,7 +384,7 @@ function VocabStep({
 
           {isFlash && entry ? (
             <div className="card p-6 text-center">
-              <p className="font-display text-3xl font-bold" lang="de">{entry.german}</p>
+              <p className="font-display text-3xl font-bold" lang={entryLang}>{entry.german}</p>
               {!flashBack ? (
                 <button type="button" className="btn mt-6" onClick={() => setFlashBack(true)}>
                   Cevabı Göster

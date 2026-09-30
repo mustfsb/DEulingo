@@ -173,6 +173,12 @@ export const TOPICS: CurriculumTopicDef[] = [
     description: 'Dünü anlatmak: haben/sein + Partizip II ile geçmiş zaman.',
     keywords: 'Ich habe Sport gemacht. · Ich bin zur Schule gegangen. · Was hast du gestern gemacht?',
   }),
+  topic('dativ', {
+    title: 'Dativ',
+    emoji: '🤝',
+    description: 'mit, zu, bei, von, aus, nach, seit + Dativ: dem / der / dem / den.',
+    keywords: 'Ich gehe mit meinem Freund. · Ich gehe zum Arzt. · Ich komme aus der Türkei.',
+  }),
   topic('vocabulary', {
     title: 'Kelime Haznesi',
     emoji: '📚',
@@ -203,6 +209,7 @@ export const T = {
   separableVerbs: 'topic.separable-verbs',
   modalVerbs: 'topic.modal-verbs',
   perfekt: 'topic.perfekt',
+  dativ: 'topic.dativ',
   vocabulary: 'topic.vocabulary',
 } as const;
 
@@ -384,6 +391,29 @@ export const SUMMARY_SECTIONS: SummarySectionDef[] = [
   section('perfekt', 'gestern', 'Gestern — Mein Tag im Perfekt', { related: ['daily-routine', 'time'] }),
   section('perfekt', 'mistakes', 'Sık Hatalar'),
 
+  // 🤝 Dativ
+  section('dativ', 'goal', 'Ne Öğreneceğim?'),
+  section('dativ', 'words', 'Bu Konunun Yeni Kelimeleri'),
+  section('dativ', 'what', 'Dativ Ne İşe Yarar?'),
+  section('dativ', 'definite', 'der / die / das → Dativ'),
+  section('dativ', 'indefinite', 'ein / eine → Dativ'),
+  section('dativ', 'possessive', 'mein / dein → Dativ'),
+  section('dativ', 'plural', 'Çoğulda Dativ'),
+  section('dativ', 'pronouns', 'mir / dir / ihm / ihr — Dativ Zamirleri'),
+  section('dativ', 'mit', 'mit — ile'),
+  section('dativ', 'zu', 'zu — zum / zur'),
+  section('dativ', 'bei', 'bei — beim'),
+  section('dativ', 'von', 'von — vom'),
+  section('dativ', 'aus', 'aus — -den (köken, içinden)'),
+  section('dativ', 'nach', 'nach / nach Hause'),
+  section('dativ', 'seit', 'seit — -den beri'),
+  section('dativ', 'akk-vs-dat', 'Akkusativ vs Dativ'),
+  section('dativ', 'verbs', 'helfen, danken, gefallen — Küçük Dativ Fiilleri'),
+  section('dativ', 'sentences', 'Cümle Kurma — Adım Adım'),
+  section('dativ', 'mistakes', 'Sık Hatalar'),
+  section('dativ', 'chunks', 'Günlük Kalıplar'),
+  section('dativ', 'cheat', 'Kopya Kâğıdı'),
+
   // 📚 Kelime Haznesi
   section('vocabulary', 'small-words', 'Faydalı Küçük Kelimeler'),
   section('vocabulary', 'daily-words', 'Günlük Hayattan Kelimeler'),
@@ -454,6 +484,7 @@ export const REVIEW_SECTIONS: ReviewSectionDef[] = [
   review('dann-danach', 'dann / danach / und / aber', { topic: 'sentence-building' }),
   review('modalverben', 'Modalverben', { topic: 'modal-verbs' }, ['Modalverben — können, möchten, wollen, sollen, dürfen', 'Modalverben']),
   review('perfekt', 'Perfekt — Geçmiş Zaman', { topic: 'perfekt' }),
+  review('dativ', 'Dativ', { topic: 'dativ' }, ['Dativ — mit, zu, bei, von, aus, nach, seit', 'Dativ']),
   review('kelimeler', 'En Önemli Kelimeler', { topic: 'vocabulary' }),
   review('kaliplar', 'Konuşma Kalıpları', { mode: 'mixed' }),
   review('hizli-tekrar', 'Hızlı Özet Turu', { mode: 'quick' }),

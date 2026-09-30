@@ -29,6 +29,8 @@ function mount(topicId: string) {
     get progress() { return progress; },
     update(updater) { progress = updater(progress); },
     replace(next) { progress = next; },
+    language: 'de',
+    setLanguage: () => undefined,
   };
   const routes: Route[] = [];
   const root = createRoot(dom.window.document.getElementById('root')!);

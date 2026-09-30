@@ -1,15 +1,5 @@
 import { useMemo } from 'react';
-import {
-  allExercises,
-  exercisesForSection,
-  exercisesForTopic,
-  getTopic,
-  getTopicSummary,
-  primaryExercisesForTopic,
-  sectionMasteryDefs,
-  topicMasteryDefs,
-  topicTitle,
-} from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { getTopicProgressStats } from '../lib/progress';
 import { computeTopicMastery } from '../lib/mastery';
 import {
@@ -48,19 +38,21 @@ export function TopicScreen({
   api: ProgressApi;
   navigate: (route: Route) => void;
 }) {
-  const topic = getTopic(topicId);
-  const summary = getTopicSummary(topicId);
-  const pool = useMemo(() => exercisesForTopic(topicId), [topicId]);
-  const primary = useMemo(() => primaryExercisesForTopic(topicId), [topicId]);
+  const C = contentFor(api.language ?? 'de');
+  const { allExercises, topicMasteryDefs } = C;
+  const topic = C.getTopic(topicId);
+  const summary = C.getTopicSummary(topicId);
+  const pool = useMemo(() => C.exercisesForTopic(topicId), [C, topicId]);
+  const primary = useMemo(() => C.primaryExercisesForTopic(topicId), [C, topicId]);
   const { progress } = api;
 
   const sectionMastery = useMemo(
-    () => computeTopicMastery(progress, allExercises, sectionMasteryDefs(topicId)),
-    [progress, topicId],
+    () => computeTopicMastery(progress, allExercises, C.sectionMasteryDefs(topicId)),
+    [progress, C, topicId],
   );
   const topicMastery = useMemo(
     () => computeTopicMastery(progress, allExercises, topicMasteryDefs.filter((def) => def.id === topicId))[0],
-    [progress, topicId],
+    [progress, topicId, topicMasteryDefs],
   );
 
   if (!topic) {
@@ -75,15 +67,14 @@ export function TopicScreen({
   }
 
   const stats = getTopicProgressStats(progress, topicId, primary);
-  const secondaryCount = pool.length - primary.length;
-  const difficulty = {
+  const secondaryCount = pool.length - primary.length;  const difficulty = {
     easy: pool.filter((item) => item.difficulty === 'easy').length,
     medium: pool.filter((item) => item.difficulty === 'medium').length,
     hard: pool.filter((item) => item.difficulty === 'hard').length,
   };
   const sessions = progress.topics[topicId]?.sessionsCompleted ?? 0;
-  const reviewSize = previewReviewSize('topic', topicId);
-  const vocabCount = vocabPoolForTopic(topicId).length;
+  const reviewSize = previewReviewSize('topic', topicId, C.language);
+  const vocabCount = vocabPoolForTopic(topicId, C.vocabulary).length;
   const relatedTopicIds = [
     ...new Set(pool.flatMap((item) => [item.topicId, ...(item.secondaryTopicIds ?? [])])),
   ].filter((id) => id !== topicId);
@@ -191,7 +182,7 @@ export function TopicScreen({
           <h2 className="eyebrow mb-4">Bölümler</h2>
           <ul className="flex flex-col gap-3.5">
             {sectionMastery.map((section) => {
-              const count = exercisesForSection(section.topicId).length;
+              const count = C.exercisesForSection(section.topicId).length;
               return (
                 <li key={section.topicId}>
                   <div className="flex items-baseline justify-between gap-3">
@@ -246,7 +237,7 @@ export function TopicScreen({
                   style={{ background: 'var(--color-sunk)' }}
                   onClick={() => navigate({ name: 'topic', topicId: id })}
                 >
-                  {topicTitle(id)}
+                  {C.topicTitle(id)}
                 </button>
               </li>
             ))}

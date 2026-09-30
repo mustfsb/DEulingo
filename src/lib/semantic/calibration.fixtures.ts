@@ -10,6 +10,7 @@
  */
 
 import type { Exercise } from '../../content/types';
+import { DATIV_CALIBRATION_CASES } from './calibration.dativ.fixtures';
 
 export interface CalibrationCase {
   id: string;
@@ -312,6 +313,9 @@ export const CALIBRATION_CASES: CalibrationCase[] = [
   c('perf-gestern-drop', ex({ id: 'cal-ferngesehen', type: 'free-text', instruction: 'Türkçeden Almancaya çevir:', prompt: 'Dün televizyon izledim. → ______', answer: 'Ich habe gestern ferngesehen.', topicId: 'topic.perfekt' }), 'Ich habe ferngesehen.', 'reject', 'zaman belirteci eksik'),
   c('perf-sehen-part', ex({ id: 'cal-ferngesehen', type: 'free-text', instruction: 'Türkçeden Almancaya çevir:', prompt: 'Dün televizyon izledim. → ______', answer: 'Ich habe gestern ferngesehen.', topicId: 'topic.perfekt' }), 'Ich habe gestern fernsehen gesehen.', 'reject', 'yanlış partizip kullanımı'),
 ];
+
+// Dativ'e özel vakalar (gerçek Dativ alıştırmalarına bağlı): ayrı dosyada.
+CALIBRATION_CASES.push(...DATIV_CALIBRATION_CASES);
 
 export const CALIBRATION_ACCEPT_COUNT = CALIBRATION_CASES.filter((c) => c.gold === 'accept').length;
 export const CALIBRATION_REJECT_COUNT = CALIBRATION_CASES.filter((c) => c.gold === 'reject').length;

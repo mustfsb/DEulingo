@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { allExercises, reviewBank, topicMasteryDefs, topics } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { computeTopicMastery } from '../lib/mastery';
 import { summarizeVocab } from '../lib/vocab/mastery';
-import { VOCABULARY } from '../content/vocabulary/inventory';
 import { REVIEW_MODES, type ReviewMode } from '../lib/general-review';
 import { previewReviewSize, startMistakeSession, startReviewSession } from '../lib/start-review';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -26,14 +25,17 @@ export function GeneralReviewScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress } = api;
+  const C = contentFor(api.language ?? 'de');
+  const { allExercises, reviewBank, topicMasteryDefs, topics } = C;
+  const VOCABULARY = C.vocabulary;
   const [notice, setNotice] = useState<string | null>(null);
 
   const mistakeCount = Object.keys(progress.mistakes).length;
   const mastery = useMemo(
     () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
-    [progress],
+    [progress, allExercises, topicMasteryDefs],
   );
-  const vocab = useMemo(() => summarizeVocab(progress), [progress]);
+  const vocab = useMemo(() => summarizeVocab(progress, VOCABULARY), [progress, VOCABULARY]);
 
   const launch = (mode: ReviewMode, topicId?: string) => {
     // Kelime modu tek kanonik havuzdan beslenir: yeni Kelime Çalışması.
@@ -68,7 +70,10 @@ export function GeneralReviewScreen({
           </span>
           <span className="mt-1 block text-xl font-bold">Genel Tekrar Başlat</span>
           <span className="text-[0.95rem] text-ink-soft">
-            ~{previewReviewSize('mixed')} soru · kelime → cümle → saat → Modalverben → yemek → dinleme
+            ~{previewReviewSize('mixed', undefined, C.language)} soru
+            {C.language === 'en'
+              ? ' · have/has → V3 → for/since → cümle → dinleme'
+              : ' · kelime → cümle → saat → Modalverben → yemek → dinleme'}
           </span>
         </span>
         <span className="numeral text-2xl" aria-hidden="true">
@@ -94,8 +99,8 @@ export function GeneralReviewScreen({
           </span>
           <span className="mt-1 block text-xl font-bold">{VOCABULARY.length} Kelimeyi Çalış</span>
           <span className="text-[0.95rem] text-ink-soft">
-            {VOCABULARY.length} kelime · {vocab.mastered} öğrenildi · {vocab.weak} zayıf — de↔tr, eşleştirme,
-            yazma, dinleme
+            {VOCABULARY.length} kelime · {vocab.mastered} öğrenildi · {vocab.weak} zayıf —{' '}
+            {C.language === 'en' ? 'en↔tr' : 'de↔tr'}, eşleştirme, yazma, dinleme
           </span>
         </span>
         <span className="numeral text-2xl" aria-hidden="true">
@@ -108,7 +113,7 @@ export function GeneralReviewScreen({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODE_ORDER.map((mode) => {
             const meta = REVIEW_MODES.find((entry) => entry.mode === mode)!;
-            const count = previewReviewSize(mode);
+            const count = previewReviewSize(mode, undefined, C.language);
             const isVocab = mode === 'vocab';
             return (
               <button
@@ -149,7 +154,7 @@ export function GeneralReviewScreen({
         <h2 id="gr-konular" className="eyebrow mb-4">Konuya göre tekrar et</h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {topics.map((topic) => {
-            const size = previewReviewSize('topic', topic.id);
+            const size = previewReviewSize('topic', topic.id, C.language);
             if (size === 0) return null;
             const item = mastery.get(topic.id);
             const score = item?.masteryScore ?? 0;

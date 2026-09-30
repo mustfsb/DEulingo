@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { Markup } from '../Markup';
+import { languageOfExerciseId } from '../../lib/language';
 import type { ExerciseViewProps } from './types';
 
 /** Bosluk doldurma, serbest yazma ve hata duzeltme icin yazi girisi. */
 export function TextView({ exercise, value, onChange, onSubmit, locked, result }: ExerciseViewProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const text = typeof value === 'string' ? value : '';
+  const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
 
   useEffect(() => {
     if (!locked) inputRef.current?.focus();
@@ -21,10 +23,10 @@ export function TextView({ exercise, value, onChange, onSubmit, locked, result }
           <p
             className="font-display text-2xl leading-snug sm:text-[1.75rem]"
             style={{ fontVariationSettings: "'wdth' 108", fontWeight: 700 }}
-            lang={exercise.type === 'error-correction' ? 'de' : undefined}
+            lang={exercise.type === 'error-correction' ? targetLang : undefined}
           >
             {isBlank ? (
-              <BlankPrompt prompt={exercise.prompt!} filled={text} />
+              <BlankPrompt prompt={exercise.prompt!} filled={text} lang={targetLang} />
             ) : (
               <Markup text={exercise.prompt} />
             )}
@@ -36,7 +38,7 @@ export function TextView({ exercise, value, onChange, onSubmit, locked, result }
         className="field"
         data-state={state}
         type="text"
-        lang="de"
+        lang={targetLang}
         autoComplete="off"
         autoCapitalize="off"
         autoCorrect="off"
@@ -58,10 +60,10 @@ export function TextView({ exercise, value, onChange, onSubmit, locked, result }
 }
 
 /** Bosluk, yazildikca doldugu gorunen bir cizgi olarak gosterilir. */
-function BlankPrompt({ prompt, filled }: { prompt: string; filled: string }) {
+function BlankPrompt({ prompt, filled, lang }: { prompt: string; filled: string; lang: string }) {
   const [before, after] = prompt.split('___');
   return (
-    <span lang="de">
+    <span lang={lang}>
       {before}
       <span
         className="mx-1 inline-block min-w-[4.5ch] border-b-4 text-center align-baseline"

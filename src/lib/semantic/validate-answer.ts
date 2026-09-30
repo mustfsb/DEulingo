@@ -8,6 +8,7 @@
 
 import type { Exercise } from '../../content/types';
 import { VOCAB_BY_ID } from '../../content/vocabulary/inventory';
+import { EN_VOCAB_BY_ID } from '../../content/en/vocab';
 import {
   evaluateExercise,
   normalizeAnswer,
@@ -52,7 +53,7 @@ function vocabIdOf(exercise: Exercise): string | null {
 /** Ders + kelime ekranlarındaki deterministik dalları tek noktada birleştirir. */
 export function deterministicValidate(exercise: Exercise, input: ExerciseInput): ValidationResult {
   const vocabId = vocabIdOf(exercise);
-  if (vocabId && VOCAB_BY_ID.has(vocabId) && typeof input === 'string') {
+  if (vocabId && (VOCAB_BY_ID.has(vocabId) || EN_VOCAB_BY_ID.has(vocabId)) && typeof input === 'string') {
     if (exercise.id.endsWith('-detr-type')) return validateDetrTyping(vocabId, input);
     if (exercise.id.endsWith('-trde-type') || exercise.id.endsWith('-listen-type')) {
       return validateVocabTyping(vocabId, input);

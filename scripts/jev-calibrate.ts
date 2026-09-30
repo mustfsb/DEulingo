@@ -4,6 +4,7 @@
  *
  *   npm run jev:calibrate            # varsayılan alt küme (~40 vaka)
  *   npm run jev:calibrate -- --full  # tüm Jev-uygun vakalar
+ *   npm run jev:calibrate -- --dativ # yalnızca Dativ vakaları (docs/jev-calibration.dativ.local.json)
  *
  * AI_GATEWAY_API_KEY gerekir. Sonuçlar `docs/jev-calibration.local.json`
  * dosyasına yazılır (gitignored); rapordaki sayılar buradan alınır.
@@ -27,15 +28,17 @@ async function main(): Promise<void> {
     process.exit(2);
   }
   const full = process.argv.includes('--full');
+  const dativOnly = process.argv.includes('--dativ');
+  const scope = dativOnly ? CALIBRATION_CASES.filter((c) => c.id.startsWith('dat-')) : CALIBRATION_CASES;
   // Yalnızca Jev'in gerçekten göreceği vakalar (deterministik incorrect + uygun).
-  const eligible = CALIBRATION_CASES.filter((c) => {
+  const eligible = scope.filter((c) => {
     const exercise = getExercise(c.exercise.id) ?? c.exercise;
     return (
       deterministicValidate(exercise, c.userAnswer).status === 'incorrect' &&
       isSemanticFallbackEligible(exercise, c.userAnswer)
     );
   });
-  const selected = full ? eligible : eligible.filter((_, i) => i % 2 === 0);
+  const selected = full || dativOnly ? eligible : eligible.filter((_, i) => i % 2 === 0);
   console.log(`model=${jevModelId()} eligible=${eligible.length} selected=${selected.length}`);
 
   const rows: Array<{ id: string; gold: string; probability: number; latencyMs: number }> = [];
@@ -69,11 +72,12 @@ async function main(): Promise<void> {
   const pct = (p: number) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))] : null);
   console.log(`\ngecikme: n=${sorted.length} medyan=${pct(50)}ms p95=${pct(95)}ms`);
 
+  const out = dativOnly ? 'docs/jev-calibration.dativ.local.json' : 'docs/jev-calibration.local.json';
   writeFileSync(
-    'docs/jev-calibration.local.json',
+    out,
     JSON.stringify({ model: jevModelId(), at: new Date().toISOString(), rows, stats, latencies }, null, 2),
   );
-  console.log('docs/jev-calibration.local.json yazıldı (gitignored).');
+  console.log(`${out} yazıldı (gitignored).`);
 }
 
 void main();

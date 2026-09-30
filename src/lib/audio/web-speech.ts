@@ -1,4 +1,4 @@
-import type { GermanAudioTarget, GermanVoiceId, SpeechSpeed } from './tts';
+import type { EnglishAudioTarget, GermanAudioTarget, GermanVoiceId, SpeechSpeed } from './tts';
 import { DEFAULT_GERMAN_VOICE_ID } from './tts';
 
 const RATE_BY_SPEED: Record<SpeechSpeed, number> = {
@@ -175,6 +175,97 @@ export function rateForVoice(voiceId: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID, s
 
 export function isWebSpeechAvailable(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+}
+
+/* ------------------------------------------------------------------ */
+/* İngilizce (en-GB) — yerel Piper modeli YOKTUR; tek yol Web Speech    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * en-GB ses seçimi (IELTS hedefi: Britanya aksanı tercihi). Bulunamazsa
+ * herhangi bir İngilizce sese, o da yoksa ilk sese düşer.
+ */
+export function pickEnglishVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+  const lower = (v: SpeechSynthesisVoice) => v.lang.toLowerCase();
+  const exact = voices.filter((v) => lower(v) === 'en-gb').sort((a, b) => a.name.localeCompare(b.name));
+  if (exact.length > 0) return exact[0];
+  const english = voices.filter((v) => lower(v).startsWith('en')).sort((a, b) => a.name.localeCompare(b.name));
+  if (english.length > 0) return english[0];
+  return voices[0] ?? null;
+}
+
+const EN_RATE_BY_SPEED: Record<SpeechSpeed, number> = {
+  slow: 0.75,
+  normal: 1,
+  fast: 1.3,
+};
+
+/** İngilizce hedefi tarayıcı sesiyle okur (Piper'da en-GB modeli yoktur). */
+export async function speakEnglishWithWebSpeech(
+  target: EnglishAudioTarget,
+  speed: SpeechSpeed,
+  signal?: AbortSignal,
+): Promise<void> {
+  await ensureVoicesLoaded();
+
+  return new Promise((resolve, reject) => {
+    if (!isWebSpeechAvailable()) {
+      reject(new Error('Tarayıcı telaffuzu desteklenmiyor.'));
+      return;
+    }
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(target.text);
+    utterance.lang = 'en-GB';
+    utterance.rate = EN_RATE_BY_SPEED[speed] ?? 1;
+    utterance.pitch = 1;
+
+    const voice = pickEnglishVoice();
+    if (voice) utterance.voice = voice;
+
+    let settled = false;
+    const cleanup = () => {
+      utterance.onend = null;
+      utterance.onerror = null;
+      signal?.removeEventListener('abort', onAbort);
+    };
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+    const fail = (err: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+
+    const onAbort = () => {
+      try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+      fail(new DOMException('Aborted', 'AbortError'));
+    };
+
+    utterance.onend = done;
+    utterance.onerror = () => fail(new Error('Tarayıcı telaffuzu başarısız.'));
+    signal?.addEventListener('abort', onAbort, { once: true });
+
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      fail(e instanceof Error ? e : new Error(String(e)));
+    }
+
+    if (signal?.aborted) onAbort();
+  });
 }
 
 async function ensureVoicesLoaded(timeoutMs = 700): Promise<void> {

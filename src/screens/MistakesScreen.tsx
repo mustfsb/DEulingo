@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Markup } from '../components/Markup';
-import { exercisesById, getExercises, summariesByTopic, topicTitle, topicsById } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { buildReviewQueue } from '../lib/lesson';
 import { MISTAKE_LABELS } from '../lib/progress';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -23,6 +23,9 @@ export function MistakesScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress, update } = api;
+  const C = contentFor(api.language ?? 'de');
+  const { exercisesById, getExercises, summariesByTopic, topicsById } = C;
+  const topicTitle = C.topicTitle;
   const [groupBy, setGroupBy] = useState<GroupBy>('topic');
 
   const groups = useMemo(() => {
@@ -49,7 +52,7 @@ export function MistakesScreen({
         weight: bucket.records.reduce((sum, record) => sum + record.count * 2 + record.typoCount, 0),
       }))
       .sort((a, b) => b.weight - a.weight);
-  }, [progress.mistakes, groupBy]);
+  }, [progress.mistakes, groupBy, exercisesById, topicTitle]);
 
   const repeatedTypos = useMemo(
     () => Object.values(progress.mistakes).filter((record) => record.typoCount >= TYPO_WARNING_THRESHOLD),
@@ -113,7 +116,7 @@ export function MistakesScreen({
               <ul className="mt-1.5 flex flex-col gap-0.5 text-[0.95rem]">
                 {repeatedTypos.map((record) => (
                   <li key={record.exerciseId}>
-                    <span className="font-mono" lang="de">
+                    <span className="font-mono" lang={C.language === 'en' ? 'en' : 'de'}>
                       {record.expectedAnswer}
                     </span>{' '}
                     — bu yazım hatasını {record.typoCount} kez yaptın.
@@ -203,6 +206,15 @@ export function MistakesScreen({
                         <span className="badge" style={{ background: 'var(--color-sunk)' }}>
                           {record.exerciseId.startsWith('gr-') ? '🔁 Genel Tekrar' : '📘 Konu dersi'}
                         </span>
+                        {(() => {
+                          const conceptId = exercisesById.get(record.exerciseId)?.conceptIds[0];
+                          const label = conceptId ? C.conceptsById.get(conceptId)?.label : undefined;
+                          return label ? (
+                            <span className="badge" style={{ background: 'var(--color-sunk)' }}>
+                              🏷️ {label}
+                            </span>
+                          ) : null;
+                        })()}
                         {groupBy === 'type' && (record.topicId || exercisesById.get(record.exerciseId)?.topicId) && (
                           <span className="badge" style={{ background: 'var(--color-sunk)' }}>
                             {topicTitle(exercisesById.get(record.exerciseId)?.topicId ?? record.topicId)}
@@ -231,14 +243,14 @@ export function MistakesScreen({
                       </div>
 
                       <p className="mt-3 text-[0.95rem] text-ink-soft">
-                        <Markup text={record.prompt} />
+                        <Markup text={record.prompt} lang={C.language === 'en' ? 'en' : 'de'} />
                       </p>
 
                       <div className="mt-2 flex flex-col gap-1 font-mono text-[0.95rem]">
-                        <p style={{ color: 'var(--color-bad)' }} lang="de">
+                        <p style={{ color: 'var(--color-bad)' }} lang={C.language === 'en' ? 'en' : 'de'}>
                           ✕ {record.userAnswer || '—'}
                         </p>
-                        <p style={{ color: 'var(--color-good-deep)' }} lang="de">
+                        <p style={{ color: 'var(--color-good-deep)' }} lang={C.language === 'en' ? 'en' : 'de'}>
                           ✓ {record.expectedAnswer || '—'}
                         </p>
                       </div>

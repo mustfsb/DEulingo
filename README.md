@@ -9,7 +9,7 @@ Obsidian Markdown ─┐
 src/content/authored ─┘
 ```
 
-Müfredat **konu tabanlıdır**: 21 kanonik konu (`topic.greetings` … `topic.perfekt`,
+Müfredat **konu tabanlıdır**: 22 kanonik konu (`topic.greetings` … `topic.dativ`,
 `topic.vocabulary`) ders, özet, ustalık, hata ve Genel Tekrar için tek kimlik kaynağıdır.
 Kasa (salt okunur) konu özetlerinin kaynağıdır; `src/content/authored/` katmanı konu
 bazlı alıştırma bankalarını, kavram kaydını, Türkçe yaklaşık okunuşları ve uygulama içi
@@ -77,7 +77,7 @@ Geçici olarak başka bir klasörü denemek için: `ALMANCA_VAULT=/başka/yol np
 scripts/sync-content.ts        Node ingestion CLI (kasayı okur, JSON yazar)
 src/content/types.ts           Alıştırma / kavram / konu / özet şeması
 src/content/curriculum/        Kanonik müfredat haritası
-  topics.ts                      21 konu, özet bölümleri, Genel Tekrar bölümü → konu eşlemesi
+  topics.ts                      22 konu, özet bölümleri, Genel Tekrar bölümü → konu eşlemesi
   legacy.ts                      eski gün kimlikleri → yeni konu/bölüm/kavram (göç ve yönlendirme)
   legacy-inventory.json          geçiş öncesi paketin salt okunur envanteri (denetim için)
 src/content/authored/          Uygulama içi içerik katmanı

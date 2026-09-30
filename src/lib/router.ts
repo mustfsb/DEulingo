@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { SessionMode } from './storage';
 import { SECTION_BY_ID, TOPIC_BY_ID, TOPIC_BY_SLUG, TOPICS } from '../content/curriculum/topics';
+import { EN_SECTION_BY_ID, EN_TOPIC_BY_ID, EN_TOPIC_BY_SLUG } from '../content/en/topics';
 import { LEGACY_SECTION_MAP, legacyDayTopic } from '../content/curriculum/legacy';
 
 export type Route =
@@ -78,14 +79,32 @@ function parseLegacyDay(segment: string | undefined): number | undefined {
   return segment !== undefined && /^\d+$/.test(segment) && Number.isInteger(day) && day >= 1 ? day : undefined;
 }
 
-/** Slug ya da kanonik kimlik → kanonik konu kimliği. */
+/** Slug ya da kanonik kimlik → kanonik konu kimliği (önce Almanca, sonra İngilizce). */
 function topicFromSegment(segment: string | undefined): string | undefined {
   if (!segment) return undefined;
-  return TOPIC_BY_SLUG.get(segment)?.id ?? (TOPIC_BY_ID.has(segment) ? segment : undefined);
+  return (
+    TOPIC_BY_SLUG.get(segment)?.id ??
+    (TOPIC_BY_ID.has(segment) ? segment : undefined) ??
+    EN_TOPIC_BY_SLUG.get(segment)?.id ??
+    (EN_TOPIC_BY_ID.has(segment) ? segment : undefined)
+  );
 }
 
 function slugFor(topicId: string): string {
-  return TOPIC_BY_ID.get(topicId)?.slug ?? topicId;
+  return TOPIC_BY_ID.get(topicId)?.slug ?? EN_TOPIC_BY_ID.get(topicId)?.slug ?? topicId;
+}
+
+/** Bölüm kimliği → konu + bölüm (önce Almanca, sonra İngilizce özet bölümleri). */
+function sectionFromSegment(
+  topicId: string,
+  segment: string | undefined,
+): { topicId: string; sectionId: string } | undefined {
+  if (!segment) return undefined;
+  const de = SECTION_BY_ID.get(segment);
+  if (de && de.topicId === topicId) return { topicId, sectionId: de.id };
+  const en = EN_SECTION_BY_ID.get(segment);
+  if (en && en.topicId === topicId) return { topicId, sectionId: en.id };
+  return undefined;
 }
 
 /** Eski gün bölümü kimliği (`private.day3.yer-yon`) → yeni bölüm. */
@@ -138,9 +157,9 @@ export function parseHash(hash: string): Route {
       if (!topicId) return { name: 'home' };
       const [, second, third] = segments;
       if (second === 'bolum') {
-        const section = third ? SECTION_BY_ID.get(third) : undefined;
-        return section && section.topicId === topicId
-          ? { name: 'lesson', topicId, mode: 'section', sectionId: section.id }
+        const section = sectionFromSegment(topicId, third);
+        return section
+          ? { name: 'lesson', topicId, mode: 'section', sectionId: section.sectionId }
           : { name: 'topic', topicId };
       }
       const mode = MODE_SLUGS[second ?? 'normal'];
@@ -187,9 +206,9 @@ export function parseHash(hash: string): Route {
       }
       const topicId = topicFromSegment(segments[0]);
       if (!topicId) return { name: 'summaries' };
-      const section = segments[1] ? SECTION_BY_ID.get(segments[1]) : undefined;
-      return section && section.topicId === topicId
-        ? { name: 'summary', topicId, sectionId: section.id }
+      const section = sectionFromSegment(topicId, segments[1]);
+      return section
+        ? { name: 'summary', topicId, sectionId: section.sectionId }
         : { name: 'summary', topicId };
     }
     case 'hatalarim':

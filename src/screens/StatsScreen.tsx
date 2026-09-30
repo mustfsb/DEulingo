@@ -1,14 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import {
-  allExercises,
-  lessonExercises,
-  migrationContext,
-  primaryExercisesForTopic,
-  reviewBank,
-  topicMasteryDefs,
-  topics as curriculumTopics,
-  topicTitle,
-} from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import {
   getGlobalSummary,
   getTopicProgressStats,
@@ -24,6 +15,17 @@ import { GOAL_OPTIONS, goalProgress } from '../lib/daily-goal';
 
 export function StatsScreen({ api }: { api: ProgressApi }) {
   const { progress, update, replace } = api;
+  const C = contentFor(api.language ?? 'de');
+  const {
+    allExercises,
+    lessonExercises,
+    migrationContext,
+    primaryExercisesForTopic,
+    reviewBank,
+    topicMasteryDefs,
+    topicTitle,
+  } = C;
+  const curriculumTopics = C.topics;
   const summary = getGlobalSummary(progress, lessonExercises);
   const reviewAttempted = reviewBank.filter((exercise) => progress.exercises[exercise.id]?.attempts.length).length;
   // Zorlanılan konular Genel Tekrar cevaplarını da kanonik konusuna sayar.
@@ -31,7 +33,7 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
   const today = goalProgress(progress);
   const mastery = useMemo(
     () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
-    [progress],
+    [progress, allExercises, topicMasteryDefs],
   );
 
   const [confirmReset, setConfirmReset] = useState(false);
@@ -44,7 +46,8 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `almanca-ilerleme-${new Date().toISOString().slice(0, 10)}.json`;
+    const prefix = C.language === 'en' ? 'ingilizce' : 'almanca';
+    link.download = `${prefix}-ilerleme-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.append(link);
     link.click();
     link.remove();
@@ -218,7 +221,11 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
         />
         <ToggleSetting
           title="Otomatik telaffuz"
-          description="Uygun Almanca soru ve doğru cevap, geri bildirimden sonra Piper ile dinletilir."
+          description={
+            C.language === 'en'
+              ? 'Uygun İngilizce soru ve doğru cevap, geri bildirimden sonra tarayıcı sesiyle (en-GB tercihi) dinletilir.'
+              : 'Uygun Almanca soru ve doğru cevap, geri bildirimden sonra Piper ile dinletilir.'
+          }
           checked={api.progress.settings.autoPronunciation}
           onChange={(autoPronunciation) =>
             api.update((current) => ({ ...current, settings: { ...current.settings, autoPronunciation } }))
@@ -232,30 +239,39 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             api.update((current) => ({ ...current, settings: { ...current.settings, showPronunciation } }))
           }
         />
-        <label className="card mt-4 flex items-center justify-between gap-4 p-4">
-          <span>
-            <span className="block text-lg font-bold">Telaffuz sesi</span>
-            <span className="block text-[0.92rem] text-ink-soft">Yerel Piper sesi; seçimin tüm Almanca telaffuzlarda kullanılır.</span>
-          </span>
-          <select
-            className="min-w-0 max-w-[55%] truncate rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
-            value={api.progress.settings.speechVoice}
-            aria-label="Telaffuz sesi"
-            onChange={(event) => {
-              const speechVoice = GERMAN_VOICE_PROFILES.find((profile) => profile.id === event.target.value)?.id ?? DEFAULT_GERMAN_VOICE_ID;
-              api.update((current) => ({
-                ...current,
-                settings: { ...current.settings, speechVoice },
-              }));
-            }}
-          >
-            {GERMAN_VOICE_PROFILES.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.label} — {profile.description}
-              </option>
-            ))}
-          </select>
-        </label>
+        {C.language === 'de' ? (
+          <label className="card mt-4 flex items-center justify-between gap-4 p-4">
+            <span>
+              <span className="block text-lg font-bold">Telaffuz sesi</span>
+              <span className="block text-[0.92rem] text-ink-soft">Yerel Piper sesi; seçimin tüm Almanca telaffuzlarda kullanılır.</span>
+            </span>
+            <select
+              className="min-w-0 max-w-[55%] truncate rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
+              value={api.progress.settings.speechVoice}
+              aria-label="Telaffuz sesi"
+              onChange={(event) => {
+                const speechVoice = GERMAN_VOICE_PROFILES.find((profile) => profile.id === event.target.value)?.id ?? DEFAULT_GERMAN_VOICE_ID;
+                api.update((current) => ({
+                  ...current,
+                  settings: { ...current.settings, speechVoice },
+                }));
+              }}
+            >
+              {GERMAN_VOICE_PROFILES.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.label} — {profile.description}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <div className="card mt-4 p-4">
+            <p className="text-lg font-bold">Telaffuz sesi</p>
+            <p className="mt-1 text-[0.92rem] text-ink-soft">
+              İngilizce telaffuz tarayıcı sesiyle okunur (en-GB tercihi); yerel Piper’da İngilizce model yoktur.
+            </p>
+          </div>
+        )}
         <label className="card mt-4 flex items-center justify-between gap-4 p-4">
           <span>
             <span className="block text-lg font-bold">Telaffuz hızı</span>
@@ -311,6 +327,11 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
 
       <section className="mt-12">
         <h2 className="text-2xl">Sıfırlama</h2>
+        {C.language === 'en' && (
+          <p className="mt-1 text-[0.92rem] text-ink-soft">
+            Buradaki sıfırlama yalnızca İngilizce ilerlemeni etkiler; Almanca ilerlemen ayrı tutulur.
+          </p>
+        )}
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <label className="text-[0.95rem] text-ink-soft" htmlFor="reset-topic">

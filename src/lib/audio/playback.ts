@@ -2,11 +2,13 @@ import {
   DEFAULT_GERMAN_VOICE_ID,
   localTts,
   type AudioResult,
+  type EnglishAudioTarget,
   type GermanAudioTarget,
   type GermanVoiceId,
+  type SpeechAudioTarget,
   type SpeechSpeed,
 } from './tts';
-import { isWebSpeechAvailable, speakWithWebSpeech } from './web-speech';
+import { isWebSpeechAvailable, speakEnglishWithWebSpeech, speakWithWebSpeech } from './web-speech';
 
 export type AudioState = 'idle' | 'feedback' | 'generating' | 'speaking';
 
@@ -142,6 +144,51 @@ export class AudioController {
   }
 
   /**
+   * İngilizce (en-GB) oynatma. Yerel Piper'da İngilizce model YOKTUR
+   * (`.piper/voices` yalnızca `de_DE` içerir); bu yüzden doğrudan tarayıcı
+   * Web Speech kullanılır. Aynı generation/iptal yaşam döngüsü geçerlidir.
+   */
+  async speakEnglish(contextId: string, target: EnglishAudioTarget, speed: SpeechSpeed): Promise<void> {
+    const generation = this.begin(contextId);
+    await this.speakEnglishInGeneration(contextId, generation, target, speed);
+  }
+
+  private async speakEnglishInGeneration(
+    contextId: string,
+    generation: number,
+    target: EnglishAudioTarget,
+    speed: SpeechSpeed,
+  ): Promise<void> {
+    if (!this.isCurrent(contextId, generation)) return;
+    const abort = new AbortController();
+    this.abort = abort;
+    this.currentState = 'speaking';
+    try {
+      await speakEnglishWithWebSpeech(target, speed, abort.signal);
+      if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
+    } catch (error) {
+      if ((error as DOMException)?.name === 'AbortError') return;
+      if (this.isCurrent(contextId, generation)) {
+        this.currentState = 'idle';
+        throw error;
+      }
+    } finally {
+      if (this.abort === abort) this.abort = null;
+    }
+  }
+
+  /** Dile göre doğru oynatıcıyı seçer (Almanca → Piper/Web Speech, İngilizce → Web Speech). */
+  async speak(
+    contextId: string,
+    target: SpeechAudioTarget,
+    speed: SpeechSpeed,
+    voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
+  ): Promise<void> {
+    if (target.language === 'en-GB') return this.speakEnglish(contextId, target, speed);
+    return this.speakGerman(contextId, target, speed, voice);
+  }
+
+  /**
    * Geri bildirim dizisi (§25):
    *   dogru/yanlis efekti → (varsa) seri kutlama efekti → kanonik Almanca.
    *
@@ -151,7 +198,7 @@ export class AudioController {
   async playFeedback(
     contextId: string,
     effect: 'correct' | 'incorrect' | 'complete',
-    target: GermanAudioTarget | undefined,
+    target: SpeechAudioTarget | undefined,
     soundEffectsEnabled: boolean,
     speed: SpeechSpeed,
     voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
@@ -175,6 +222,11 @@ export class AudioController {
       }
     }
     if (target && this.isCurrent(contextId, generation)) {
+      // İngilizce hedef Piper'a gitmez; aynı generation içinde Web Speech.
+      if (target.language === 'en-GB') {
+        await this.speakEnglishInGeneration(contextId, generation, target, speed);
+        return;
+      }
       await this.requestThenPlay(contextId, generation, target, speed, voice);
     }
   }

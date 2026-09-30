@@ -12,13 +12,19 @@
 
 import { evaluateText, type ValidationResult } from '../validation';
 import { VOCAB_BY_ID } from '../../content/vocabulary/inventory';
+import { EN_VOCAB_BY_ID } from '../../content/en/vocab';
+
+/** Her iki dilin envanterinde de ara (dilimler ayrı ilerlemede tutulur). */
+function lookupVocabEntry(vocabId: string) {
+  return VOCAB_BY_ID.get(vocabId) ?? EN_VOCAB_BY_ID.get(vocabId);
+}
 
 function normalize(value: string): string {
   return value.normalize('NFC').replace(/\s+/g, ' ').trim().toLocaleLowerCase('de').replace(/[.!?;:,]+$/g, '');
 }
 
 export function validateVocabTyping(vocabId: string, input: string): ValidationResult {
-  const entry = VOCAB_BY_ID.get(vocabId);
+  const entry = lookupVocabEntry(vocabId);
   if (!entry) return { status: 'incorrect', expected: '', normalizedInput: input };
   const base = evaluateText(input, entry.german, entry.aliases ?? [], { keyboardTolerance: true });
   if (base.status === 'correct' || base.status === 'incorrect') {
@@ -40,7 +46,7 @@ export function validateVocabTyping(vocabId: string, input: string): ValidationR
 }
 
 export function validateDetrTyping(vocabId: string, input: string): ValidationResult {
-  const entry = VOCAB_BY_ID.get(vocabId);
+  const entry = lookupVocabEntry(vocabId);
   if (!entry) return { status: 'incorrect', expected: '', normalizedInput: input };
   const result = evaluateText(input, entry.turkish, [], {});
   return result.status === 'incorrect' ? { ...result, expected: entry.turkish } : result;

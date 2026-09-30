@@ -66,7 +66,7 @@ describe('paket saglik durumu', () => {
     expect(bundle.warnings.filter((warning) => warning.level === 'warn')).toEqual([]);
   });
 
-  it('kanonik konu haritasi 21 konu olarak, kararli kimlikleriyle ve sirayla uretilir', () => {
+  it('kanonik konu haritasi 22 konu olarak, kararli kimlikleriyle ve sirayla uretilir', () => {
     expect(bundle.topics.map((topic) => topic.id)).toEqual(TOPICS.map((topic) => topic.id));
     expect(bundle.topics.map((topic) => topic.order)).toEqual(TOPICS.map((_, index) => index));
     for (const topic of bundle.topics) expect(topic.id).toMatch(/^topic\.[a-z-]+$/);
@@ -1108,6 +1108,192 @@ describe('Perfekt — Geçmiş Zaman (defterdeki A1 Perfekt dersi)', () => {
   });
 });
 
+describe('Dativ (A1 — mit, zu, bei, von, aus, nach, seit)', () => {
+  const dativ = primary(T.dativ);
+  const pool = topicPool(T.dativ);
+  const TR = 'Türkçeden Almancaya çevir:';
+  const prefixed = (...prefixes: string[]) => dativ.filter((exercise) => prefixes.some((prefix) => exercise.id.startsWith(prefix)));
+  const canonical = (exercise: Exercise) =>
+    [exercise.answer, exercise.sampleAnswer, ...(exercise.acceptedAnswers ?? [])].filter((value): value is string => Boolean(value));
+
+  it('en az 120 benzersiz alıştırma içerir (normalize soru/cevap tekrarı yok)', () => {
+    expect(dativ.length).toBeGreaterThanOrEqual(120);
+    expect(new Set(dativ.map((exercise) => exercise.id)).size).toBe(dativ.length);
+    const keys = dativ.map((exercise) => `${exercise.type}|${exercise.instruction}|${exercise.prompt ?? ''}|${exercise.answer ?? ''}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('zorluk dağılımı A1 üretim bandındadır (kolay ~%30, orta ~%45, zor ~%25)', () => {
+    const share = (difficulty: string) => dativ.filter((exercise) => exercise.difficulty === difficulty).length / dativ.length;
+    expect(share('easy')).toBeGreaterThanOrEqual(0.2);
+    expect(share('easy')).toBeLessThanOrEqual(0.4);
+    expect(share('medium')).toBeGreaterThanOrEqual(0.35);
+    expect(share('medium')).toBeLessThanOrEqual(0.55);
+    expect(share('hard')).toBeGreaterThanOrEqual(0.15);
+    expect(share('hard')).toBeLessThanOrEqual(0.33);
+  });
+
+  it('alıştırma aileleri hedef dağılıma yakındır', () => {
+    const n = dativ.length;
+    const article = prefixed('dat-def-', 'dat-indef-', 'dat-kein-').length;
+    const possessive = prefixed('dat-poss-').length;
+    const preposition = prefixed('dat-mit-', 'dat-zu-', 'dat-bei-', 'dat-von-', 'dat-aus-', 'dat-nach-', 'dat-seit-').length;
+    const trde = dativ.filter(
+      (exercise) => exercise.instruction === TR || exercise.wordBank?.direction === 'tr-to-de' || exercise.type === 'sentence-builder',
+    ).length;
+    const akkDat = prefixed('dat-akk-').length;
+    const construction = prefixed('dat-sb-', 'dat-sit-', 'dat-free-', 'dat-spoken-').length;
+    const errors = dativ.filter((exercise) => exercise.type === 'error-correction').length;
+    const pronounsVerbs = prefixed('dat-pron-', 'dat-verb-').length;
+    console.log(
+      `[dativ-dağılım] n=${n} artikel=${article} iyelik=${possessive} edat=${preposition} tr→de=${trde} ` +
+        `akk/dat=${akkDat} cümle=${construction} hata=${errors} zamir/fiil=${pronounsVerbs}`,
+    );
+    expect(article / n).toBeGreaterThanOrEqual(0.1);
+    expect(possessive / n).toBeGreaterThanOrEqual(0.1);
+    expect(preposition / n).toBeGreaterThanOrEqual(0.2);
+    expect(trde / n).toBeGreaterThanOrEqual(0.18);
+    expect(akkDat / n).toBeGreaterThanOrEqual(0.06);
+    expect(construction / n).toBeGreaterThanOrEqual(0.07);
+    expect(errors / n).toBeGreaterThanOrEqual(0.05);
+    expect(pronounsVerbs / n).toBeGreaterThanOrEqual(0.05);
+  });
+
+  it('kapsam denetimi: her biçim, edat, zamir ve Akkusativ karşıtlığı çalışılır', () => {
+    const joined = ` ${surfaceText(dativ, [answers, (exercise) => [exercise.prompt, ...(exercise.options ?? [])], (exercise) => (exercise.pairs ?? []).flatMap((pair) => [pair.left, pair.right])])} `;
+    for (const form of ['dem', 'der', 'den', 'einem', 'einer', 'keinem', 'keiner', 'meinem', 'meiner', 'meinen', 'deinem', 'seinem', 'ihrer', 'unserem',
+      'mit', 'zu', 'bei', 'von', 'aus', 'nach', 'seit', 'zum', 'zur', 'beim', 'vom', 'mir', 'dir', 'ihm', 'ihr', 'uns', 'euch', 'ihnen', 'Ihnen']) {
+      expect(new RegExp(`\\b${form}\\b`).test(joined), form).toBe(true);
+    }
+    for (const plural of ['den Freunden', 'meinen Freunden', 'den Kindern', 'seit zwei Monaten']) expect(joined, plural).toContain(plural);
+    expect(prefixed('dat-akk-').length).toBeGreaterThanOrEqual(10);
+    for (const pair of ['Ich sehe meinen Freund.', 'Ich gehe mit meinem Freund.']) expect(joined, pair).toContain(pair);
+  });
+
+  it('hedef cümleler kanonik Almanca ile öğretilir ve seslendirilir', () => {
+    const joined = surfaceText(pool, [answers, spoken]);
+    for (const sentence of [
+      'Ich gehe mit meinem Freund.',
+      'Ich bin bei meiner Mutter.',
+      'Ich komme aus der Türkei.',
+      'Ich gehe zum Arzt.',
+      'Ich gehe zur Schule.',
+      'Ich fahre mit dem Bus.',
+      'Das Geschenk ist von meinem Vater.',
+      'Ich spreche mit meiner Mutter.',
+      'Ich spiele mit meinen Freunden.',
+      'Ich lerne seit zwei Monaten Deutsch.',
+      'Das gefällt mir.',
+      'Ich helfe dir.',
+    ]) {
+      expect(joined, sentence).toContain(sentence);
+    }
+  });
+
+  it('artikel denetimi: hiçbir kanonik cevap yanlış hâl biçimi taşımaz', () => {
+    const wrong: Array<[string, RegExp]> = [
+      ['Dativ edatı + Nominativ/Akkusativ', /\b(mit|zu|bei|von|aus|seit)\s+(die|das|ein|eine|kein|keine|mein|meine|dein|deine|sein|seine|ihre|unsere|mich|dich|ihn|sie)\b/i],
+      ['çoğul Dativ -n eksik', /\b(mit|zu|bei|von|aus|seit)\s+(den|meinen|deinen|seinen|ihren|unseren|zwei)\s+[A-ZÄÖÜ][a-zäöüß]*[^nsa\s.?!]\b/],
+      ['tekil eril Dativ yerine -en', /\b(mit|zu|bei|von|aus|seit)\s+(meinen|deinen|seinen|keinen|einen)\s+(Freund|Vater|Bruder|Lehrer|Arzt)\b/],
+      ['şehir/ülke önünde artikel', /\bnach\s+(dem|der|den)\s+(Berlin|Deutschland|Istanbul|Hause)\b/],
+      ['zum + dişil / zur + eril', /\b(zum\s+(Schule|Arbeit|Freundin)|zur\s+(Arzt|Supermarkt|Bus|Markt))\b/],
+      ['Dativ fiili + Akkusativ zamiri', /\b(helfe|danke|gefällt)\s+(mich|dich|ihn)\b/],
+      ['Akkusativ fiili + Dativ', /\b(sehe|besuche|treffe|rufe)\s+(meinem|meiner|dem|einem)\b/],
+    ];
+    const offenders = pool.flatMap((exercise) =>
+      canonical(exercise).flatMap((text) => wrong.filter(([, pattern]) => pattern.test(text)).map(([label]) => `${exercise.id}: ${label} — ${text}`)),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('A2 sızıntısı yok: Genitiv, sıfat çekimi, ilgi/yan cümle, pasif, Wechselpräposition teorisi', () => {
+    const forbidden: Array<[string, RegExp]> = [
+      ['Genitiv', /\b(des|eines|meines|deines|wegen|während|trotz)\b/],
+      ['sıfat çekimi', /\b(dem|der|den|einem|einer|meinem|meiner|meinen)\s+[a-zäöü]+(en|em|er|e)\s+[A-ZÄÖÜ]/],
+      ['yan cümle', /\b(weil|dass|obwohl|wenn|ob)\b/],
+      ['ilgi zamiri', /,\s*(dem|der|denen|die|den)\s+/],
+      ['pasif', /\b(wird|werden|wurde)\b/],
+      ['Wechselpräposition', /\b(auf|unter|über|vor|hinter|neben|zwischen)\s+(dem|der|den|einem|einer)\b/],
+      ['wem', /\bwem\b/i],
+    ];
+    const offenders = dativ.flatMap((exercise) =>
+      canonical(exercise).flatMap((text) => forbidden.filter(([, pattern]) => pattern.test(text)).map(([label]) => `${exercise.id}: ${label} — ${text}`)),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('konu, bildiği konularla çapraz etiketlidir (Yer ve Yön, Akkusativ, Zamirler, Mein Tag, Perfekt, Modalverben)', () => {
+    for (const topicId of [T.places, T.akkusativ, T.pronouns, T.dailyRoutine, T.perfekt, T.modalVerbs]) {
+      expect(dativ.some((exercise) => exercise.secondaryTopicIds?.includes(topicId)), topicId).toBe(true);
+    }
+    // Aşırı temsil yok: çapraz etiketli Dativ soruları ev sahibi konunun havuzunu domine etmez.
+    for (const topicId of [T.places, T.akkusativ]) {
+      const host = topicPool(topicId);
+      const guest = host.filter((exercise) => exercise.topicId === T.dativ).length;
+      expect(guest / host.length, topicId).toBeLessThan(0.2);
+    }
+  });
+
+  it('dinleme, dikte ve hata düzeltme temsil edilir', () => {
+    expect(pool.filter((exercise) => ['listen-choice', 'dictation'].includes(exercise.type)).length).toBeGreaterThanOrEqual(6);
+    expect(dativ.filter((exercise) => exercise.type === 'error-correction').length).toBeGreaterThanOrEqual(10);
+    expect(dativ.filter((exercise) => exercise.type === 'word-bank-translation').length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('oturum boyutları hedef bantlarda kalır (Normal 20–25, Tam 45–60, Hızlı 8–12, Zor 15–20)', () => {
+    const bands: Record<string, [number, number]> = { normal: [20, 25], full: [45, 60], quick: [8, 12], challenge: [15, 20] };
+    for (const [mode, [low, high]] of Object.entries(bands)) {
+      const ids = plan(T.dativ, mode as SessionMode, `dat-size:${mode}`);
+      expect(ids.length, mode).toBeGreaterThanOrEqual(low);
+      expect(ids.length, mode).toBeLessThanOrEqual(high);
+    }
+  });
+
+  it('Tam Çalışma ve Zor Sorular her tohumda serbest üretim göreviyle biter', () => {
+    for (const mode of ['full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        expect(plan(T.dativ, mode, `dat-close:${mode}:${seed}`).at(-1), `${mode}#${seed}`).toBe('dat-free-kiminle');
+      }
+    }
+  });
+
+  it('Normal / Tam / Zor oturumları 50 tohumda birincil ID tekrarı üretmez ve challenge hazırdır', () => {
+    for (const mode of ['normal', 'full', 'challenge'] as const) {
+      for (let seed = 0; seed < 50; seed += 1) {
+        const ids = plan(T.dativ, mode, `dat:${mode}:${seed}`);
+        expect(new Set(ids).size, `${mode}#${seed}`).toBe(ids.length);
+      }
+    }
+    expect(challengeReadiness(pool).ready).toBe(true);
+  });
+
+  it('Tam Çalışma zorunlu içeriği kapsar (biçimler, edatlar, zamirler, karşıtlık, hata, üretim)', () => {
+    const byId = new Map(lesson.map((exercise) => [exercise.id, exercise]));
+    const need = ['dem', 'der', 'den', 'einem|einer', 'meinem', 'meiner', 'meinen', 'mit', 'zu|zum|zur', 'bei|beim', 'von|vom', 'aus', 'nach', 'seit', 'mir|dir|ihm|ihr|uns'];
+    let misses = 0;
+    for (let seed = 0; seed < 20; seed += 1) {
+      const chosen = plan(T.dativ, 'full', `dat-full-cover:${seed}`).map((id) => byId.get(id)!);
+      const text = ` ${chosen.flatMap((exercise) => [exercise.answer, exercise.prompt, ...(exercise.options ?? []), ...(exercise.pairs ?? []).map((pair) => pair.right)]).join(' ')} `;
+      const missing = need.filter((form) => !new RegExp(`\\b(${form})\\b`).test(text));
+      const kinds = new Set(chosen.map((exercise) => exercise.id.split('-')[1]));
+      const hasContrast = kinds.has('akk');
+      const hasError = chosen.some((exercise) => exercise.type === 'error-correction');
+      const hasFree = chosen.some((exercise) => exercise.type === 'free-text' && exercise.skill === 'production');
+      if (missing.length || !hasContrast || !hasError || !hasFree) misses += 1;
+    }
+    expect(misses).toBeLessThanOrEqual(2);
+  });
+
+  it('Zor Sorular ağırlıklı olarak üretimdir (çoktan seçmeli değil)', () => {
+    const byId = new Map(lesson.map((exercise) => [exercise.id, exercise]));
+    for (let seed = 0; seed < 10; seed += 1) {
+      const chosen = plan(T.dativ, 'challenge', `dat-challenge:${seed}`).map((id) => byId.get(id)!);
+      const recognition = chosen.filter((exercise) => !isProductionTask(exercise)).length;
+      expect(recognition / chosen.length).toBeLessThanOrEqual(CHALLENGE_MAX_RECOGNITION_RATIO + 0.01);
+    }
+  });
+});
+
 describe('Genel Tekrar bankasi (kumulatif, ayni taksonomi)', () => {
   const lessonPairs = new Map<string, string>();
   const normalize = (value: string) =>
@@ -1154,6 +1340,33 @@ describe('Genel Tekrar bankasi (kumulatif, ayni taksonomi)', () => {
     expect(pfSentence.length).toBeGreaterThanOrEqual(8);
     expect(pfWriting.length).toBeGreaterThanOrEqual(3);
     expect(pfListening.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('Cümle Kurma, Writing ve Dinleme Dativ içerir ama Dativ baskın değildir', () => {
+    const sentencePool = reviewPoolFor(bank, 'sentence');
+    const datSentence = sentencePool.filter(touches(T.dativ));
+    expect(datSentence.length).toBeGreaterThanOrEqual(10);
+    expect(datSentence.length / sentencePool.length).toBeLessThan(0.1);
+    for (const prompt of ['mit + Freund + gehen → ______', 'Arzt + gehen → ______', 'Türkei + kommen → ______']) {
+      expect(datSentence.some((exercise) => exercise.prompt === prompt), prompt).toBe(true);
+    }
+    const datWriting = reviewPoolFor(bank, 'writing').filter(touches(T.dativ));
+    expect(datWriting.length).toBeGreaterThanOrEqual(4);
+    for (const prompt of ['Kimlerle vakit geçiriyorsun?', 'Okula nasıl gidiyorsun?', 'Kiminle konuşuyorsun?', 'Bugün nereye gidiyorsun?']) {
+      expect(datWriting.some((exercise) => exercise.instruction.startsWith(prompt)), prompt).toBe(true);
+    }
+    expect(reviewPoolFor(bank, 'listening').filter(touches(T.dativ)).length).toBeGreaterThanOrEqual(3);
+    // 50 Cümle Kurma oturumunda Dativ "bazen" görünür, hiçbir oturumu domine etmez.
+    let sessionsWithDativ = 0;
+    for (let seed = 0; seed < 50; seed += 1) {
+      const ids = buildSessionPlan({ pool: sentencePool, progress: createEmptyProgress(), mode: 'gr-sentence', seed: `gr-dat:${seed}` })
+        .primaryQueue.map((item) => item.exerciseId);
+      const dat = ids.filter((id) => datSentence.some((exercise) => exercise.id === id)).length;
+      if (dat > 0) sessionsWithDativ += 1;
+      expect(dat / ids.length, `seed ${seed}`).toBeLessThanOrEqual(0.25);
+    }
+    expect(sessionsWithDativ).toBeGreaterThanOrEqual(10);
+    expect(sessionsWithDativ).toBeLessThan(50);
   });
 
   it('ders sorularinin kopyasi degildir (yeni birlesimler)', () => {

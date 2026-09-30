@@ -45,6 +45,8 @@ function harness() {
     replace(next) {
       progress = next;
     },
+    language: 'de',
+    setLanguage: () => undefined,
   };
   const navigate = (route: Route) => {
     navigations.push(route);

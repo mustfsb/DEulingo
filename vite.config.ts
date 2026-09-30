@@ -5,7 +5,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { loadConfig, resolveSourcePaths, syncContent } from './scripts/sync-content.ts';
-import { AUDIO_CACHE_DIRECTORY, createTtsService, ttsHealth, voiceFileFor } from './scripts/tts-service.ts';
+import { AUDIO_CACHE_DIRECTORY, createTtsService, ttsHealth, voiceFileFor, TTS_AUDIO_URL_VERSION } from './scripts/tts-service.ts';
 import { germanVoiceProfile, validateSpeechRequest, type GermanVoiceId } from './src/lib/audio/tts.ts';
 import { loadLocalEnv } from './server/env.ts';
 import { handleValidate } from './server/validate-handler.ts';
@@ -117,7 +117,7 @@ function localTts(): Plugin {
           if (!checked.ok) return json(response, 400, { error: checked.error });
           try {
             const generated = await serviceFor(checked.value.voice).generate(checked.value);
-            return json(response, 200, { key: generated.key, cached: generated.cached, url: `/api/tts/audio/${generated.key}` });
+            return json(response, 200, { key: generated.key, cached: generated.cached, url: `/api/tts/audio/${generated.key}?v=${TTS_AUDIO_URL_VERSION}` });
           } catch (error) {
             server.config.logger.warn(`[piper] üretim hatası: ${(error as Error).message}`);
             return json(response, 503, { error: 'Telaffuz şu anda kullanılamıyor.' });

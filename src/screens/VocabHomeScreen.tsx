@@ -6,24 +6,26 @@
  */
 
 import { useMemo, useState } from 'react';
-import { VOCABULARY } from '../content/vocabulary/inventory';
-import { topicsById } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { computeVocabProgress, summarizeVocab } from '../lib/vocab/mastery';
 import { vocabPoolForTopic } from '../lib/vocab/questions';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { VocabKind } from '../lib/vocab/questions';
+import { VOCABULARY as DE_VOCABULARY } from '../content/vocabulary/inventory';
 
-const MODES: Array<{ kind: VocabKind; title: string; description: string; icon: string }> = [
-  { kind: 'mixed', title: 'Tüm Kelimeler', description: `${VOCABULARY.length} kelimeden karışık tekrar`, icon: '📚' },
-  { kind: 'detr', title: 'Almanca → Türkçe', description: 'Tanıma: anlamı bul', icon: '🇩🇪' },
-  { kind: 'trde', title: 'Türkçe → Almanca', description: 'Üretim: artikeliyle yaz', icon: '🇹🇷' },
-  { kind: 'match', title: 'Eşleştirme', description: '4–8 çift, iki yönlü', icon: '🔗' },
-  { kind: 'type', title: 'Yazma', description: 'Türkçeden Almancaya yaz', icon: '⌨️' },
-  { kind: 'listen', title: 'Dinleme', description: 'Duy, tanı ve yaz', icon: '🔊' },
-  { kind: 'weak', title: 'Zayıf Kelimeler', description: 'Hatalar ve zayıflar önce', icon: '🎯' },
-  { kind: 'flash', title: 'Kartlar', description: 'Hatırla, çevir, puanla', icon: '🃏' },
-];
+function modesFor(isEnglish: boolean, total: number): Array<{ kind: VocabKind; title: string; description: string; icon: string }> {
+  return [
+    { kind: 'mixed', title: 'Tüm Kelimeler', description: `${total} kelimeden karışık tekrar`, icon: '📚' },
+    { kind: 'detr', title: isEnglish ? 'İngilizce → Türkçe' : 'Almanca → Türkçe', description: 'Tanıma: anlamı bul', icon: isEnglish ? '🇬🇧' : '🇩🇪' },
+    { kind: 'trde', title: isEnglish ? 'Türkçe → İngilizce' : 'Türkçe → Almanca', description: isEnglish ? 'Üretim: İngilizcesini yaz' : 'Üretim: artikeliyle yaz', icon: '🇹🇷' },
+    { kind: 'match', title: 'Eşleştirme', description: '4–8 çift, iki yönlü', icon: '🔗' },
+    { kind: 'type', title: 'Yazma', description: isEnglish ? 'Türkçeden İngilizceye yaz' : 'Türkçeden Almancaya yaz', icon: '⌨️' },
+    { kind: 'listen', title: 'Dinleme', description: 'Duy, tanı ve yaz', icon: '🔊' },
+    { kind: 'weak', title: 'Zayıf Kelimeler', description: 'Hatalar ve zayıflar önce', icon: '🎯' },
+    { kind: 'flash', title: 'Kartlar', description: 'Hatırla, çevir, puanla', icon: '🃏' },
+  ];
+}
 
 type SizeChoice = 'quick' | 'normal' | 'full';
 
@@ -41,9 +43,20 @@ export function VocabHomeScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress } = api;
+  const C = contentFor(api.language ?? 'de');
+  const VOCABULARY = C.vocabulary;
+  const { topicsById } = C;
+  const isEnglish = C.language === 'en';
+  const MODES = modesFor(isEnglish, VOCABULARY.length);
+  const VOCAB_TOPICS: string[] = useMemo(
+    () => [...new Set(VOCABULARY.flatMap((entry) => entry.topicIds))].sort(
+      (a, b) => vocabPoolForTopic(b, VOCABULARY).length - vocabPoolForTopic(a, VOCABULARY).length,
+    ),
+    [VOCABULARY],
+  );
   const [size, setSize] = useState<SizeChoice>('normal');
-  const summary = useMemo(() => summarizeVocab(progress), [progress]);
-  const byId = useMemo(() => computeVocabProgress(progress), [progress]);
+  const summary = useMemo(() => summarizeVocab(progress, VOCABULARY), [progress, VOCABULARY]);
+  const byId = useMemo(() => computeVocabProgress(progress, VOCABULARY), [progress, VOCABULARY]);
 
   const start = (kind: VocabKind, topicId?: string, fixedSize?: string) => {
     navigate({ name: 'vocab-study', kind, ...(topicId ? { topicId } : {}), size: fixedSize ?? size });
@@ -128,7 +141,7 @@ export function VocabHomeScreen({
         <h2 id="vocab-topics" className="eyebrow mb-4">Konulara göre</h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {VOCAB_TOPICS.map((topicId) => {
-            const pool = vocabPoolForTopic(topicId);
+            const pool = vocabPoolForTopic(topicId, VOCABULARY);
             if (!pool.length) return null;
             const mastered = pool.filter((entry) => byId.get(entry.id)?.state === 'mastered').length;
             const title = topicsById.get(topicId)?.title ?? topicId;
@@ -176,8 +189,8 @@ export function VocabHomeScreen({
   );
 }
 
-/** Envanterde üyesi olan konular (gerçek veriden, sabit liste değil). */
-export const VOCAB_TOPICS: string[] = [...new Set(VOCABULARY.flatMap((entry) => entry.topicIds))].sort(
+/** Envanterde üyesi olan konular (Almanca varsayılan; ekran dile göre yeniden hesaplar). */
+export const VOCAB_TOPICS: string[] = [...new Set(DE_VOCABULARY.flatMap((entry) => entry.topicIds))].sort(
   (a, b) => vocabPoolForTopic(b).length - vocabPoolForTopic(a).length,
 );
 

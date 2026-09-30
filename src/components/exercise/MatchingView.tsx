@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { seededShuffle } from '../../content/parser/text';
 import { AudioButton } from '../AudioButton';
 import { findGermanAudioTarget } from '../../lib/audio/targets';
+import { languageOfExerciseId } from '../../lib/language';
 import type { ExerciseViewProps } from './types';
 
 /** Eslestirme: once soldan, sonra sagdan sec. Tamamlanan cift isaretlenir. */
@@ -9,6 +10,9 @@ export function MatchingView({ exercise, value, onChange, locked, audioContextId
   const pairs = useMemo(() => exercise.pairs ?? [], [exercise.pairs]);
   const answers = (value ?? {}) as Record<string, string>;
   const [activeLeft, setActiveLeft] = useState<string | null>(null);
+  // İçerik kuralı: sağ seçenekler benzersizdir (denetimle garanti edilir).
+  // Anahtar yine de konuma bağlıdır; yinelenen metin React uzlaşmasını bozmaz.
+  const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
 
   const rights = useMemo(
     () => seededShuffle(pairs.map((pair) => pair.right), exercise.id),
@@ -64,11 +68,11 @@ export function MatchingView({ exercise, value, onChange, locked, audioContextId
                 {index + 1}
               </span>
               <span className="flex-1">
-                <span className="block font-mono font-bold" lang="de">
+                <span className="block font-mono font-bold" lang={targetLang}>
                   {pair.left}
                 </span>
                 {answers[pair.left] && (
-                  <span className="mt-1 block text-sm text-ink-soft" lang="de">
+                  <span className="mt-1 block text-sm text-ink-soft" lang={targetLang}>
                     ↳ {answers[pair.left]}
                   </span>
                 )}
@@ -83,10 +87,10 @@ export function MatchingView({ exercise, value, onChange, locked, audioContextId
       </div>
 
       <div className="flex flex-col gap-3">
-        {rights.map((right) => {
+        {rights.map((right, index) => {
           const audioTarget = findGermanAudioTarget(exercise, right);
           return (
-            <div key={right} className="choice-option" data-audio-reveal={audioTarget ? 'hover' : undefined} style={{ opacity: takenRights.has(right) ? 0.4 : 1 }}>
+            <div key={`${right}-${index}`} className="choice-option" data-audio-reveal={audioTarget ? 'hover' : undefined} style={{ opacity: takenRights.has(right) ? 0.4 : 1 }}>
               <button
                 type="button"
                 className="choice"
@@ -94,7 +98,7 @@ export function MatchingView({ exercise, value, onChange, locked, audioContextId
                 disabled={locked || takenRights.has(right) || !activeLeft}
                 onClick={() => chooseRight(right)}
               >
-                <span className="font-mono font-bold" lang="de">
+                <span className="font-mono font-bold" lang={targetLang}>
                   {right}
                 </span>
               </button>

@@ -13,6 +13,8 @@
 
 import type { Exercise } from '../content/types';
 import { REVIEW_SECTION_BY_ID } from '../content/curriculum/topics';
+import { EN_REVIEW_SECTION_BY_ID } from '../content/en/topics';
+import type { LearningLanguage } from './language';
 
 export type ReviewMode =
   | 'mixed'
@@ -152,9 +154,15 @@ export const MIN_TOPIC_POOL = 6;
 /**
  * Genel Tekrar Özeti bölümü → başlatılacak hedef. Bölümün kanonik konusu
  * varsa o konunun tekrarı; yoksa konular arası bir mod.
+ * İngilizce bölümler (`genel-en.*`) İngilizce haritadan çözülür.
  */
-export function reviewSectionAction(sectionId: string): { topicId?: string; mode?: ReviewMode } | undefined {
-  const def = REVIEW_SECTION_BY_ID.get(sectionId);
+export function reviewSectionAction(
+  sectionId: string,
+  language: LearningLanguage = 'de',
+): { topicId?: string; mode?: ReviewMode } | undefined {
+  const def =
+    REVIEW_SECTION_BY_ID.get(sectionId) ??
+    (language === 'en' ? EN_REVIEW_SECTION_BY_ID.get(sectionId) : undefined);
   if (!def) return undefined;
   if (def.topicId) return { topicId: def.topicId };
   if (def.mode) return { mode: def.mode };

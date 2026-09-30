@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useProgressState } from './hooks/useProgress';
 import { ThemeProvider, useResolvedTheme } from './hooks/useTheme';
+import { LanguageSelector } from './components/LanguageSelector';
 import { ThemeModeButton } from './components/ThemeModeButton';
 import { hrefFor, useRoute, type Route } from './lib/router';
 import { DebugScreen } from './screens/DebugScreen';
@@ -95,6 +96,8 @@ function AppContents({
       <TopNav
         current={route}
         navigate={navigate}
+        language={api.language}
+        onLanguageChange={api.setLanguage}
         onThemeChange={(themePreference) =>
           api.update((current) => ({
             ...current,
@@ -146,10 +149,14 @@ function MissingResult({ navigate }: { navigate: (route: Route) => void }) {
 function TopNav({
   current,
   navigate,
+  language,
+  onLanguageChange,
   onThemeChange,
 }: {
   current: Route;
   navigate: (route: Route) => void;
+  language: ReturnType<typeof useProgressState>['language'];
+  onLanguageChange: ReturnType<typeof useProgressState>['setLanguage'];
   onThemeChange: (theme: 'light' | 'dark') => void;
 }) {
   const theme = useResolvedTheme();
@@ -196,6 +203,7 @@ function TopNav({
           )}
         </nav>
         <ThemeModeButton theme={theme} onChange={onThemeChange} />
+        <LanguageSelector language={language} onChange={onLanguageChange} />
       </div>
     </header>
   );

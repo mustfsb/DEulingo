@@ -8,7 +8,8 @@
  */
 
 import { buildSessionPlan, type SessionMode } from './session';
-import { exercisesById, getExercises, lessonExercises, reviewBank } from './content';
+import { contentFor, type ContentFacade } from './content-en';
+import type { LearningLanguage } from './language';
 import { buildReviewQueue } from './lesson';
 import { MIN_TOPIC_POOL, reviewModeMeta, reviewPoolFor, type ReviewMode } from './general-review';
 import type { ProgressApi } from '../hooks/useProgress';
@@ -31,9 +32,15 @@ export interface StartReviewOptions {
   topicId?: string;
 }
 
+/** Aktif dile ait içerik cephesi (varsayılan Almanca; mevcut çağrılar değişmez). */
+function facadeFor(api: ProgressApi): ContentFacade {
+  return contentFor(api.language ?? 'de');
+}
+
 /** Genel Tekrar havuzu (konu kartında ders bankası da katılır). */
-export function reviewPool(mode: ReviewMode, topicId?: string) {
-  return reviewPoolFor(reviewBank, mode, topicId, lessonExercises);
+export function reviewPool(mode: ReviewMode, topicId?: string, language: LearningLanguage = 'de') {
+  const facade = contentFor(language);
+  return reviewPoolFor(facade.reviewBank, mode, topicId, facade.lessonExercises);
 }
 
 /** Oturum kurulduysa true (kurulamazsa false — örn. konu havuzu çok küçük). */
@@ -43,7 +50,7 @@ export function startReviewSession(
   options: StartReviewOptions,
 ): boolean {
   const { mode, topicId } = options;
-  const pool = reviewPool(mode, topicId);
+  const pool = reviewPool(mode, topicId, api.language ?? 'de');
   if (!pool.length) return false;
   if (topicId && pool.length < MIN_TOPIC_POOL) return false;
 
@@ -53,7 +60,7 @@ export function startReviewSession(
     progress: api.progress,
     mode: sessionMode,
     topicId,
-    seed: `gr:${mode}:${topicId ?? ''}:${Date.now()}`,
+    seed: `gr:${api.language ?? 'de'}:${mode}:${topicId ?? ''}:${Date.now()}`,
   });
   if (!plan.primaryQueue.length) return false;
 
@@ -76,17 +83,18 @@ export function startReviewSession(
 }
 
 /** Önizleme: bu mod/konu kaç soruluk oturum kurar? */
-export function previewReviewSize(mode: ReviewMode, topicId?: string): number {
-  const pool = reviewPool(mode, topicId);
+export function previewReviewSize(mode: ReviewMode, topicId?: string, language: LearningLanguage = 'de'): number {
+  const pool = reviewPool(mode, topicId, language);
   if (!pool.length) return 0;
   if (topicId && pool.length < MIN_TOPIC_POOL) return 0;
   return Math.min(reviewModeMeta(mode).size, pool.length);
 }
 
-/** Tüm hatalardan tekrar oturumu. */
+/** Tüm hatalardan tekrar oturumu (yalnızca aktif dilin hataları — dilim ayrı tutulur). */
 export function startMistakeSession(api: ProgressApi, navigate: (route: Route) => void): boolean {
-  const ids = buildReviewQueue(getExercises(Object.keys(api.progress.mistakes)), api.progress, 15)
-    .filter((id) => exercisesById.has(id));
+  const facade = facadeFor(api);
+  const ids = buildReviewQueue(facade.getExercises(Object.keys(api.progress.mistakes)), api.progress, 15)
+    .filter((id) => facade.exercisesById.has(id));
   if (!ids.length) return false;
   api.update((current) => ({
     ...current,

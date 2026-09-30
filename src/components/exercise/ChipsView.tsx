@@ -1,6 +1,7 @@
 import { Markup } from '../Markup';
 import { AudioButton } from '../AudioButton';
 import { findGermanAudioTarget } from '../../lib/audio/targets';
+import { languageOfExerciseId } from '../../lib/language';
 import type { ExerciseViewProps } from './types';
 
 /**
@@ -10,6 +11,7 @@ import type { ExerciseViewProps } from './types';
 export function ChipsView({ exercise, value, onChange, locked, result, audioContextId, speechSpeed = 'normal', speechVoice }: ExerciseViewProps) {
   const words = exercise.words ?? [];
   const picked = Array.isArray(value) ? value : [];
+  const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
 
   // Ayni kelime birden fazla kez gecebilir: cipler indeksle takip edilir.
   const usedIndexes = new Set<number>();
@@ -33,8 +35,8 @@ export function ChipsView({ exercise, value, onChange, locked, result, audioCont
   return (
     <div className="flex flex-col gap-6">
       {exercise.prompt && (
-        <p className="text-lg text-ink-soft">
-          <Markup text={exercise.prompt} />
+        <p className="text-lg text-ink-soft" lang={targetLang}>
+          <Markup text={exercise.prompt} lang={targetLang} />
         </p>
       )}
 

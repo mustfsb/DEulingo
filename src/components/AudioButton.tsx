@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { audioController } from '../lib/audio/playback';
-import { DEFAULT_GERMAN_VOICE_ID, type GermanAudioTarget, type GermanVoiceId, type SpeechSpeed } from '../lib/audio/tts';
+import { DEFAULT_GERMAN_VOICE_ID, type GermanVoiceId, type SpeechAudioTarget, type SpeechSpeed } from '../lib/audio/tts';
 
 export function PronunciationButton({
   target,
@@ -10,12 +10,12 @@ export function PronunciationButton({
   compact = true,
   revealOnHover = false,
 }: {
-  /** Piper'a yalnızca açıkça Almanca işaretli hedef gönderilebilir. */
-  target: GermanAudioTarget;
+  /** Yalnızca içerikte açıkça işaretlenmiş hedef gönderilebilir (de-DE ya da en-GB). */
+  target: SpeechAudioTarget;
   /** Elle oynatma da aktif ekran bağlamına bağlıdır; eski ekranda kalmaz. */
   contextId: string;
   speed?: SpeechSpeed;
-  /** Kullanıcının ayarlardan seçtiği, doğrulanmış Piper sesi. */
+  /** Kullanıcının ayarlardan seçtiği, doğrulanmış Piper sesi (Almanca hedeflerde). */
   voice?: GermanVoiceId;
   compact?: boolean;
   /** Metin/tile kapsayıcısı hover veya klavye odağındayken görünür. */
@@ -24,6 +24,7 @@ export function PronunciationButton({
   const [playing, setPlaying] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const requestGeneration = useRef(0);
+  const isEnglish = target.language === 'en-GB';
 
   useEffect(() => () => { requestGeneration.current += 1; }, []);
 
@@ -33,7 +34,7 @@ export function PronunciationButton({
     setUnavailable(false);
     setPlaying(true);
     try {
-      await audioController.speakGerman(contextId, target, speed, voice);
+      await audioController.speak(contextId, target, speed, voice);
     } catch {
       if (generation === requestGeneration.current) setUnavailable(true);
     } finally {
@@ -41,13 +42,25 @@ export function PronunciationButton({
     }
   };
 
+  const label = isEnglish
+    ? speed === 'slow'
+      ? 'İngilizce telaffuzu yavaş dinle'
+      : speed === 'fast'
+        ? 'İngilizce telaffuzu hızlı dinle'
+        : 'İngilizce telaffuzu dinle'
+    : speed === 'slow'
+      ? 'Almanca telaffuzu yavaş dinle'
+      : speed === 'fast'
+        ? 'Almanca telaffuzu hızlı dinle'
+        : 'Almanca telaffuzu dinle';
+
   return (
     <span className={`audio-button-wrap inline-flex items-center gap-2${revealOnHover ? ' is-reveal' : ''}`}>
       <button
         type="button"
         className={`audio-button${playing ? ' is-playing' : ''}${compact ? ' is-compact' : ''}`}
-        aria-label={speed === 'slow' ? 'Almanca telaffuzu yavaş dinle' : speed === 'fast' ? 'Almanca telaffuzu hızlı dinle' : 'Almanca telaffuzu dinle'}
-        title={speed === 'slow' ? 'Yavaş dinle' : speed === 'fast' ? 'Hızlı dinle' : 'Almanca telaffuzu dinle'}
+        aria-label={label}
+        title={isEnglish ? 'İngilizce telaffuzu dinle' : 'Almanca telaffuzu dinle'}
         aria-busy={playing}
         aria-pressed={playing}
         onClick={(event) => void listen(event)}

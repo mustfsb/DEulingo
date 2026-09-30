@@ -53,6 +53,8 @@ function mountAnsweredWordBankExercise() {
     replace(next) {
       progress = next;
     },
+    language: 'de',
+    setLanguage: () => undefined,
   };
   const root = createRoot(dom.window.document.getElementById('root')!);
   act(() => {
@@ -128,6 +130,8 @@ function mountLesson(lesson: ActiveLesson) {
     replace(next) {
       progress = next;
     },
+    language: 'de',
+    setLanguage: () => undefined,
   };
 
   const root = createRoot(dom.window.document.getElementById('root')!);
@@ -312,6 +316,8 @@ describe('konu dersi kurulumu ve etiketler', () => {
       get progress() { return progress; },
       update(updater) { progress = updater(progress); },
       replace(next) { progress = next; },
+    language: 'de',
+    setLanguage: () => undefined,
     };
     const root = createRoot(dom.window.document.getElementById('root')!);
     const render = () =>

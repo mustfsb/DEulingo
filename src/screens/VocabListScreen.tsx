@@ -6,13 +6,11 @@
  */
 
 import { useMemo, useState } from 'react';
-import { VOCABULARY } from '../content/vocabulary/inventory';
-import { topicsById } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { computeVocabProgress, type VocabState } from '../lib/vocab/mastery';
 import { AudioButton } from '../components/AudioButton';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
-import { VOCAB_TOPICS } from './VocabHomeScreen';
 
 type Filter = 'all' | VocabState | string;
 
@@ -39,9 +37,18 @@ export function VocabListScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress } = api;
+  const C = contentFor(api.language ?? 'de');
+  const VOCABULARY = C.vocabulary;
+  const { topicsById } = C;
+  const entryLang = C.language === 'en' ? 'en-GB' : 'de-DE';
+  const htmlLang = C.language === 'en' ? 'en' : 'de';
+  const VOCAB_TOPICS = useMemo(
+    () => [...new Set(VOCABULARY.flatMap((entry) => entry.topicIds))],
+    [VOCABULARY],
+  );
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const byId = useMemo(() => computeVocabProgress(progress), [progress]);
+  const byId = useMemo(() => computeVocabProgress(progress, VOCABULARY), [progress, VOCABULARY]);
 
   const results = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase('tr');
@@ -57,7 +64,7 @@ export function VocabListScreen({
       }
       return true;
     });
-  }, [query, filter, byId]);
+  }, [query, filter, byId, VOCABULARY]);
 
   const ctx = `vocab-list`;
 
@@ -78,7 +85,7 @@ export function VocabListScreen({
         <input
           type="search"
           className="card w-full p-3"
-          placeholder="Almanca ya da Türkçe ara…"
+          placeholder={C.language === 'en' ? 'İngilizce ya da Türkçe ara…' : 'Almanca ya da Türkçe ara…'}
           aria-label="Kelime ara"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -119,12 +126,12 @@ export function VocabListScreen({
           return (
             <li key={entry.id} className="card flex items-center gap-3 p-3">
               <AudioButton
-                target={{ text: entry.ttsText, language: 'de-DE', role: 'vocabulary' }}
+                target={{ text: entry.ttsText, language: entryLang, role: 'vocabulary' }}
                 contextId={ctx}
                 compact
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bold" lang="de">{entry.german}</p>
+                <p className="truncate font-bold" lang={htmlLang}>{entry.german}</p>
                 <p className="truncate text-[0.92rem] text-ink-soft">{entry.turkish}</p>
                 <p className="truncate text-xs text-ink-faint">{topicNames}</p>
               </div>

@@ -1,7 +1,7 @@
-import type { Exercise, GermanAudioTarget } from '../../content/types';
-import { findGermanAudioTarget } from './targets';
+import type { Exercise, GermanAudioTarget, SpeechAudioTarget } from '../../content/types';
+import { findEnglishAudioTarget, findGermanAudioTarget } from './targets';
 
-export type { GermanAudioTarget } from '../../content/types';
+export type { EnglishAudioTarget, GermanAudioTarget, SpeechAudioTarget } from '../../content/types';
 
 /** Yerel Piper kurulumunda desteklenen, Almanca için sınırlandırılmış sesler. */
 export const GERMAN_VOICE_PROFILES = [
@@ -177,10 +177,14 @@ export function shouldAutoplayPrompt(exercise: Pick<Exercise, 'type' | 'wordBank
 export function canonicalGermanAnswer(
   exercise: Pick<Exercise, 'audio' | 'answer'>,
   result: { status: 'correct' | 'minor-typo' | 'incorrect' },
-): GermanAudioTarget | undefined {
+): SpeechAudioTarget | undefined {
   // Statü her zaman sonuç panelini belirler; burada öğrenci girdisi hiç alınmaz.
   void result;
-  return exercise.audio?.canonicalAnswer ?? findGermanAudioTarget(exercise, exercise.answer);
+  return (
+    exercise.audio?.canonicalAnswer ??
+    findGermanAudioTarget(exercise, exercise.answer) ??
+    findEnglishAudioTarget(exercise, exercise.answer)
+  );
 }
 
 export class LocalTtsService {

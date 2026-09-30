@@ -5,13 +5,6 @@ import { FeedbackPanel } from '../components/FeedbackPanel';
 import { AudioButton } from '../components/AudioButton';
 import { Markup } from '../components/Markup';
 import { ComboIndicator, StreakCelebration } from '../components/StreakCelebration';
-import {
-  exercisesById,
-  exercisesForSection,
-  exercisesForTopic,
-  summarySectionForExercise,
-  topicTitle,
-} from '../lib/content';
 import { buildSessionPlan } from '../lib/session';
 import { cancelScheduledRetry, scheduleRetry } from '../lib/lesson';
 import { buildLessonResult, completeLesson } from '../lib/session-result';
@@ -30,6 +23,7 @@ import {
 import { isSemanticFallbackEligible } from '../lib/semantic/policy';
 import { shouldAutoplayPrompt } from '../lib/audio/tts';
 import { audioController, type SoundEffect } from '../lib/audio/playback';
+import { contentFor, type ContentFacade } from '../lib/content-en';
 
 export interface LessonScreenProps {
   mode: LessonKind;
@@ -77,9 +71,10 @@ export function LessonScreen({
 }: LessonScreenProps) {
   const { progress, update } = api;
   const active = progress.activeLesson;
+  const C: ContentFacade = contentFor(api.language ?? 'de');
   // İçerik güncellemesi bir soruyu kaldırmış olabilir. Böyle bir yarım ders
   // ekranda takılmak yerine güncel havuzdan güvenle yeniden kurulur.
-  const hasRemovedExercise = active?.queue.some((item) => !exercisesById.has(item.exerciseId)) ?? false;
+  const hasRemovedExercise = active?.queue.some((item) => !C.exercisesById.has(item.exerciseId)) ?? false;
   // Yarim kalan oturum ancak AYNI tur + AYNI konu + AYNI mod (+ AYNI bolum) ise surdurulur.
   const matches =
     active &&
@@ -100,18 +95,18 @@ export function LessonScreen({
     (lesson: ActiveLesson) => {
       if (finishing.current) return;
       finishing.current = true;
-      const result = buildLessonResult(lesson, { lookup: (id) => exercisesById.get(id) });
+      const result = buildLessonResult(lesson, { lookup: (id) => C.exercisesById.get(id) });
       update((current) => completeLesson(current, result));
       navigate({ name: 'complete' });
     },
-    [navigate, update],
+    [C, navigate, update],
   );
 
   // Oturum yoksa (ya da baska bir konuya aitse) yeni kuyruk kur.
   useEffect(() => {
     if (matches || finishing.current) return;
     if (mode === 'topic' && topicId) {
-      const pool = sessionMode === 'section' && sectionId ? exercisesForSection(sectionId) : exercisesForTopic(topicId);
+      const pool = sessionMode === 'section' && sectionId ? C.exercisesForSection(sectionId) : C.exercisesForTopic(topicId);
       // Birincil sıra ders başlamadan tamamen kurulur: ID'ler benzersizdir ve
       // hata tekrarları bu sıra yerine ayrı, gerekçeli sunumlar olarak eklenir.
       const plan = buildSessionPlan({
@@ -155,7 +150,7 @@ export function LessonScreen({
   if (!active || !matches) {
     return <div className="p-10 text-center text-ink-soft">Ders hazırlanıyor…</div>;
   }
-  return <LessonRunner lesson={active} onFinish={onFinish} navigate={navigate} api={api} />;
+  return <LessonRunner lesson={active} onFinish={onFinish} navigate={navigate} api={api} content={C} />;
 }
 
 function LessonRunner({
@@ -163,11 +158,13 @@ function LessonRunner({
   api,
   navigate,
   onFinish,
+  content,
 }: {
   lesson: ActiveLesson;
   api: ProgressApi;
   navigate: (route: Route) => void;
   onFinish: (lesson: ActiveLesson) => void;
+  content: ContentFacade;
 }) {
   const { update } = api;
   const done = lesson.index >= lesson.queue.length;
@@ -177,8 +174,8 @@ function LessonRunner({
   }, [done, lesson, onFinish]);
 
   const exercise = useMemo(
-    () => exercisesById.get(lesson.queue[lesson.index]?.exerciseId ?? ''),
-    [lesson.queue, lesson.index],
+    () => content.exercisesById.get(lesson.queue[lesson.index]?.exerciseId ?? ''),
+    [content, lesson.queue, lesson.index],
   );
 
   const advance = useCallback(() => {
@@ -259,6 +256,7 @@ function LessonRunner({
       key={`${lesson.queue[lesson.index]?.presentationReason ?? 'primary'}:${exercise.id}#${lesson.index}`}
       exercise={exercise}
       lesson={lesson}
+      content={content}
       showPronunciation={api.progress.settings.showPronunciation}
       soundEffects={api.progress.settings.soundEffects}
       autoPronunciation={api.progress.settings.autoPronunciation}
@@ -283,6 +281,7 @@ function LessonRunner({
 interface ExerciseStepProps {
   exercise: Exercise;
   lesson: ActiveLesson;
+  content: ContentFacade;
   onCommit: (
     exercise: Exercise,
     result: AttemptResult,
@@ -303,6 +302,7 @@ interface ExerciseStepProps {
 function ExerciseStep({
   exercise,
   lesson,
+  content,
   onCommit,
   onAdvance,
   onExit,
@@ -349,7 +349,7 @@ function ExerciseStep({
 
   useEffect(() => {
     if (!autoPronunciation || !promptTarget || !shouldAutoplayPrompt(exercise)) return;
-    void audioController.speakGerman(audioContextId, promptTarget, speechSpeed, speechVoice).catch(() => undefined);
+    void audioController.speak(audioContextId, promptTarget, speechSpeed, speechVoice).catch(() => undefined);
   }, [audioContextId, autoPronunciation, exercise, promptTarget, speechSpeed, speechVoice]);
 
   const stopAudio = useCallback(() => audioController.dispose(audioContextId), [audioContextId]);
@@ -447,7 +447,7 @@ function ExerciseStep({
       if (exercise.type === 'word-bank-translation') return;
       if (event.key.toLowerCase() === 'r' && promptTarget) {
         event.preventDefault();
-        void audioController.speakGerman(audioContextId, promptTarget, speechSpeed, speechVoice).catch(() => undefined);
+        void audioController.speak(audioContextId, promptTarget, speechSpeed, speechVoice).catch(() => undefined);
         return;
       }
       if (event.key !== 'Enter') return;
@@ -462,20 +462,19 @@ function ExerciseStep({
   }, [audioContextId, check, continueToNext, exercise.type, promptTarget, speechSpeed, speechVoice]);
 
   const total = lesson.queue.length;
-  const position = lesson.index + 1;
-  const label =
+  const position = lesson.index + 1;  const label =
     lesson.mode === 'mistakes'
       ? 'Hata Tekrarı'
       : lesson.mode === 'review'
         ? `${lesson.sessionMode ? MODE_LABEL[lesson.sessionMode] : 'Tekrar'}${
-          lesson.topicId ? ` · ${topicTitle(lesson.topicId)}` : ''
+          lesson.topicId ? ` · ${content.topicTitle(lesson.topicId)}` : ''
         }`
-        : `${topicTitle(lesson.topicId)} · ${MODE_LABEL[lesson.sessionMode ?? 'normal']}`;
-  const summarySection = summarySectionForExercise(exercise);
+        : `${content.topicTitle(lesson.topicId)} · ${MODE_LABEL[lesson.sessionMode ?? 'normal']}`;
+  const summarySection = content.summarySectionForExercise(exercise);
   const canCheck = (exercise.type === 'spoken' || hasInput(exercise, input)) && !checking;
   const showPromptAbove = exercise.type === 'multiple-choice' && Boolean(exercise.prompt);
-  const streak = lesson.streak?.current ?? 0;
-  const milestoneEffect: SoundEffect | undefined = milestone
+  const targetLang = content.language === 'en' ? 'en' : 'de';
+  const streak = lesson.streak?.current ?? 0;  const milestoneEffect: SoundEffect | undefined = milestone
     ? milestoneCopy(milestone).effect
     : undefined;
 
@@ -531,9 +530,9 @@ function ExerciseStep({
               <span
                 className="badge"
                 style={{ background: 'var(--color-brand-soft)', color: 'var(--color-brand)' }}
-                title={`Bu soru ${exercise.topic} konusundan; ${topicTitle(lesson.topicId)} konusunu da çalıştırıyor.`}
+                title={`Bu soru ${exercise.topic} konusundan; ${content.topicTitle(lesson.topicId)} konusunu da çalıştırıyor.`}
               >
-                🔗 {topicTitle(lesson.topicId)} ile bağlantılı
+                🔗 {content.topicTitle(lesson.topicId)} ile bağlantılı
               </span>
             )}
             {exercise.difficulty === 'hard' && (
@@ -547,7 +546,7 @@ function ExerciseStep({
             )}
           </p>
           <h1 className="mb-6 text-[1.75rem] sm:text-4xl">
-            <Markup text={exercise.instruction} />
+            <Markup text={exercise.instruction} lang={targetLang} />
           </h1>
 
           {promptTarget && (!showPromptAbove || exercise.type === 'dictation' || exercise.type === 'listen-choice') && (
@@ -563,7 +562,7 @@ function ExerciseStep({
                 <span
                   className="pronunciation-hover-text font-display text-2xl leading-snug sm:text-[1.75rem]"
                   style={{ fontVariationSettings: "'wdth' 108", fontWeight: 700 }}
-                  lang="de"
+                  lang={content.language === 'en' ? 'en' : 'de'}
                 >
                   <Markup text={exercise.prompt!} />
                 </span>
@@ -586,7 +585,7 @@ function ExerciseStep({
 
           {exercise.hint && !result && (
             <p className="mt-6 text-[0.95rem] text-ink-faint">
-              💡 <Markup text={exercise.hint} />
+              💡 <Markup text={exercise.hint} lang={targetLang} />
             </p>
           )}
         </div>

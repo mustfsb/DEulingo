@@ -47,7 +47,7 @@ const CREDIT = { correct: 1, 'minor-typo': 0.5, 'self-assessed': 0.5, incorrect:
 /** Doygunluk için gereken ağırlıklı kanıt miktarı (tek kolay cevap yetmez). */
 export const VOCAB_CONFIDENCE_TARGET = 3;
 
-export function computeVocabProgress(progress: UserProgress): Map<string, VocabProgress> {
+export function computeVocabProgress(progress: UserProgress, inventory: VocabEntry[] = VOCABULARY): Map<string, VocabProgress> {
   const acc = new Map<string, { weighted: number; credit: number; attempts: number; correct: number; incorrect: number; typo: number; last?: string }>();
   for (const [id, record] of Object.entries(progress.exercises)) {
     if (!id.startsWith('vocab-') || id.startsWith('vocab-match-')) continue;
@@ -88,7 +88,7 @@ export function computeVocabProgress(progress: UserProgress): Map<string, VocabP
   }
 
   const result = new Map<string, VocabProgress>();
-  for (const entry of VOCABULARY) {
+  for (const entry of inventory) {
     const item = acc.get(entry.id);
     if (!item) {
       result.set(entry.id, {
@@ -133,9 +133,9 @@ export interface VocabSummary {
   untouched: number;
 }
 
-export function summarizeVocab(progress: UserProgress): VocabSummary {
-  const map = computeVocabProgress(progress);
-  const summary: VocabSummary = { total: VOCABULARY.length, mastered: 0, familiar: 0, learning: 0, weak: 0, untouched: 0 };
+export function summarizeVocab(progress: UserProgress, inventory: VocabEntry[] = VOCABULARY): VocabSummary {
+  const map = computeVocabProgress(progress, inventory);
+  const summary: VocabSummary = { total: inventory.length, mastered: 0, familiar: 0, learning: 0, weak: 0, untouched: 0 };
   for (const item of map.values()) {
     if (item.state === 'mastered') summary.mastered += 1;
     else if (item.state === 'familiar') summary.familiar += 1;
@@ -150,16 +150,17 @@ export function summarizeVocab(progress: UserProgress): VocabSummary {
 export function topicVocabProgress(
   progress: UserProgress,
   topicId: string,
+  inventory: VocabEntry[] = VOCABULARY,
 ): { total: number; mastered: number; entries: VocabEntry[] } {
-  const map = computeVocabProgress(progress);
-  const entries = VOCABULARY.filter((entry) => entry.topicIds.includes(topicId));
+  const map = computeVocabProgress(progress, inventory);
+  const entries = inventory.filter((entry) => entry.topicIds.includes(topicId));
   const mastered = entries.filter((entry) => map.get(entry.id)?.state === 'mastered').length;
   return { total: entries.length, mastered, entries };
 }
 
 /** Zayıf kelimeler (önce en çok yanlış yapılan). */
-export function weakVocabs(progress: UserProgress, limit = 30): VocabProgress[] {
-  return [...computeVocabProgress(progress).values()]
+export function weakVocabs(progress: UserProgress, limit = 30, inventory: VocabEntry[] = VOCABULARY): VocabProgress[] {
+  return [...computeVocabProgress(progress, inventory).values()]
     .filter((item) => item.state === 'weak' || item.incorrect > 0 || item.typoCount > 0)
     .sort((a, b) => b.incorrect - a.incorrect || b.typoCount - a.typoCount || b.attempts - a.attempts)
     .slice(0, limit);

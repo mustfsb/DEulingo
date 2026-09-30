@@ -7,7 +7,7 @@ import { Fragment, type ReactNode } from 'react';
 
 const PATTERN = /(`[^`]+`|\*\*[^*]+\*\*)/g;
 
-export function Markup({ text, className }: { text: string; className?: string }): ReactNode {
+export function Markup({ text, className, lang = 'de' }: { text: string; className?: string; lang?: string }): ReactNode {
   if (!text) return null;
   const parts = text.split(PATTERN).filter((part) => part !== '');
 
@@ -16,7 +16,7 @@ export function Markup({ text, className }: { text: string; className?: string }
       {parts.map((part, index) => {
         if (part.startsWith('`') && part.endsWith('`')) {
           return (
-            <span key={index} className="de" lang="de">
+            <span key={index} className="de" lang={lang}>
               {part.slice(1, -1)}
             </span>
           );

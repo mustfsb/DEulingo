@@ -35,6 +35,8 @@ describe('Ayarlar telaffuz hızı', () => {
       replace(next) {
         progress = next;
       },
+    language: 'de',
+    setLanguage: () => undefined,
     };
     const root = createRoot(dom.window.document.getElementById('root')!);
     act(() => root.render(createElement(StatsScreen, { api })));

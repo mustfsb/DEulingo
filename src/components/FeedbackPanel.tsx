@@ -3,6 +3,7 @@ import { AudioButton } from './AudioButton';
 import { Markup } from './Markup';
 import type { Exercise, Pronunciation } from '../content/types';
 import { describeDiff, type ValidationResult } from '../lib/validation';
+import { languageOfExerciseId } from '../lib/language';
 import { audioController, type SoundEffect } from '../lib/audio/playback';
 import { canonicalGermanAnswer, type GermanVoiceId, type SpeechSpeed } from '../lib/audio/tts';
 
@@ -66,6 +67,9 @@ export function FeedbackPanel({
   const pronunciation = showPronunciation ? (exercise.pronunciation ?? []) : [];
   const canonical = canonicalGermanAnswer(exercise, result);
   const displayedAnswer = canonical?.text ?? result.expected;
+  const canonicalLang = canonical?.language === 'en-GB' ? 'en' : canonical ? 'de' : 'tr';
+  // Beklenen cevap her zaman hedef dildedir; Almanca akış birebir korunur.
+  const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
   const feedbackPlayed = useRef(false);
 
   useEffect(() => {
@@ -119,14 +123,14 @@ export function FeedbackPanel({
           {result.status === 'minor-typo' && diff && (
             <p className="mt-1 text-[0.95rem]">
               Küçük yazım farkı:{' '}
-              <span className="de" lang="de">
+              <span className="de" lang={targetLang}>
                 {diff}
               </span>
             </p>
           )}
 
           {result.status !== 'incorrect' && displayedAnswer && (
-            <p className="mt-1 text-lg font-bold" lang={canonical ? 'de' : 'tr'}>
+            <p className="mt-1 text-lg font-bold" lang={canonicalLang}>
               <span className="pronunciation-hover-target">
                 <span className="pronunciation-hover-text">{displayedAnswer}</span>
                 {canonical && <AudioButton target={canonical} contextId={audioContextId} speed={speechSpeed} voice={speechVoice} compact revealOnHover />}
@@ -137,7 +141,7 @@ export function FeedbackPanel({
           {result.status === 'incorrect' && (
             <div className="mt-1">
               <p className="text-[0.95rem] text-ink-soft">Doğru cevap:</p>
-              <p className="whitespace-pre-line font-mono text-lg font-bold" lang="de">
+              <p className="whitespace-pre-line font-mono text-lg font-bold" lang={targetLang}>
                 <span className="pronunciation-hover-target">
                   <span className="pronunciation-hover-text">{result.expected || '—'}</span>
                   {canonical && <AudioButton target={canonical} contextId={audioContextId} speed={speechSpeed} voice={speechVoice} compact revealOnHover />}
@@ -158,7 +162,7 @@ export function FeedbackPanel({
               </button>
               {showWhy && (
                 <p className="mt-1 text-[0.95rem] leading-snug text-ink-soft anim-pop">
-                  <Markup text={exercise.explanation} />
+                  <Markup text={exercise.explanation} lang={targetLang} />
                 </p>
               )}
             </div>

@@ -1,12 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  getTopic,
-  reviewSectionsById,
-  reviewSummary,
-  searchSummaries,
-  sectionsById,
-  summaries,
-} from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
@@ -18,8 +11,10 @@ export function SummaryIndexScreen({
   navigate: (route: Route) => void;
 }) {
   const { progress } = api;
+  const C = contentFor(api.language ?? 'de');
+  const { getTopic, reviewSectionsById, reviewSummary, sectionsById, summaries } = C;
   const [query, setQuery] = useState('');
-  const hits = useMemo(() => searchSummaries(query), [query]);
+  const hits = useMemo(() => C.searchSummaries(query), [C, query]);
   const bookmarks = progress.settings.bookmarks ?? [];
   const read = progress.settings.readSummaries ?? {};
   const searching = query.trim().length >= 2;
@@ -33,7 +28,7 @@ export function SummaryIndexScreen({
         if (review) return [{ id, title: `🔁 ${review.title}`, route: { name: 'review-summary', sectionId: id } as Route }];
         return [];
       }),
-    [bookmarks],
+    [bookmarks, sectionsById, reviewSectionsById],
   );
 
   return (

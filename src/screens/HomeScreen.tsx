@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { allExercises, lessonExercises, primaryExercisesForTopic, topicMasteryDefs, topics } from '../lib/content';
+import { contentFor } from '../lib/content-en';
 import { getGlobalSummary, getTopicProgressStats } from '../lib/progress';
 import { computeTopicMastery } from '../lib/mastery';
 import { goalProgress } from '../lib/daily-goal';
@@ -7,11 +7,11 @@ import { recommendNext } from '../lib/recommendation';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
-const GREETINGS: Array<{ until: number; de: string; tr: string }> = [
-  { until: 9, de: 'Guten Morgen', tr: 'Günaydın' },
-  { until: 17, de: 'Guten Tag', tr: 'İyi günler' },
-  { until: 21, de: 'Guten Abend', tr: 'İyi akşamlar' },
-  { until: 24, de: 'Gute Nacht', tr: 'İyi geceler' },
+const GREETINGS: Array<{ until: number; de: string; tr: string; en: string; lang: string }> = [
+  { until: 9, de: 'Guten Morgen', tr: 'Günaydın', en: 'Good morning', lang: 'en' },
+  { until: 17, de: 'Guten Tag', tr: 'İyi günler', en: 'Good afternoon', lang: 'en' },
+  { until: 21, de: 'Guten Abend', tr: 'İyi akşamlar', en: 'Good evening', lang: 'en' },
+  { until: 24, de: 'Gute Nacht', tr: 'İyi geceler', en: 'Good night', lang: 'en' },
 ];
 
 function greeting(date = new Date()) {
@@ -25,24 +25,28 @@ function masteryColor(score: number): string {
 
 export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (route: Route) => void }) {
   const { progress } = api;
+  const C = contentFor(api.language ?? 'de');
+  const { topics } = C;
   const hello = greeting();
+  const helloText = C.language === 'en' ? hello.en : hello.de;
+  const helloLang = C.language === 'en' ? hello.lang : 'de';
 
-  const recommendation = recommendNext({ progress, topics, exercisesForTopic: primaryExercisesForTopic });
+  const recommendation = recommendNext({ progress, topics, exercisesForTopic: C.primaryExercisesForTopic });
   const goal = goalProgress(progress);
-  const overall = getGlobalSummary(progress, lessonExercises);
+  const overall = getGlobalSummary(progress, C.lessonExercises);
   const totalMistakes = Object.keys(progress.mistakes).length;
   // Ustalık kavram bazlıdır: Genel Tekrar'daki cevaplar da konunun ustalığına sayılır.
   const mastery = useMemo(
-    () => new Map(computeTopicMastery(progress, allExercises, topicMasteryDefs).map((item) => [item.topicId, item])),
-    [progress],
+    () => new Map(computeTopicMastery(progress, C.allExercises, C.topicMasteryDefs).map((item) => [item.topicId, item])),
+    [progress, C],
   );
 
   return (
     <main className="mx-auto w-full max-w-[980px] px-5 pb-24 pt-6 sm:pt-10">
       <section className="anim-pop">
         <p className="eyebrow">{hello.tr}</p>
-        <h1 className="mt-1 text-[2.5rem] sm:text-6xl" lang="de">
-          {hello.de}, Mustafa
+        <h1 className="mt-1 text-[2.5rem] sm:text-6xl" lang={helloLang}>
+          {helloText}, Mustafa
         </h1>
         <p className="mt-3 text-lg text-ink-soft">
           {goal.reached
@@ -112,7 +116,7 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
         </div>
         <ul className="grid gap-4 sm:grid-cols-2">
           {topics.map((topic) => {
-            const stats = getTopicProgressStats(progress, topic.id, primaryExercisesForTopic(topic.id));
+            const stats = getTopicProgressStats(progress, topic.id, C.primaryExercisesForTopic(topic.id));
             const topicMastery = mastery.get(topic.id)?.masteryScore ?? 0;
             const masteryPct = Math.round(topicMastery * 100);
             const accuracy = stats.accuracy === null ? null : Math.round(stats.accuracy * 100);

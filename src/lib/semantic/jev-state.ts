@@ -77,5 +77,13 @@ export function equivalentInstructions(state: JevState): string {
     'Do not require literal string equality.',
     'When the exercise tests grammar (tense, case, article, person, modal, auxiliary, participle),',
     'do not forgive those differences even if the general meaning is understandable.',
+    ...(state.testedConcepts.includes('dative_case')
+      ? [
+          'This exercise tests German Dativ: return false if any article, possessive ending, pronoun,',
+          'plural -n or preposition differs in case from the expected answer (e.g. mit mein Freund,',
+          'mit meinen Freund, zu den Arzt, Ich helfe dich), even when the meaning is obvious.',
+          'Return true for a grammatical word-order variant with identical Dativ forms.',
+        ]
+      : []),
   ].join(' ');
 }

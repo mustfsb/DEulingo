@@ -80,6 +80,8 @@ function mount(result: LessonResult) {
     replace(next) {
       progress = next;
     },
+    language: 'de',
+    setLanguage: () => undefined,
   };
 
   const root = createRoot(dom.window.document.getElementById('root')!);

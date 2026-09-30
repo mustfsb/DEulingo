@@ -12,7 +12,8 @@
  */
 
 import type { Exercise, ExercisePair } from '../../content/types';
-import { VOCAB_BY_ID, VOCABULARY, type VocabEntry } from '../../content/vocabulary/inventory';
+import { VOCABULARY, type VocabEntry } from '../../content/vocabulary/inventory';
+import { EN_TOPIC_BY_ID } from '../../content/en/topics';
 import { topicTitle } from '../../content/curriculum/topics';
 import type { UserProgress } from '../storage';
 
@@ -48,6 +49,8 @@ export interface VocabSessionOptions {
   size?: VocabSize;
   seed?: string;
   progress?: UserProgress;
+  /** Varsayılan Almanca envanter; İngilizcede `enContent.vocabulary` verilir. */
+  inventory?: VocabEntry[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -105,7 +108,17 @@ export function normalizeTurkish(value: string): string {
 
 function exerciseTopicOf(entry: VocabEntry): { topicId: string; topic: string } {
   const topicId = entry.topicIds[0];
-  return { topicId, topic: topicTitle(topicId) };
+  return { topicId, topic: EN_TOPIC_BY_ID.get(topicId)?.title ?? topicTitle(topicId) };
+}
+
+/** Yönergedeki hedef-dil adı (Almanca envanter varsayılanı korunur). */
+export function targetName(entry: VocabEntry): string {
+  return entry.lang === 'en' ? 'İngilizce' : 'Almanca';
+}
+
+/** Ses hedefi dili (İngilizce girdiler en-GB ile okunur). */
+function audioLanguageOf(entry: VocabEntry): 'de-DE' | 'en-GB' {
+  return entry.lang === 'en' ? 'en-GB' : 'de-DE';
 }
 
 function baseExercise(
@@ -123,7 +136,7 @@ function baseExercise(
     conceptIds: [],
     origin: 'authored',
     audio: {
-      prompt: { text: entry.ttsText, language: 'de-DE', role: 'vocabulary' },
+      prompt: { text: entry.ttsText, language: audioLanguageOf(entry), role: 'vocabulary' },
     },
   } satisfies Exercise;
 }
@@ -197,7 +210,12 @@ export function buildTrdeMc(entry: VocabEntry, pool: VocabEntry[], rand: () => n
     type: 'multiple-choice',
     difficulty: 'medium',
     skill: 'recall',
-    instruction: entry.type === 'noun' ? 'Almancasını artikeliyle seç:' : 'Almancasını seç:',
+    instruction:
+      entry.lang === 'en'
+        ? 'İngilizcesini seç:'
+        : entry.type === 'noun'
+          ? 'Almancasını artikeliyle seç:'
+          : 'Almancasını seç:',
     prompt: entry.turkish,
     answer: entry.german,
     options,
@@ -216,7 +234,12 @@ export function buildTrdeType(entry: VocabEntry, _pool: VocabEntry[]): VocabQues
     type: 'free-text',
     difficulty: 'hard',
     skill: 'production',
-    instruction: entry.type === 'noun' ? 'Almancasını ARTİKELİYLE yaz:' : 'Almancasını yaz:',
+    instruction:
+      entry.lang === 'en'
+        ? 'İngilizcesini yaz:'
+        : entry.type === 'noun'
+          ? 'Almancasını ARTİKELİYLE yaz:'
+          : 'Almancasını yaz:',
     prompt: entry.turkish,
     answer: entry.german,
     acceptedAnswers: [],
@@ -267,13 +290,20 @@ export function buildMatching(
   }));
   const { topicId, topic } = exerciseTopicOf(ordered[0]);
   const id = `${VOCAB_EXERCISE_PREFIX}match-${ordered.map((e) => e.id).sort().join('+')}-${direction}`;
+  const isEnglish = ordered[0].lang === 'en';
   const exercise: Exercise = {
     id,
     topicId,
     topic,
     type: 'matching',
     instruction:
-      direction === 'de-tr' ? 'Almancayı Türkçesiyle eşleştir.' : 'Türkçeyi Almancasıyla eşleştir.',
+      direction === 'de-tr'
+        ? isEnglish
+          ? 'İngilizceyi Türkçesiyle eşleştir.'
+          : 'Almancayı Türkçesiyle eşleştir.'
+        : isEnglish
+          ? 'Türkçeyi İngilizcesiyle eşleştir.'
+          : 'Türkçeyi Almancasıyla eşleştir.',
     pairs,
     difficulty: direction === 'de-tr' ? 'easy' : 'medium',
     skill: direction === 'de-tr' ? 'recognition' : 'recall',
@@ -282,7 +312,7 @@ export function buildMatching(
     origin: 'authored',
     familyId: `vocab-match-${direction}`,
     audio: {
-      targets: ordered.map((entry) => ({ text: entry.ttsText, language: 'de-DE', role: 'vocabulary' })),
+      targets: ordered.map((entry) => ({ text: entry.ttsText, language: audioLanguageOf(entry), role: 'vocabulary' })),
     },
   };
   return {
@@ -312,7 +342,7 @@ export function buildListenChoice(
     options,
     familyId: `vocab-${entry.id}`,
   });
-  exercise.audio = { prompt: { text: entry.ttsText, language: 'de-DE', role: 'prompt' } };
+  exercise.audio = { prompt: { text: entry.ttsText, language: audioLanguageOf(entry), role: 'prompt' } };
   return { exercise, vocabIds: [entry.id], primaryVocabId: entry.id, weight: 0.7, stage: 3 };
 }
 
@@ -321,13 +351,13 @@ export function buildListenType(entry: VocabEntry, _pool: VocabEntry[]): VocabQu
     type: 'dictation',
     difficulty: 'hard',
     skill: 'production',
-    instruction: entry.type === 'noun' ? 'Duyduğunu ARTİKELİYLE yaz:' : 'Duyduğunu yaz:',
+    instruction: entry.type === 'noun' && entry.lang !== 'en' ? 'Duyduğunu ARTİKELİYLE yaz:' : 'Duyduğunu yaz:',
     audioText: entry.ttsText,
     answer: entry.german,
     validation: { keyboardTolerance: true },
     familyId: `vocab-${entry.id}`,
   });
-  exercise.audio = { prompt: { text: entry.ttsText, language: 'de-DE', role: 'prompt' } };
+  exercise.audio = { prompt: { text: entry.ttsText, language: audioLanguageOf(entry), role: 'prompt' } };
   return { exercise, vocabIds: [entry.id], primaryVocabId: entry.id, weight: 1.1, stage: 5 };
 }
 
@@ -350,9 +380,9 @@ export function buildFlash(entry: VocabEntry, _pool: VocabEntry[]): VocabQuestio
 /* Havuz + zayıflık önceliği                                           */
 /* ------------------------------------------------------------------ */
 
-export function vocabPoolForTopic(topicId?: string): VocabEntry[] {
-  if (!topicId) return [...VOCABULARY];
-  return VOCABULARY.filter((entry) => entry.topicIds.includes(topicId));
+export function vocabPoolForTopic(topicId?: string, inventory: VocabEntry[] = VOCABULARY): VocabEntry[] {
+  if (!topicId) return [...inventory];
+  return inventory.filter((entry) => entry.topicIds.includes(topicId));
 }
 
 function weaknessOf(progress: UserProgress | undefined, vocabId: string): number {
@@ -467,8 +497,8 @@ function individualFor(entry: VocabEntry, pool: VocabEntry[], rand: () => number
 }
 
 export function buildVocabSession(options: VocabSessionOptions): VocabQuestion[] {
-  const { kind, topicId, seed = 'vocab', progress } = options;
-  const pool = vocabPoolForTopic(topicId);
+  const { kind, topicId, seed = 'vocab', progress, inventory = VOCABULARY } = options;
+  const pool = vocabPoolForTopic(topicId, inventory);
   if (!pool.length) return [];
   const rand = seededRandom(`${seed}:pick`);
 
@@ -559,17 +589,18 @@ export function buildVocabSession(options: VocabSessionOptions): VocabQuestion[]
 /* ------------------------------------------------------------------ */
 
 /** Sorudaki her hedef envanterde mi? (Test + çalışma-zamanı güvencesi.) */
-export function assertWhitelist(questions: VocabQuestion[]): string[] {
+export function assertWhitelist(questions: VocabQuestion[], inventory: VocabEntry[] = VOCABULARY): string[] {
+  const ids = new Set(inventory.map((entry) => entry.id));
   const violations: string[] = [];
   for (const question of questions) {
     for (const id of question.vocabIds) {
-      if (!VOCAB_BY_ID.has(id)) violations.push(`${question.exercise.id} → ${id}`);
+      if (!ids.has(id)) violations.push(`${question.exercise.id} → ${id}`);
     }
   }
   return violations;
 }
 
 /** Metinsel hedefin envanter dışı kelime sızdırmadığını denetler (basit). */
-export function targetInWhitelist(vocabId: string): boolean {
-  return VOCAB_BY_ID.has(vocabId);
+export function targetInWhitelist(vocabId: string, inventory: VocabEntry[] = VOCABULARY): boolean {
+  return inventory.some((entry) => entry.id === vocabId);
 }
