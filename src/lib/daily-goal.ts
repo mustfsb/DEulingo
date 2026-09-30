@@ -2,8 +2,10 @@
  * Gunluk hedef (§38, §39).
  *
  * Hesap yok, sunucu yok, seri baskisi yok: yalnizca YEREL takvim gunune yazilan
- * kucuk bir sayac. Gecen sureyi olcerken kronometre kullanmayiz — her cevabin
+ * kucuk bir sayac. Egzersizlerde kronometre kullanmayiz — her cevabin
  * gercek yanit suresi (makul bir tavanla) ve sabit bir okuma payi toplanir.
+ * Ozet okuma ise sayfada gecirilen gercek sureyle (ziyaret basina tavanla)
+ * hedefe yazilir.
  */
 
 import type { DailyActivity, UserProgress } from './storage';
@@ -60,6 +62,15 @@ export function answerDurationMs(responseTimeMs: number | undefined): number {
   return measured + ANSWER_OVERHEAD_MS;
 }
 
+/** Tek bir özet ziyaretinde hedefe yazilabilecek en fazla süre (sekme açık unutulmasın). */
+export const MAX_SUMMARY_VISIT_MS = 15 * 60_000;
+
+/** Özet sayfasında geçen sürenin hedefe yazılacak karşılığı. */
+export function summaryDurationMs(dwellMs: number | undefined): number {
+  if (!Number.isFinite(dwellMs)) return 0;
+  return Math.min(Math.max(0, dwellMs as number), MAX_SUMMARY_VISIT_MS);
+}
+
 export interface GoalProgress {
   date: string;
   minutes: number;
@@ -75,9 +86,32 @@ export interface GoalProgress {
 
 export const GOAL_OPTIONS = [5, 10, 20] as const;
 
+/** Günlük hedef sınırları: en az 5 dk, en çok 5 saat (300 dk). */
+export const GOAL_MIN_MINUTES = 5;
+export const GOAL_MAX_MINUTES = 300;
+/** Artır/azalt düğmelerinin adımı. */
+export const GOAL_STEP_MINUTES = 5;
+
+/** Hedef süreyi [5, 300] aralığına kırpar; geçersizse varsayılan 10 döner. */
+export function clampGoalMinutes(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 10;
+  return Math.min(GOAL_MAX_MINUTES, Math.max(GOAL_MIN_MINUTES, Math.round(parsed)));
+}
+
+/** Hedef sürenin okunabilir karşılığı: 45 → "45 dakika", 60 → "1 saat", 90 → "1 sa 30 dk". */
+export function formatGoalMinutes(minutes: number): string {
+  const total = clampGoalMinutes(minutes);
+  if (total < 60) return `${total} dakika`;
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  if (rest === 0) return `${hours} saat`;
+  return `${hours} sa ${rest} dk`;
+}
+
 export function goalProgress(progress: UserProgress, date = new Date()): GoalProgress {
   const activity = dayActivity(progress, date);
-  const targetMinutes = Math.max(1, progress.settings.dailyGoalMinutes || 10);
+  const targetMinutes = clampGoalMinutes(progress.settings.dailyGoalMinutes);
   const minutes = activity.activeMs / 60_000;
   const reached = minutes >= targetMinutes;
   return {

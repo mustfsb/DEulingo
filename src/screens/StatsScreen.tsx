@@ -11,7 +11,7 @@ import { computeTopicMastery } from '../lib/mastery';
 import { parseImportedProgress, serializeProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
 import { DEFAULT_GERMAN_VOICE_ID, GERMAN_VOICE_PROFILES, isSpeechSpeed } from '../lib/audio/tts';
-import { GOAL_OPTIONS, goalProgress } from '../lib/daily-goal';
+import { clampGoalMinutes, formatGoalMinutes, GOAL_MAX_MINUTES, GOAL_MIN_MINUTES, GOAL_STEP_MINUTES, goalProgress } from '../lib/daily-goal';
 
 export function StatsScreen({ api }: { api: ProgressApi }) {
   const { progress, update, replace } = api;
@@ -39,7 +39,9 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetTopic, setResetTopic] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [goalDraft, setGoalDraft] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const goalValue = clampGoalMinutes(progress.settings.dailyGoalMinutes);
 
   const exportProgress = () => {
     const blob = new Blob([serializeProgress(progress)], { type: 'application/json' });
@@ -185,32 +187,97 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             ))}
           </div>
         </fieldset>
-        <label className="card mt-4 flex items-center justify-between gap-4 p-4">
+        <div className="card mt-4 flex items-center justify-between gap-4 p-4">
           <span>
             <span className="block text-lg font-bold">Günlük hedef</span>
             <span className="block text-[0.92rem] text-ink-soft">
               Ana sayfadaki bugünkü hedef çubuğu bu süreyi hedefler. Yalnızca bu tarayıcıda tutulur.
             </span>
           </span>
-          <select
-            className="rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
-            value={String(progress.settings.dailyGoalMinutes)}
-            aria-label="Günlük hedef"
-            onChange={(event) => {
-              const dailyGoalMinutes = Number(event.target.value) || 10;
-              update((current) => ({
-                ...current,
-                settings: { ...current.settings, dailyGoalMinutes },
-              }));
-            }}
-          >
-            {GOAL_OPTIONS.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {minutes} dakika
-              </option>
-            ))}
-          </select>
-        </label>
+          <div className="flex flex-none items-center gap-2" role="group" aria-label="Günlük hedef">
+            <button
+              type="button"
+              className="btn px-3"
+              aria-label="Hedefi azalt"
+              disabled={clampGoalMinutes(progress.settings.dailyGoalMinutes) <= GOAL_MIN_MINUTES}
+              onClick={() => {
+                setGoalDraft(null);
+                update((current) => ({
+                  ...current,
+                  settings: {
+                    ...current.settings,
+                    dailyGoalMinutes: clampGoalMinutes(
+                      clampGoalMinutes(current.settings.dailyGoalMinutes) - GOAL_STEP_MINUTES,
+                    ),
+                  },
+                }));
+              }}
+            >
+              −
+            </button>
+            <span className="min-w-20 text-center">
+              <input
+                type="number"
+                className="w-20 rounded-xl border-2 border-line bg-surface px-2 py-2 text-center font-bold"
+                value={goalDraft ?? String(goalValue)}
+                min={GOAL_MIN_MINUTES}
+                max={GOAL_MAX_MINUTES}
+                step={GOAL_STEP_MINUTES}
+                aria-label="Günlük hedef (dakika)"
+                onChange={(event) => {
+                  setGoalDraft(event.target.value);
+                  if (event.target.value === '') return;
+                  const parsed = Number(event.target.value);
+                  if (!Number.isFinite(parsed)) return;
+                  update((current) => ({
+                    ...current,
+                    settings: {
+                      ...current.settings,
+                      dailyGoalMinutes: Math.min(
+                        GOAL_MAX_MINUTES,
+                        Math.max(0, Math.round(parsed)),
+                      ),
+                    },
+                  }));
+                }}
+                onBlur={(event) => {
+                  setGoalDraft(null);
+                  const dailyGoalMinutes = clampGoalMinutes(event.target.value);
+                  update((current) => ({
+                    ...current,
+                    settings: { ...current.settings, dailyGoalMinutes },
+                  }));
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') (event.target as HTMLInputElement).blur();
+                }}
+              />
+              <span className="mt-1 block text-xs text-ink-soft">
+                {formatGoalMinutes(progress.settings.dailyGoalMinutes)}
+              </span>
+            </span>
+            <button
+              type="button"
+              className="btn px-3"
+              aria-label="Hedefi artır"
+              disabled={clampGoalMinutes(progress.settings.dailyGoalMinutes) >= GOAL_MAX_MINUTES}
+              onClick={() => {
+                setGoalDraft(null);
+                update((current) => ({
+                  ...current,
+                  settings: {
+                    ...current.settings,
+                    dailyGoalMinutes: clampGoalMinutes(
+                      clampGoalMinutes(current.settings.dailyGoalMinutes) + GOAL_STEP_MINUTES,
+                    ),
+                  },
+                }));
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
         <ToggleSetting
           title="Ses efektleri"
           description="Doğru ve yanlış cevaplarda kısa, yerel geri bildirim sesi çalar."

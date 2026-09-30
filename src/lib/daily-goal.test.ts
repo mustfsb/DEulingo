@@ -7,6 +7,8 @@ import {
   goalProgress,
   markGoalCelebrated,
   MAX_ANSWER_MS,
+  MAX_SUMMARY_VISIT_MS,
+  summaryDurationMs,
 } from './daily-goal';
 import { createEmptyProgress, type UserProgress } from './storage';
 
@@ -57,5 +59,12 @@ describe('gunluk hedef', () => {
   it('hedef suresi ayardan gelir', () => {
     expect(goalProgress(withMinutes(11, 20), today).reached).toBe(false);
     expect(goalProgress(withMinutes(11, 5), today).reached).toBe(true);
+  });
+
+  it('ozet okuma suresini ziyaret basina tavanla sayar', () => {
+    expect(summaryDurationMs(10_000)).toBe(10_000);
+    expect(summaryDurationMs(60 * 60_000)).toBe(MAX_SUMMARY_VISIT_MS);
+    expect(summaryDurationMs(undefined)).toBe(0);
+    expect(summaryDurationMs(-500)).toBe(0);
   });
 });

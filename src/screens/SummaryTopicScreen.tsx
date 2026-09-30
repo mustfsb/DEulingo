@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Markup } from '../components/Markup';
 import { NoteBlockView } from '../components/NoteBlocks';
 import { AudioButton } from '../components/AudioButton';
 import { contentFor } from '../lib/content-en';
+import { addDailyActivity, summaryDurationMs } from '../lib/daily-goal';
 import { reviewSectionAction } from '../lib/general-review';
 import { previewReviewSize, startReviewSession } from '../lib/start-review';
 import { audioController } from '../lib/audio/playback';
@@ -38,6 +39,30 @@ function useAudioContext(contextId: string) {
     audioController.activate(contextId);
     return () => audioController.dispose(contextId);
   }, [contextId]);
+}
+
+/**
+ * Özet okuma süresini günlük hedefe yazar.
+ *
+ * Sayfa açıldığında başlar, sayfadan ayrılınca (unmount / konu değişimi)
+ * geçen gerçek süre — ziyaret başına 15 dk tavanla — `daily.activeMs`'e
+ * eklenir. Eşik yok: 10 sn okuma ≈ 10 sn sayılır.
+ */
+function useSummaryTime(api: ProgressApi, visitKey: string, enabled: boolean) {
+  const updateRef = useRef(api.update);
+  updateRef.current = api.update;
+  useEffect(() => {
+    if (!enabled || !visitKey) return;
+    const startedAt = Date.now();
+    return () => {
+      const activeMs = summaryDurationMs(Date.now() - startedAt);
+      if (activeMs <= 0) return;
+      updateRef.current((current) => ({
+        ...current,
+        daily: addDailyActivity(current.daily, { activeMs }),
+      }));
+    };
+  }, [visitKey, enabled]);
 }
 
 function useScrollToSection(sectionId: string | undefined) {
@@ -84,6 +109,7 @@ export function SummaryTopicScreen({
   const audioContextId = `summary:${topicId}`;
   useAudioContext(audioContextId);
   useMarkRead(api, summary?.sections.map((section) => section.id) ?? []);
+  useSummaryTime(api, `topic:${topicId}`, Boolean(summary));
   useScrollToSection(sectionId);
 
   if (!summary || !topic) {
@@ -206,6 +232,7 @@ export function ReviewSummaryScreen({
   const audioContextId = 'summary:genel';
   useAudioContext(audioContextId);
   useMarkRead(api, summary?.sections.map((section) => section.id) ?? []);
+  useSummaryTime(api, 'review:genel', Boolean(summary));
   useScrollToSection(sectionId);
 
   if (!summary) {

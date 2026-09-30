@@ -832,6 +832,15 @@ export function migrate(raw: unknown, context?: MigrationContext): UserProgress 
       settings: { ...progress.settings, speechSpeed: DEFAULT_SETTINGS.speechSpeed },
     };
   }
+  {
+    const parsed = Number(progress.settings.dailyGoalMinutes);
+    const clamped = !Number.isFinite(parsed)
+      ? DEFAULT_SETTINGS.dailyGoalMinutes
+      : Math.min(300, Math.max(5, Math.round(parsed)));
+    if (clamped !== progress.settings.dailyGoalMinutes) {
+      progress = { ...progress, settings: { ...progress.settings, dailyGoalMinutes: clamped } };
+    }
+  }
 
   // v10: konu tabanlı — gün haritası ve izlek artıkları taşınmaz.
   delete (progress as unknown as { tracks?: unknown }).tracks;
