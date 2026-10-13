@@ -5,7 +5,7 @@ import type { Exercise, Pronunciation } from '../content/types';
 import { describeDiff, type ValidationResult } from '../lib/validation';
 import { languageOfExerciseId } from '../lib/language';
 import { audioController, type SoundEffect } from '../lib/audio/playback';
-import { canonicalGermanAnswer, type GermanVoiceId, type SpeechSpeed } from '../lib/audio/tts';
+import { canonicalGermanAnswer, type PiperVoiceId, type SpeechSpeed } from '../lib/audio/tts';
 
 const TONE = {
   correct: {
@@ -39,7 +39,7 @@ export interface FeedbackPanelProps {
   soundEffects: boolean;
   autoPronunciation: boolean;
   speechSpeed: SpeechSpeed;
-  speechVoice: GermanVoiceId;
+  speechVoice: PiperVoiceId;
   audioContextId: string;
   /** Bu cevapla bir seri esigi asildiysa araya giren kutlama efekti (§25). */
   milestoneEffect?: SoundEffect;

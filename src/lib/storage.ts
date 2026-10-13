@@ -9,9 +9,9 @@
 
 import {
   DEFAULT_GERMAN_VOICE_ID,
-  isGermanVoiceId,
+  isPiperVoiceId,
   isSpeechSpeed,
-  type GermanVoiceId,
+  type PiperVoiceId,
   type SpeechSpeed,
 } from './audio/tts';
 import type { LearningTrack } from '../content/types';
@@ -229,7 +229,7 @@ export interface UserSettings {
   /** v4: kullanıcının kalıcı görünüm tercihi. */
   themePreference: 'light' | 'dark' | 'system';
   /** v5: kullanıcının yerel Piper Almanca ses tercihi. */
-  speechVoice: GermanVoiceId;
+  speechVoice: PiperVoiceId;
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -411,7 +411,7 @@ function migrateV4ToV5(progress: UserProgress): UserProgress {
     version: 5,
     settings: {
       ...incoming,
-      speechVoice: isGermanVoiceId(incoming.speechVoice) ? incoming.speechVoice : DEFAULT_SETTINGS.speechVoice,
+      speechVoice: isPiperVoiceId(incoming.speechVoice) ? incoming.speechVoice : DEFAULT_SETTINGS.speechVoice,
     } as UserSettings,
   };
 }
@@ -820,7 +820,7 @@ export function migrate(raw: unknown, context?: MigrationContext): UserProgress 
   if (progress.version === 8) progress = migrateV8ToV9(progress);
   if (progress.version === 9) progress = migrateV9ToV10(progress, context);
 
-  if (!isGermanVoiceId(progress.settings.speechVoice)) {
+  if (!isPiperVoiceId(progress.settings.speechVoice)) {
     progress = {
       ...progress,
       settings: { ...progress.settings, speechVoice: DEFAULT_SETTINGS.speechVoice },

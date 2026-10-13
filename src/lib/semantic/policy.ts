@@ -135,14 +135,86 @@ function enTokens(value: string): string[] {
 /** Kapalı küme üyeleri + işaret kelimeleri: cümlenin dilbilgisi imzası. */
 const EN_MARKERS = new Set([
   'have', 'has', 'had', 'not', 'for', 'since', 'ever', 'never', 'already', 'yet', 'just',
+  'will', 'would', 'can', 'could', 'if', 'unless', 'was', 'were',
+  'in', 'at', 'on', 'to', 'of', 'from', 'with', 'by', 'about',
   ...EN_CLOSED_SETS.flat(),
 ]);
 
-function enGrammarSignature(value: string): string {
+/**
+ * Biçim kayması: beklenen cevapta `-ed` (geçmiş ortaç) ya da `-ing` (gerund)
+ * biçimi varken öğrenci aynı fiilin YALIN halini yazdıysa (had arrive,
+ * enjoy swim) bu dilbilgisi hatasıdır — anlam anlaşılsa da Jev'e sorulmaz.
+ * Eşanlamlı farklı fiil (got there ↔ arrived) kaymaya girmez.
+ */
+function stemsOf(token: string, suffix: 'ed' | 'ing'): string[] {
+  const cut = suffix.length;
+  const stems = [token.slice(0, -cut), `${token.slice(0, -cut)}e`];
+  if (suffix === 'ed' && token.endsWith('ied')) stems.push(`${token.slice(0, -3)}y`);
+  if (token.length > cut + 2 && token[token.length - cut - 1] === token[token.length - cut - 2]) {
+    stems.push(token.slice(0, -cut - 1)); // stopped → stop, running → run
+  }
+  return stems.filter((stem) => stem.length >= 2);
+}
+
+function morphologicalSlip(userTokens: string[], expectedTokens: string[], topicId: string): boolean {
+  const user = new Set(userTokens);
+  const check = (suffix: 'ed' | 'ing') =>
+    expectedTokens.some(
+      (token) =>
+        token.length > suffix.length + 2 &&
+        token.endsWith(suffix) &&
+        !user.has(token) &&
+        stemsOf(token, suffix).some((stem) => user.has(stem)),
+    );
+  if (topicId === 'en.past-perfect') return check('ed');
+  if (topicId === 'en.gerund-infinitive' || topicId === 'en.prepositions-collocations') return check('ing');
+  return false;
+}
+
+/** Bu konularda zaman yardımcıları hedef değildir (I decided ↔ I have decided zararsızdır). */
+const AUX_NOT_TARGET = new Set(['have', 'has', 'had', 'do', 'does', 'did', 'am', 'is', 'are', 'was', 'were', 'be', 'been']);
+const AUX_FREE_TOPICS = new Set(['en.gerund-infinitive', 'en.prepositions-collocations']);
+
+function enGrammarSignature(value: string, topicId = ''): string {
+  const skipAux = AUX_FREE_TOPICS.has(topicId);
   return enTokens(value)
-    .filter((token) => EN_MARKERS.has(token))
+    .filter((token) => EN_MARKERS.has(token) && !(skipAux && AUX_NOT_TARGET.has(token)))
     .sort()
     .join(' ');
+}
+
+/** Düzensiz fiil: [yalın, ...düzensiz biçimler]. Yanlış düzenli çekim (leaved) kaymadır. */
+const IRREGULAR_VERBS: string[][] = [
+  ['leave', 'left'], ['go', 'went', 'gone'], ['see', 'saw', 'seen'], ['eat', 'ate', 'eaten'], ['write', 'wrote', 'written'],
+  ['take', 'took', 'taken'], ['make', 'made'], ['do', 'did', 'done'], ['know', 'knew', 'known'], ['give', 'gave', 'given'],
+  ['find', 'found'], ['buy', 'bought'], ['lose', 'lost'], ['meet', 'met'], ['think', 'thought'], ['forget', 'forgot', 'forgotten'],
+  ['wake', 'woke', 'woken'], ['fly', 'flew', 'flown'], ['begin', 'began', 'begun'], ['bring', 'brought'], ['tell', 'told'],
+  ['say', 'said'], ['come', 'came'], ['run', 'ran'], ['sit', 'sat'], ['stand', 'stood'], ['teach', 'taught'], ['catch', 'caught'],
+  ['sleep', 'slept'], ['feel', 'felt'], ['keep', 'kept'], ['build', 'built'], ['send', 'sent'], ['spend', 'spent'],
+  ['drive', 'drove', 'driven'], ['speak', 'spoke', 'spoken'], ['choose', 'chose', 'chosen'], ['get', 'got'], ['win', 'won'],
+];
+
+/** Beklenen düzensiz biçimin yerine yanlış düzenli çekim (leaved, goed, buyed) yazılmış mı? */
+function irregularRegularizationSlip(userTokens: string[], expectedTokens: string[]): boolean {
+  const user = new Set(userTokens);
+  return IRREGULAR_VERBS.some(([base, ...forms]) => {
+    if (!forms.some((form) => expectedTokens.includes(form) && !user.has(form))) return false;
+    const wrong = [`${base}ed`, `${base}d`, `${base}ned`, `${base.slice(0, -1)}ied`, `${base}en`, `${base}ned`];
+    return wrong.some((token) => user.has(token) && !expectedTokens.includes(token));
+  });
+}
+
+const WH_WORDS = new Set(['where', 'when', 'what', 'why', 'how', 'who', 'which']);
+const QUESTION_AUX = new Set(['is', 'are', 'was', 'were', 'does', 'do', 'did', 'can', 'could', 'will', 'would']);
+const EMBEDDING_CUES = /\b(know|tell\s+(?:me|us|you)|wonder|ask(?:\s+(?:me|you))?|sure|remember)\b/;
+
+/** Dolaylı soruda wh-kelimesinin hemen ardından yardımcı fiil (where IS the bank) = devrik sıra hatası. */
+function indirectQuestionOrderSlip(userRaw: string, expectedTokens: string[]): boolean {
+  const user = enTokens(userRaw);
+  if (!EMBEDDING_CUES.test(user.join(' '))) return false;
+  const inverted = (tokens: string[]) =>
+    tokens.some((token, index) => WH_WORDS.has(token) && QUESTION_AUX.has(tokens[index + 1] ?? '') && index > 0);
+  return inverted(user) && !inverted(expectedTokens);
 }
 
 /**
@@ -155,11 +227,14 @@ function enGrammarSignature(value: string): string {
 export function presentPerfectFormMismatch(exercise: Exercise, userAnswer: string): boolean {
   const expected = [exercise.answer ?? '', ...(exercise.acceptedAnswers ?? [])].filter(Boolean);
   if (!expected.length) return false;
-  const userSignature = enGrammarSignature(userAnswer);
+  const userSignature = enGrammarSignature(userAnswer, exercise.topicId);
   const userTokens = enTokens(userAnswer);
   return expected.every((candidate) => {
-    if (enGrammarSignature(candidate) !== userSignature) return true;
+    if (enGrammarSignature(candidate, exercise.topicId) !== userSignature) return true;
     const candidateTokens = enTokens(candidate);
+    if (morphologicalSlip(userTokens, candidateTokens, exercise.topicId)) return true;
+    if (irregularRegularizationSlip(userTokens, candidateTokens)) return true;
+    if (exercise.topicId === 'en.sentence-structure' && indirectQuestionOrderSlip(userAnswer, candidateTokens)) return true;
     const known = new Set(candidateTokens);
     // Aynı fiil ailesinin farklı üyesi (see↔seen, have↔has, go↔gone…).
     return userTokens.some((token) => {
@@ -389,15 +464,22 @@ export function semanticPolicyFor(exercise: Exercise): SemanticPolicy {
     }
     if (isPresentPerfectTested(exercise)) {
       tested.push('present_perfect_auxiliary', 'past_participle_v3', 'for_since_selection');
+      // Yeni 1. hafta konuları da aynı korumayı alır (had/V3, doing/to-do,
+      // would/will, edat öbekleri): anlam anlaşılır olsa bile dilbilgisi
+      // hedefi deterministik korunur.
+      tested.push('past_perfect_had', 'gerund_infinitive_chunk', 'conditional_would', 'preposition_chunk');
       allowed.push(
         'different but valid word order where grammar allows (For three years, I have lived here.)',
         'contracted or uncontracted auxiliaries with the same grammar (I\'ve = I have, haven\'t = have not)',
       );
       forbidden.unshift(
-        'have/has auxiliary swap or missing auxiliary (She have finished, I seen it)',
-        'wrong past participle (see/saw/seen, go/went/gone, write/wrote/written)',
+        'have/has/had auxiliary swap or missing auxiliary (She have finished, I seen it, film has started for had started)',
+        'wrong past participle (see/saw/seen, go/went/gone, write/wrote/written, leave/left, lose/lost)',
         'for/since swap (since three years, for 2024)',
-        'Simple Past where Present Perfect is tested and vice versa (I saw him yesterday vs I have seen him yesterday)',
+        'Simple Past where Present Perfect/Past Perfect is tested and vice versa',
+        'gerund/infinitive chunk swap (enjoy to visit, decide take, look forward to see)',
+        'conditional If+would or will/would swap (If I would have, If I have for had)',
+        'preposition chunk swap (interested for, give attention, believe myself, afraid from)',
         'negation change',
       );
     }
@@ -512,6 +594,7 @@ export function validationMatrix(): Array<{ exercise: string; local: string; jev
     { exercise: 'vocab detr-type (de→tr yazma)', local: 'evet', jevFallback: 'evet' },
     { exercise: 'vocab trde-type (tr→de yazma)', local: 'evet (artikel politikası)', jevFallback: 'evet (artikel politikasıyla)' },
     { exercise: 'en present-perfect (have/has/V3/for-since)', local: 'evet (kısaltma normalizasyonu + kapalı küme)', jevFallback: 'koşullu (yardımcı/V3/for-since/zaman hariç)' },
+    { exercise: 'en week-1 (past-perfect/gerund/conditionals/prepositions)', local: 'evet (kısaltma normalizasyonu + kapalı küme)', jevFallback: 'koşullu (had/V3, doing/to-do, would/will, edat öbeği hariç)' },
     { exercise: 'clock/number parsing', local: 'evet (deterministik)', jevFallback: 'nadiren/asla' },
   ];
 }

@@ -68,6 +68,8 @@ import {
   EN_LESSON_EXERCISES,
   EN_REVIEW_BANK,
 } from '../content/en/index';
+import { exercisesForPracticeSet, isPracticeSetId } from '../content/en/practice-sets';
+import { getUserVocabEntry, getUserVocabulary, userVocabVersion } from '../content/en/user-vocab';
 import { EN_VOCAB_BY_ID, EN_VOCABULARY } from '../content/en/vocab';
 import { VOCAB_BY_ID, VOCABULARY } from '../content/vocabulary/inventory';
 import type { VocabEntry } from '../content/vocabulary/inventory';
@@ -198,6 +200,31 @@ function enGetTopicSummary(topicId: string | undefined): TopicSummary | undefine
   return topicId ? enSummariesByTopic.get(topicId) : undefined;
 }
 
+let combinedVersion = -1;
+let combinedList: VocabEntry[] = enVocabulary;
+let combinedMap: Map<string, VocabEntry> = EN_VOCAB_BY_ID;
+
+function refreshCombined(): void {
+  const version = userVocabVersion();
+  if (version === combinedVersion) return;
+  combinedVersion = version;
+  const user = getUserVocabulary();
+  combinedList = user.length ? [...enVocabulary, ...user] : enVocabulary;
+  combinedMap = user.length ? new Map([...EN_VOCAB_BY_ID, ...user.map((entry) => [entry.id, entry] as const)]) : EN_VOCAB_BY_ID;
+}
+
+function combinedEnglishVocabulary(): VocabEntry[] {
+  refreshCombined();
+  return combinedList;
+}
+
+function combinedEnglishVocabById(): Map<string, VocabEntry> {
+  refreshCombined();
+  return combinedMap;
+}
+
+export { getUserVocabEntry };
+
 export const enContent: ContentFacade = {
   language: 'en',
   bundle: null,
@@ -223,16 +250,20 @@ export const enContent: ContentFacade = {
   exerciseInTopic: enExerciseInTopic,
   primaryExercisesForTopic: (topicId) => EN_LESSON_EXERCISES.filter((exercise) => exercise.topicId === topicId),
   exercisesForTopic: (topicId) => EN_LESSON_EXERCISES.filter((exercise) => enExerciseInTopic(exercise, topicId)),
-  exercisesForSection: (sectionId) => EN_LESSON_EXERCISES.filter((exercise) => exercise.sectionId === sectionId),
+  exercisesForSection: (sectionId) =>
+    isPracticeSetId(sectionId)
+      ? exercisesForPracticeSet(sectionId, EN_LESSON_EXERCISES)
+      : EN_LESSON_EXERCISES.filter((exercise) => exercise.sectionId === sectionId),
   concepts: enConcepts,
   conceptsById: enConceptsById,
   conceptIdsForTopic: enConceptIdsForTopic,
   topicMasteryDefs: enTopics.map((topic) => ({ id: topic.id, title: topic.title, conceptIds: topic.conceptIds })),
   sectionMasteryDefs: enSectionMasteryDefs,
   migrationContext: enMigrationContext,
-  contentVersion: 'en.present-perfect-v1',
-  vocabulary: enVocabulary,
-  vocabById: EN_VOCAB_BY_ID,
+  contentVersion: 'en.week1-v1',
+  // Statik envanter + öğrencinin Okumadan KENDİ seçtikleri (yalnızca İngilizce cephe).
+  get vocabulary() { return combinedEnglishVocabulary(); },
+  get vocabById() { return combinedEnglishVocabById(); },
 };
 
 export const deContent: ContentFacade = {

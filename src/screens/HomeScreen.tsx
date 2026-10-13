@@ -4,6 +4,8 @@ import { getGlobalSummary, getTopicProgressStats } from '../lib/progress';
 import { computeTopicMastery } from '../lib/mastery';
 import { goalProgress } from '../lib/daily-goal';
 import { recommendNext } from '../lib/recommendation';
+import { weekPlanProgress } from '../content/en/skills-weekly';
+import { loadSkills, recommendWeeklyNext } from '../lib/skills-storage';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 
@@ -40,6 +42,25 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
     () => new Map(computeTopicMastery(progress, C.allExercises, C.topicMasteryDefs).map((item) => [item.topicId, item])),
     [progress, C],
   );
+  const isEnglish = C.language === 'en';
+  const weekly = useMemo(() => {
+    if (!isEnglish) return null;
+    let skills = null as ReturnType<typeof loadSkills> | null;
+    try { skills = loadSkills(localStorage); } catch { skills = null; }
+    if (!skills) return null;
+    const topicAccuracy = new Map<string, number | null>(
+      topics.map((t) => {
+        const stats = getTopicProgressStats(progress, t.id, C.primaryExercisesForTopic(t.id));
+        return [t.id, stats.accuracy] as [string, number | null];
+      }),
+    );
+    return {
+      skills,
+      next: recommendWeeklyNext({ skills, topicAccuracy, openMistakes: totalMistakes }),
+      doneActivities: weekPlanProgress(skills.weekly.completedActivities ?? []).done,
+      totalActivities: weekPlanProgress([]).total,
+    };
+  }, [isEnglish, progress, topics, C, totalMistakes]);
 
   return (
     <main className="mx-auto w-full max-w-[980px] px-5 pb-24 pt-6 sm:pt-10">
@@ -108,6 +129,29 @@ export function HomeScreen({ api, navigate }: { api: ProgressApi; navigate: (rou
           <MiniStat label="Aktif hata" value={String(totalMistakes)} />
         </div>
       </section>
+
+      {isEnglish && weekly && (
+        <section className="card mt-6 p-5" aria-label="Bu haftanın planı" style={{ borderColor: 'var(--color-good)', boxShadow: '0 5px 0 0 var(--color-good)' }}>
+          <p className="eyebrow" style={{ color: 'var(--color-good-deep)' }}>Bu Haftanın Planı · 15–20 saat hedefi</p>
+          <p className="mt-1 text-xl font-bold">Önerilen Sonraki Çalışma: {weekly.next.label}</p>
+          <p className="text-[0.95rem] text-ink-soft">{weekly.next.detail}</p>
+          <p className="numeral mt-2 text-sm text-ink-faint">
+            {weekly.doneActivities} / {weekly.totalActivities} aktivite tamamlandı
+          </p>
+          <div className="rail mt-2 h-2">
+            <div className="rail-fill" style={{ width: `${Math.max(2, Math.round((weekly.doneActivities / Math.max(1, weekly.totalActivities)) * 100))}%`, background: 'var(--color-good)' }} />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'weekly' })}>
+              Haftalık Planı Aç →
+            </button>
+            <button type="button" className="btn" onClick={() => navigate({ name: 'reading' })}>Reading</button>
+            <button type="button" className="btn" onClick={() => navigate({ name: 'listening' })}>Listening</button>
+            <button type="button" className="btn" onClick={() => navigate({ name: 'speaking' })}>Speaking</button>
+            <button type="button" className="btn" onClick={() => navigate({ name: 'writing' })}>Writing</button>
+          </div>
+        </section>
+      )}
 
       <section className="mt-10" aria-labelledby="konular-baslik">
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">

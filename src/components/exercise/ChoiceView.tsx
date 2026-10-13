@@ -34,7 +34,7 @@ export function ChoiceView({ exercise, value, onChange, locked, result }: Exerci
     <div className="flex flex-col gap-3" role="radiogroup" aria-label="Cevap seçenekleri">
       {options.map((option, index) => (
         <button
-          key={option}
+          key={`${option}::${index}`}
           type="button"
           role="radio"
           aria-checked={option === selected}

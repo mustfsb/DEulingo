@@ -11,6 +11,9 @@ import { semanticMetricsSummary } from '../lib/semantic/metrics';
 import { JEV_ACCEPT_THRESHOLD, JEV_MODEL_ID, JEV_TIMEOUT_MS } from '../lib/semantic/threshold';
 import { validationMatrix } from '../lib/semantic/policy';
 import type { Difficulty, Skill } from '../content/types';
+import { EN_WEEK_1_PLAN, formatMinutes } from '../content/en/skills-weekly';
+import { familyFactors, observations } from '../lib/week-calibration';
+import type { EnSkillsState } from '../lib/skills-storage';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 const SKILLS: Skill[] = ['recognition', 'recall', 'production', 'correction', 'speaking'];
@@ -23,7 +26,7 @@ const SKILL_LABEL: Record<Skill, string> = {
   speaking: 'Sesli',
 };
 
-export function DebugScreen() {
+export function DebugScreen({ skills }: { skills?: EnSkillsState }) {
   const [showAll, setShowAll] = useState(false);
   const [metricsTick, setMetricsTick] = useState(0);
   const metrics = useMemo(() => semanticMetricsSummary(), [metricsTick]);
@@ -228,6 +231,7 @@ export function DebugScreen() {
           </tbody>
         </table>
       </section>
+      <WeekWorkloadDiagnostics skills={skills} />
     </main>
   );
 }
@@ -244,5 +248,58 @@ function sourcesBlock(exercises: { type: string; skill: string; wordBank?: { dir
         Üretim: {exercises.filter((item) => ['production', 'correction', 'speaking'].includes(item.skill)).length}
       </p>
     </div>
+  );
+}
+
+/**
+ * Hafta 1 süre tanılaması: model tahmini (içerikten) ↔ ölçülen aktif süre.
+ * Ölçüm yalnızca gerçekten çalışılmış aktiviteler için vardır; boş hücre
+ * "henüz ölçülmedi" demektir, uydurma değer gösterilmez.
+ */
+function WeekWorkloadDiagnostics({ skills }: { skills?: EnSkillsState }) {
+  const observed = useMemo(() => new Map((skills ? observations(skills) : []).map((o) => [o.activityId, o])), [skills]);
+  const factors = useMemo(() => (skills ? familyFactors(skills) : new Map()), [skills]);
+  const m = (seconds: number) => (seconds / 60).toFixed(1);
+  return (
+    <section className="mt-10" aria-labelledby="week-workload">
+      <h2 id="week-workload" className="font-display text-2xl">Hafta 1 iş yükü: tahmin ↔ gözlem</h2>
+      <p className="mt-1 text-ink-soft">
+        Tahminler içerikten türetilen model öngörüsüdür (hızlı / tipik / yavaş dk). “Gözlem” yalnızca `Git` ile açılıp
+        ölçülen aktivitelerde dolar. Oran = gözlem ÷ hızlı tahmin.
+      </p>
+      {factors.size > 0 && (
+        <p className="mt-2">
+          Aile katsayıları: {[...factors].map(([family, f]) => `${family} ×${f.factor} (n=${f.samples})`).join(' · ')}
+        </p>
+      )}
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-left text-[0.8rem]">
+          <thead>
+            <tr><th>Aktivite</th><th>Aile</th><th>Öğe</th><th>Hızlı</th><th>Tipik</th><th>Yavaş</th><th>Gözlem</th><th>Oran</th><th>İşaret</th></tr>
+          </thead>
+          <tbody>
+            {EN_WEEK_1_PLAN.flatMap((session) => session.activities).map((a) => {
+              const o = observed.get(a.id);
+              return (
+                <tr key={a.id} className="border-t border-line">
+                  <td>{a.id}{a.tier === 'extra' ? ' (ek)' : ''}</td>
+                  <td>{a.family}</td>
+                  <td>{a.workload.items}</td>
+                  <td>{m(a.workload.seconds.fast)}</td>
+                  <td>{m(a.workload.seconds.typical)}</td>
+                  <td>{m(a.workload.seconds.slow)}</td>
+                  <td>{o ? `${o.actualMinutes}${o.completed ? '' : ' (bitmedi)'}` : '—'}</td>
+                  <td>{o ? o.ratio.toFixed(2) : '—'}</td>
+                  <td>{o ? o.flag : a.workload.reachable ? '' : 'İÇERİK YOK'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-ink-soft">
+        Çekirdek toplam: {EN_WEEK_1_PLAN.map((s) => `${s.code} ${formatMinutes(s.minutes)}`).join(' · ')}
+      </p>
+    </section>
   );
 }

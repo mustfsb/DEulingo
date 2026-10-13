@@ -72,7 +72,7 @@ export function GeneralReviewScreen({
           <span className="text-[0.95rem] text-ink-soft">
             ~{previewReviewSize('mixed', undefined, C.language)} soru
             {C.language === 'en'
-              ? ' · have/has → V3 → for/since → cümle → dinleme'
+              ? ' · Present Perfect → Sentence Structure → Past Perfect → Gerund → Conditionals → Prepositions'
               : ' · kelime → cümle → saat → Modalverben → yemek → dinleme'}
           </span>
         </span>

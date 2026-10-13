@@ -60,6 +60,8 @@ export function languageOfTopicId(topicId: string | undefined): LearningLanguage
 
 export function languageOfExerciseId(exerciseId: string | undefined): LearningLanguage | undefined {
   if (!exerciseId) return undefined;
-  if (exerciseId.startsWith('en-') || exerciseId.startsWith('vocab-en-v-') || exerciseId.startsWith('gr-en-')) return 'en';
+  // Kelime soruları: `vocab-en-v-*` (envanter), `vocab-en-uv-*` (öğrencinin Okumadan seçtikleri),
+  // `vocab-match-en-*` (eşleştirme setleri). Almanca kelime kimlikleri bunlarla başlamaz.
+  if (exerciseId.startsWith('en-') || exerciseId.startsWith('gr-en-') || /^vocab-(?:match-)?en-u?v-/.test(exerciseId)) return 'en';
   return 'de';
 }

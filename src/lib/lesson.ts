@@ -11,6 +11,7 @@
 
 import type { Exercise } from '../content/types';
 import type { SessionPresentation, UserProgress } from './storage';
+import { stableHash } from '../content/parser/text.ts';
 import { weaknessScore } from './progress';
 
 export type { SessionPresentation } from './storage';
@@ -23,11 +24,26 @@ export function buildReviewQueue(
   exercises: Exercise[],
   progress: UserProgress,
   limit = 12,
+  /**
+   * Esit zayiflik puanlilar arasi cesitlilik tohumu. Verilmezse sira
+   * kararli (testler); verilirse zayif-oncelik korunur, esitler karisir.
+   */
+  seed?: string,
 ): string[] {
   return exercises
     .map((exercise) => ({ id: exercise.id, score: weaknessScore(progress, exercise.id) }))
     .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (seed
+          ? (() => {
+              const ha = stableHash(`${seed}#${a.id}`);
+              const hb = stableHash(`${seed}#${b.id}`);
+              return ha < hb ? -1 : ha > hb ? 1 : 0;
+            })()
+          : 0),
+    )
     .slice(0, limit)
     .map((item) => item.id);
 }

@@ -20,6 +20,7 @@
 import type { Difficulty, Exercise } from '../content/types';
 import type { SessionPresentation, UserProgress } from './storage';
 import { computeConceptProgress } from './mastery';
+import { isPracticeSetId } from '../content/en/practice-sets';
 
 export type SessionMode =
   | 'normal'
@@ -88,6 +89,11 @@ export const SESSION_SIZE_OVERRIDES: Record<string, Partial<Record<SessionMode, 
   'topic.dativ': { normal: 22, full: 52, quick: 10, challenge: 18 },
   // ~155 alistirmalik, uretim agirlikli İngilizce Present Perfect havuzu.
   'en.present-perfect': { normal: 28, full: 55, quick: 12, challenge: 22 },
+  'en.sentence-structure': { normal: 28, full: 55, quick: 12, challenge: 22 },
+  'en.past-perfect': { normal: 26, full: 50, quick: 12, challenge: 20 },
+  'en.gerund-infinitive': { normal: 28, full: 55, quick: 12, challenge: 22 },
+  'en.conditionals': { normal: 28, full: 55, quick: 12, challenge: 22 },
+  'en.prepositions-collocations': { normal: 28, full: 55, quick: 12, challenge: 22 },
 };
 
 const LESSON_MODES = new Set<SessionMode>(['normal', 'full', 'quick', 'challenge']);
@@ -129,6 +135,26 @@ export const SESSION_CLOSING_TASKS: Record<string, Partial<Record<SessionMode, s
   'en.present-perfect': {
     full: ['en-pp-write-experience'],
     challenge: ['en-pp-write-experience'],
+  },
+  'en.sentence-structure': {
+    full: ['en-ss-exp-free-because'],
+    challenge: ['en-ss-exp-free-because'],
+  },
+  'en.past-perfect': {
+    full: ['en-ppf-free-personal'],
+    challenge: ['en-ppf-free-personal'],
+  },
+  'en.gerund-infinitive': {
+    full: ['en-gi-free-personal-2'],
+    challenge: ['en-gi-free-personal-2'],
+  },
+  'en.conditionals': {
+    full: ['en-cond-hypo-free-money'],
+    challenge: ['en-cond-hypo-free-money'],
+  },
+  'en.prepositions-collocations': {
+    full: ['en-pc-free-personal-1'],
+    challenge: ['en-pc-free-personal-1'],
   },
 };
 
@@ -340,7 +366,13 @@ export function buildSessionPlan(input: SessionInput): SessionPlan {
 
   let candidates = uniqueExercises(pool);
   if (mode === 'section') {
-    candidates = sectionId ? candidates.filter((exercise) => exercise.sectionId === sectionId) : [];
+    // Pratik setleri (`set.*`) havuzu zaten kapsam icinde gelir; ozet bolumu
+    // kimlikleri ise alistirmanin kendi `sectionId` degeriyle suzulur.
+    candidates = sectionId
+      ? isPracticeSetId(sectionId)
+        ? candidates
+        : candidates.filter((exercise) => exercise.sectionId === sectionId)
+      : [];
   }
   if (mode === 'challenge' || mode === 'gr-challenge') {
     candidates = challengeCandidates(candidates);
@@ -528,9 +560,15 @@ function selectByMix(
     hard: Math.round(size * mix.hard),
   };
 
+  // Ince bir kova (havuzun %10'u gibi) kotadan fazla alinmaz: yoksa o birkac
+  // alistirma HER oturumda ayni sirayla gelir. Tavan, kovanin havuzdaki
+  // payina oranlidir; eksik kalan yer asagida puanla (esitlikte tohumla)
+  // doldurulur, boylece secki oturumdan oturuma degisir.
+  const total = Math.max(1, candidates.length);
   const picked: Exercise[] = [];
   for (const difficulty of ['easy', 'medium', 'hard'] as Difficulty[]) {
-    picked.push(...buckets[difficulty].slice(0, quota[difficulty]));
+    const proportionalCap = Math.round((buckets[difficulty].length * size) / total);
+    picked.push(...buckets[difficulty].slice(0, Math.min(quota[difficulty], proportionalCap)));
   }
 
   // Kota tutmadiysa (kova bos ya da yuvarlanma) kalan en yuksek puanlilarla doldur.

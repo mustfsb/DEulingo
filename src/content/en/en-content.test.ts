@@ -41,8 +41,15 @@ function sectionText(sectionId: string): string {
 }
 
 describe('İngilizce içerik denetimi', () => {
-  it('yalnızca Present Perfect vardır (gelecek konular uydurulmaz)', () => {
-    expect(enTopics.map((topic) => topic.id)).toEqual(['en.present-perfect']);
+  it('1. hafta: 6 konu (Present Perfect korunur + 5 yeni)', () => {
+    expect(enTopics.map((topic) => topic.id)).toEqual([
+      'en.present-perfect',
+      'en.sentence-structure',
+      'en.past-perfect',
+      'en.gerund-infinitive',
+      'en.conditionals',
+      'en.prepositions-collocations',
+    ]);
     expect(EN_TOPIC_BY_ID.has('en.present-perfect')).toBe(true);
   });
 
@@ -52,10 +59,22 @@ describe('İngilizce içerik denetimi', () => {
     expect(new Set(enAllExercises.map((exercise) => exercise.id)).size).toBe(enAllExercises.length);
   });
 
+  it('konu havuz büyüklükleri (hafta hedefleri)', () => {
+    const count = (topicId: string) => lesson.filter((e) => e.topicId === topicId).length;
+    expect(count('en.present-perfect')).toBeGreaterThanOrEqual(140);
+    expect(count('en.sentence-structure')).toBeGreaterThanOrEqual(100);
+    expect(count('en.past-perfect')).toBeGreaterThanOrEqual(80);
+    expect(count('en.gerund-infinitive')).toBeGreaterThanOrEqual(100);
+    expect(count('en.conditionals')).toBeGreaterThanOrEqual(100);
+    expect(count('en.prepositions-collocations')).toBeGreaterThanOrEqual(100);
+  });
+
   it('kimlik ve konu kuralları (Almancayla çakışmaz)', () => {
+    const valid = new Set(enTopics.map((t) => t.id));
     for (const exercise of lesson) {
       expect(exercise.id.startsWith('en-')).toBe(true);
-      expect(exercise.topicId).toBe('en.present-perfect');
+      expect(valid.has(exercise.topicId), exercise.id).toBe(true);
+      expect(exercise.topicId.startsWith('en.')).toBe(true);
       expect(exercise.reviewOnly).not.toBe(true);
     }
     for (const exercise of EN_REVIEW_BANK) {
@@ -219,11 +238,15 @@ describe('İngilizce içerik denetimi', () => {
   });
 
   it('türetilmiş müfredat haritası ders havuzuyla tutarlı', () => {
-    expect(enTopics[0].exerciseIds.length).toBe(lesson.length);
-    expect(enTopics[0].conceptIds.length).toBe(EN_CONCEPTS.length);
-    expect(enTopics[0].sectionIds.length).toBe(enSummaries[0].sections.length);
-    for (const id of enTopics[0].exerciseIds) {
-      expect(enMigrationContext.topicOfExercise(id)?.topicId).toBe('en.present-perfect');
+    const total = enTopics.reduce((s, t) => s + t.exerciseIds.length, 0);
+    expect(total).toBe(lesson.length);
+    expect(enTopics[0].exerciseIds.length).toBeGreaterThanOrEqual(140);
+    for (const topic of enTopics) {
+      expect(topic.conceptIds.length).toBeGreaterThan(0);
+      expect(topic.sectionIds.length).toBeGreaterThan(0);
+      for (const id of topic.exerciseIds) {
+        expect(enMigrationContext.topicOfExercise(id)?.topicId).toBe(topic.id);
+      }
     }
   });
 
@@ -231,38 +254,57 @@ describe('İngilizce içerik denetimi', () => {
     expect(EN_PRESENT_PERFECT_SUMMARY.sections.length).toBeGreaterThanOrEqual(11);
     expect(EN_PRESENT_PERFECT_SUMMARY.keyPoints.length).toBeGreaterThanOrEqual(8);
     expect(EN_PRESENT_PERFECT_SUMMARY.recallQuestions.length).toBeGreaterThanOrEqual(4);
-    expect(enReviewSummary.sections.length).toBeGreaterThanOrEqual(3);
+    expect(enSummaries.length).toBe(6);
+    for (const summary of enSummaries) {
+      expect(summary.sections.length).toBeGreaterThanOrEqual(4);
+      expect(summary.keyPoints.length).toBeGreaterThanOrEqual(3);
+    }
+    expect(enReviewSummary.sections.length).toBeGreaterThanOrEqual(8);
   });
 
-  it('kelime envanteri yalnızca konunun öğrettikleri (~30–45 girdi)', () => {
-    expect(EN_VOCABULARY.length).toBeGreaterThanOrEqual(30);
-    expect(EN_VOCABULARY.length).toBeLessThanOrEqual(45);
+  it('kelime envanteri konuların öğrettikleri (collocation/chunk dahil)', () => {
+    expect(EN_VOCABULARY.length).toBeGreaterThanOrEqual(100);
     expect(new Set(EN_VOCABULARY.map((entry) => entry.id)).size).toBe(EN_VOCABULARY.length);
     for (const entry of EN_VOCABULARY) {
       expect(entry.id.startsWith('en-v-')).toBe(true);
-      expect(entry.topicIds).toContain('en.present-perfect');
       expect(entry.lang).toBe('en');
+      expect(entry.topicIds.length).toBeGreaterThan(0);
     }
+    const has = (id: string) => EN_VOCABULARY.some((entry) => entry.id === id);
+    expect(has('en-v-pay-attention')).toBe(true);
+    expect(has('en-v-look-forward-doing')).toBe(true);
+    expect(has('en-v-interested-in')).toBe(true);
   });
 });
 
-describe('İngilizce oturum çeşitliliği (50 tohum)', () => {
+describe('İngilizce oturum çeşitliliği (yeni konular dahil)', () => {
   const modes = ['normal', 'full', 'challenge'] as const;
-  for (const mode of modes) {
-    it(`${mode}: oturum içi birincil ID tekrarı yok`, () => {
-      for (let seed = 0; seed < 50; seed += 1) {
-        const plan = buildSessionPlan({
-          pool: lesson,
-          progress: createEmptyProgress(),
-          mode,
-          topicId: 'en.present-perfect',
-          seed: `en present-perfect ${mode} ${seed}`,
-        });
-        const ids = plan.primaryQueue.map((item) => item.exerciseId);
-        expect(new Set(ids).size, `${mode} tohum ${seed}`).toBe(ids.length);
-        expect(ids.length).toBeGreaterThan(0);
-      }
-    });
+  const topicIds = [
+    'en.present-perfect',
+    'en.sentence-structure',
+    'en.past-perfect',
+    'en.gerund-infinitive',
+    'en.conditionals',
+    'en.prepositions-collocations',
+  ];
+  for (const topicId of topicIds) {
+    for (const mode of modes) {
+      it(`${topicId} ${mode}: oturum içi birincil ID tekrarı yok`, () => {
+        const pool = lesson.filter((e) => e.topicId === topicId);
+        for (let seed = 0; seed < 20; seed += 1) {
+          const plan = buildSessionPlan({
+            pool,
+            progress: createEmptyProgress(),
+            mode,
+            topicId,
+            seed: `en ${topicId} ${mode} ${seed}`,
+          });
+          const ids = plan.primaryQueue.map((item) => item.exerciseId);
+          expect(new Set(ids).size, `${topicId} ${mode} tohum ${seed}`).toBe(ids.length);
+          expect(ids.length).toBeGreaterThan(0);
+        }
+      });
+    }
   }
 
   it('Genel Tekrar (mixed): 50 tohumda oturum içi tekrar yok', () => {

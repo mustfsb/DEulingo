@@ -65,13 +65,13 @@ describe('İngilizce kapsama taraması', () => {
   it('kelime ekranları İngilizce envanterle çizilir', () => {
     const { api } = enApi(createEmptyProgress());
     const home = mount(createElement(VocabHomeScreen, {} as never), api);
-    expect(home.text()).toContain('38');
+    expect(home.text()).toContain(String(EN_VOCABULARY.length));
     expect(home.text()).toContain('İngilizce → Türkçe');
     expect(home.text()).toContain('Present Perfect');
     act(() => home.root.unmount());
 
     const list = mount(createElement(VocabListScreen, {} as never), api);
-    expect(list.text()).toContain('38');
+    expect(list.text()).toContain(String(EN_VOCABULARY.length));
     expect(list.dom.window.document.querySelector('input')?.placeholder).toContain('İngilizce');
     act(() => list.root.unmount());
   });
@@ -150,12 +150,12 @@ describe('İngilizce kapsama taraması', () => {
     act(() => view.root.unmount());
   });
 
-  it('istatistik ekranı İngilizce diliminde ses seçici yerine bilgi gösterir', () => {
+  it('istatistik ekranı İngilizce diliminde Piper ses seçici gösterir', () => {
     const { api } = enApi(createEmptyProgress());
     const view = mount(createElement(StatsScreen, {} as never), api);
     expect(view.text()).toContain('Present Perfect');
-    expect(view.text()).toContain('en-GB');
-    expect(view.dom.window.document.querySelector('select[aria-label="Telaffuz sesi"]')).toBeNull();
+    const select = view.dom.window.document.querySelector('select[aria-label="Telaffuz sesi"]');
+    expect(select).not.toBeNull();
     act(() => view.root.unmount());
   });
 
@@ -217,8 +217,10 @@ describe('İngilizce kapsama taraması', () => {
     await controller.speak('ctx', { text: 'Guten Morgen', language: 'de-DE', role: 'prompt' }, 'normal');
     expect(requested).toBe(1);
     expect(played).toEqual(['blob:x']);
-    // Düğüm ortamında Web Speech yok: reddeder ama çökmez.
-    await expect(controller.speak('ctx', { text: 'Hello', language: 'en-GB', role: 'prompt' }, 'normal')).rejects.toThrow();
+    // İngilizce de artık Piper hattından okunur (aynı enjekte istek).
+    await controller.speak('ctx', { text: 'Hello', language: 'en-GB', role: 'prompt' }, 'normal');
+    expect(requested).toBe(2);
+    expect(played).toEqual(['blob:x', 'blob:x']);
     expect(contentFor('en').language).toBe('en');
   });
 });

@@ -39,10 +39,35 @@ export function pp(
   };
 }
 
+/** Yeni 1. hafta konuları için genel üretici (SVO, Past Perfect, Gerund, Conditionals, Prep). */
+export function enEx(
+  topicId: string,
+  topicTitle: string,
+  id: string,
+  type: Exercise['type'],
+  difficulty: Exercise['difficulty'],
+  skill: Exercise['skill'],
+  conceptIds: string[],
+  rest: Rest,
+): Exercise {
+  return {
+    id,
+    topicId,
+    topic: topicTitle,
+    type,
+    difficulty,
+    skill,
+    conceptIds,
+    origin: 'authored',
+    source: { file: topicId, naturalKey: id },
+    ...rest,
+  };
+}
+
 /** Kelime bankası jetonu — `t1, t2, …` kararlı kimlikler. */
 export const tok = (...texts: string[]) => texts.map((text, index) => ({ id: `t${index + 1}`, text }));
 
-/** İngilizce dinleme istemi (en-GB; oynatma tarayıcı Web Speech ile). */
+/** İngilizce dinleme istemi (en-GB; oynatma önce yerel Piper, yoksa Web Speech ile). */
 export const listenEn = (text: string) => ({
   prompt: { text, language: 'en-GB' as const, role: 'prompt' as const },
 });

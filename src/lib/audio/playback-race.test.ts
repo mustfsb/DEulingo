@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AudioController, browserTimer, type AudioHandle, type TimerDriver } from './playback';
-import type { GermanAudioTarget, GermanVoiceId } from './tts';
+import type { GermanAudioTarget, SpeechAudioTarget } from './tts';
 
 const german = (text: string): GermanAudioTarget => ({ text, language: 'de-DE', role: 'prompt' });
 
@@ -103,7 +103,7 @@ describe('AudioController exercise lifecycle', () => {
 
   it('handles an aborted TTS request silently without playback', async () => {
     const played: string[] = [];
-    const requestSpeech = vi.fn((_target: GermanAudioTarget, _speed: string, _voice: GermanVoiceId, signal: AbortSignal) =>
+    const requestSpeech = vi.fn((_target: SpeechAudioTarget, _speed: string, _voice: string, signal: AbortSignal) =>
       new Promise<{ url: string; cached: boolean }>((_resolve, reject) =>
         signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))),
       ),
@@ -219,5 +219,45 @@ describe('AudioController exercise lifecycle', () => {
     sounds[0].end();
     await Promise.all([one, two]);
     expect(played).toEqual(['/second.wav']);
+  });
+
+  it('routes the English voice setting to Piper (alan stays alan, thorsten maps to alan)', async () => {
+    const seen: string[] = [];
+    const played: string[] = [];
+    const sounds: FakeAudio[] = [];
+    const controller = new AudioController({
+      createAudio: (url) => { const audio = new FakeAudio(url, played); sounds.push(audio); return audio; },
+      requestSpeech: vi.fn(async (_target: SpeechAudioTarget, _speed: string, voice: string) => {
+        seen.push(voice);
+        return { url: `/en-${voice}.wav`, cached: false };
+      }),
+    });
+    const english = (text: string): SpeechAudioTarget => ({ text, language: 'en-GB', role: 'prompt' });
+    controller.activate('A');
+    const flush = async () => {
+      for (let i = 0; i < 10 && sounds.length === 0; i += 1) await Promise.resolve();
+    };
+    const playAll = async () => {
+      for (let i = 0; i < 10 && sounds.length < seen.length; i += 1) await Promise.resolve();
+      sounds.at(-1)!.end();
+    };
+    let pending = controller.speak('A', english('Hello.'), 'normal', 'alan');
+    await flush();
+    sounds.at(-1)!.end();
+    await pending;
+    pending = controller.speak('A', english('Hello.'), 'normal', 'thorsten');
+    await playAll();
+    await pending;
+    pending = controller.speak('A', english('Hello.'), 'normal', 'kerstin');
+    await playAll();
+    await pending;
+    pending = controller.speak('A', english('Hello.'), 'normal', 'cori');
+    await playAll();
+    await pending;
+    pending = controller.speak('A', english('Hello.'), 'normal', 'vctk');
+    await playAll();
+    await pending;
+    expect(seen).toEqual(['alan', 'alan', 'jenny', 'cori', 'vctk']);
+    expect(played).toEqual(['/en-alan.wav', '/en-alan.wav', '/en-jenny.wav', '/en-cori.wav', '/en-vctk.wav']);
   });
 });

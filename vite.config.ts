@@ -6,7 +6,7 @@ import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { loadConfig, resolveSourcePaths, syncContent } from './scripts/sync-content.ts';
 import { AUDIO_CACHE_DIRECTORY, createTtsService, ttsHealth, voiceFileFor, TTS_AUDIO_URL_VERSION } from './scripts/tts-service.ts';
-import { germanVoiceProfile, validateSpeechRequest, type GermanVoiceId } from './src/lib/audio/tts.ts';
+import { validateSpeechRequest, voiceProfileFor } from './src/lib/audio/tts.ts';
 import { loadLocalEnv } from './server/env.ts';
 import { handleValidate } from './server/validate-handler.ts';
 
@@ -61,19 +61,20 @@ function obsidianContent(): Plugin {
  * calisir ve WAV sadece proje-ici cache'ten okunur.
  */
 function localTts(): Plugin {
-  const services = new Map<GermanVoiceId, ReturnType<typeof createTtsService>>();
-  const serviceFor = (voice: GermanVoiceId) => {
-    const existing = services.get(voice);
+  const services = new Map<string, ReturnType<typeof createTtsService>>();
+  const serviceFor = (language: 'de-DE' | 'en-GB', voice: string) => {
+    const key = `${language}:${voice}`;
+    const existing = services.get(key);
     if (existing) return existing;
-    const profile = germanVoiceProfile(voice);
+    const profile = voiceProfileFor(language, voice);
     const service = createTtsService({
       voice: profile.model,
       voiceVersion: profile.version,
-      voiceFile: voiceFileFor(voice),
-      voiceId: profile.id,
-      speaker: 'speaker' in profile ? profile.speaker : undefined,
+      voiceFile: voiceFileFor(profile.id, language),
+      voiceId: profile.id as never,
+      speaker: 'speaker' in profile ? (profile.speaker as number) : undefined,
     });
-    services.set(voice, service);
+    services.set(key, service);
     return service;
   };
   const json = (response: import('node:http').ServerResponse, status: number, value: unknown) => {
@@ -116,7 +117,7 @@ function localTts(): Plugin {
           const checked = validateSpeechRequest(parsed);
           if (!checked.ok) return json(response, 400, { error: checked.error });
           try {
-            const generated = await serviceFor(checked.value.voice).generate(checked.value);
+            const generated = await serviceFor(checked.value.language, checked.value.voice).generate(checked.value);
             return json(response, 200, { key: generated.key, cached: generated.cached, url: `/api/tts/audio/${generated.key}?v=${TTS_AUDIO_URL_VERSION}` });
           } catch (error) {
             server.config.logger.warn(`[piper] üretim hatası: ${(error as Error).message}`);

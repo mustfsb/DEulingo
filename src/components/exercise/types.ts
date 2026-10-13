@@ -1,6 +1,6 @@
 import type { Exercise } from '../../content/types';
 import type { ExerciseInput, ValidationResult } from '../../lib/validation';
-import type { GermanVoiceId, SpeechSpeed } from '../../lib/audio/tts';
+import type { PiperVoiceId, SpeechSpeed } from '../../lib/audio/tts';
 
 export interface ExerciseViewProps {
   exercise: Exercise;
@@ -14,7 +14,13 @@ export interface ExerciseViewProps {
   /** Tek AudioController bağlamı; yanlış ekrana ses sızmaz. */
   audioContextId?: string;
   speechSpeed?: SpeechSpeed;
-  speechVoice?: GermanVoiceId;
+  speechVoice?: PiperVoiceId;
+  /**
+   * Sunum tohumu (oturum + soru olusumu). Verilirse eslestirme sag
+   * sutunu bu tohumla bagimsiz karisir; secenek/cip sirasi ust katmanda
+   * `presentExercise` ile turetilmis kopyadan gelir.
+   */
+  presentationSeed?: string;
 }
 
 /** Bir alistirmanin cevaplanmis sayilmasi icin gereken en az girdi. */

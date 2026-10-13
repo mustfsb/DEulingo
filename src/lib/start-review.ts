@@ -93,7 +93,7 @@ export function previewReviewSize(mode: ReviewMode, topicId?: string, language: 
 /** Tüm hatalardan tekrar oturumu (yalnızca aktif dilin hataları — dilim ayrı tutulur). */
 export function startMistakeSession(api: ProgressApi, navigate: (route: Route) => void): boolean {
   const facade = facadeFor(api);
-  const ids = buildReviewQueue(facade.getExercises(Object.keys(api.progress.mistakes)), api.progress, 15)
+  const ids = buildReviewQueue(facade.getExercises(Object.keys(api.progress.mistakes)), api.progress, 15, `mistakes:${Date.now()}`)
     .filter((id) => facade.exercisesById.has(id));
   if (!ids.length) return false;
   api.update((current) => ({

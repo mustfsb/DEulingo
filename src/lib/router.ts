@@ -12,12 +12,22 @@ import { useCallback, useEffect, useState } from 'react';
 import type { SessionMode } from './storage';
 import { SECTION_BY_ID, TOPIC_BY_ID, TOPIC_BY_SLUG, TOPICS } from '../content/curriculum/topics';
 import { EN_SECTION_BY_ID, EN_TOPIC_BY_ID, EN_TOPIC_BY_SLUG } from '../content/en/topics';
+import { EN_PRACTICE_SET_BY_ID } from '../content/en/practice-sets';
+import { EN_LISTENING_BY_ID, EN_LISTENING_FOCUS_TAGS } from '../content/en/skills-listening';
+import { EN_EXTERNAL_LISTENING_BY_ID } from '../content/en/skills-listening-external';
+import { EN_SPEAKING_BY_ID, EN_SPEAKING_FOCUS_TAGS, type SpeakingKind } from '../content/en/skills-speaking';
+import { EN_WRITING_BY_ID } from '../content/en/skills-writing';
 import { LEGACY_SECTION_MAP, legacyDayTopic } from '../content/curriculum/legacy';
+
+/** Derin baglanti filtreleri (ekran ici filtrelerle ayni kume). */
+export type ListeningKindFilter = 'short' | 'dictation' | 'ielts';
+export type ReadingFilter = 'short' | 'ielts';
 
 export type Route =
   | { name: 'home' }
   | { name: 'topic'; topicId: string }
-  | { name: 'lesson'; topicId: string; mode: SessionMode; sectionId?: string }
+  /** `all`: bölüm/set havuzunun TAMAMI tek oturumda (haftalık plan). */
+  | { name: 'lesson'; topicId: string; mode: SessionMode; sectionId?: string; all?: boolean }
   | { name: 'review' }
   | { name: 'mistake-review' }
   | { name: 'complete' }
@@ -25,11 +35,21 @@ export type Route =
   | { name: 'summary'; topicId: string; sectionId?: string }
   | { name: 'review-summary'; sectionId?: string }
   | { name: 'general-review' }
-  | { name: 'mistakes' }
+  | { name: 'mistakes'; scope?: 'week1' }
   | { name: 'stats' }
   | { name: 'vocab' }
   | { name: 'vocab-list' }
   | { name: 'vocab-study'; kind: string; topicId?: string; size?: string }
+  | { name: 'reading'; filter?: ReadingFilter }
+  | { name: 'reading-passage'; passageId: string; view?: 'review' }
+  | { name: 'reading-intro' }
+  | { name: 'reading-vocab' }
+  | { name: 'writing'; taskId?: string; stage?: 'rewrite' }
+  | { name: 'listening'; topicId?: string; kind?: ListeningKindFilter; focus?: string; itemId?: string }
+  | { name: 'listening-task'; taskId: string }
+  | { name: 'speaking'; kind?: SpeakingKind; promptId?: string; topicId?: string; focus?: string; retry?: boolean }
+  | { name: 'weekly' }
+  | { name: 'weekly-analysis' }
   | { name: 'debug' };
 
 const MODE_SLUGS: Record<string, SessionMode> = {
@@ -98,12 +118,15 @@ function slugFor(topicId: string): string {
 function sectionFromSegment(
   topicId: string,
   segment: string | undefined,
+  allowSets = false,
 ): { topicId: string; sectionId: string } | undefined {
   if (!segment) return undefined;
   const de = SECTION_BY_ID.get(segment);
   if (de && de.topicId === topicId) return { topicId, sectionId: de.id };
   const en = EN_SECTION_BY_ID.get(segment);
   if (en && en.topicId === topicId) return { topicId, sectionId: en.id };
+  const set = allowSets ? EN_PRACTICE_SET_BY_ID.get(segment) : undefined;
+  if (set && set.topicId === topicId) return { topicId, sectionId: set.id };
   return undefined;
 }
 
@@ -116,6 +139,82 @@ function legacySection(id: string | undefined): { topicId: string; sectionId: st
 }
 
 const stripTrack = (segments: string[]) => segments.filter((segment) => segment !== 'private' && segment !== 'normal');
+
+/**
+ * Dinleme derin baglantisi: `#/dinleme[/konu/<slug>][/tur/<kisa|dikte|ielts>][/odak/<odak>][/parca/<parca>]`.
+ * Bilinmeyen degerler sessizce dusurulur; rota her zaman gecerli bir
+ * dinleme kapsamina iner (en kotu: filtresiz ev).
+ */
+function parseListeningRoute(rest: string[]): Route {
+  // `#/dinleme/gorev/<kimlik>`: gerçek sesli dış dinleme görevi.
+  if (rest[0] === 'gorev') {
+    return rest[1] && EN_EXTERNAL_LISTENING_BY_ID.has(rest[1]) ? { name: 'listening-task', taskId: rest[1] } : { name: 'listening' };
+  }
+  let topicId: string | undefined;
+  let kind: ListeningKindFilter | undefined;
+  let focus: string | undefined;
+  let itemId: string | undefined;
+  for (let i = 0; i + 1 < rest.length; i += 2) {
+    const key = rest[i];
+    const value = rest[i + 1];
+    if (key === 'konu') {
+      const topic = topicFromSegment(value);
+      if (topic && EN_TOPIC_BY_ID.has(topic)) topicId = topic;
+    } else if (key === 'tur') {
+      if (value === 'kisa') kind = 'short';
+      else if (value === 'dikte') kind = 'dictation';
+      else if (value === 'ielts') kind = 'ielts';
+    } else if (key === 'odak') {
+      if (EN_LISTENING_FOCUS_TAGS.includes(value)) focus = value;
+    } else if (key === 'parca') {
+      if (EN_LISTENING_BY_ID.has(value)) itemId = value;
+    }
+  }
+  const route: Extract<Route, { name: 'listening' }> = { name: 'listening' };
+  if (topicId) route.topicId = topicId;
+  if (kind) route.kind = kind;
+  if (focus) route.focus = focus;
+  if (itemId) route.itemId = itemId;
+  return route;
+}
+
+const SPEAKING_KINDS: SpeakingKind[] = ['read-aloud', 'shadowing', 'short-answer', 'topic', 'ielts-part1'];
+
+/**
+ * Konusma derin baglantisi: `#/konusma[/tur/<tur>][/istem/<istem>]`.
+ * Gecersiz tur/istem dusurulur; istem gecerliyse turle celisse bile
+ * istem acilir (en ozel hedef kazanir).
+ */
+function parseSpeakingRoute(rest: string[]): Route {
+  let kind: SpeakingKind | undefined;
+  let promptId: string | undefined;
+  let topicId: string | undefined;
+  let focus: string | undefined;
+  let retry = false;
+  for (let i = 0; i + 1 < rest.length; i += 2) {
+    const key = rest[i];
+    const value = rest[i + 1];
+    if (key === 'tur') {
+      if ((SPEAKING_KINDS as string[]).includes(value)) kind = value as SpeakingKind;
+    } else if (key === 'istem') {
+      if (EN_SPEAKING_BY_ID.has(value)) promptId = value;
+    } else if (key === 'konu') {
+      const topic = topicFromSegment(value);
+      if (topic && EN_TOPIC_BY_ID.has(topic)) topicId = topic;
+    } else if (key === 'odak') {
+      if (EN_SPEAKING_FOCUS_TAGS.includes(value)) focus = value;
+    } else if (key === 'tekrar') {
+      retry = value === '1';
+    }
+  }
+  const route: Extract<Route, { name: 'speaking' }> = { name: 'speaking' };
+  if (kind) route.kind = kind;
+  if (promptId) route.promptId = promptId;
+  if (topicId) route.topicId = topicId;
+  if (focus) route.focus = focus;
+  if (retry) route.retry = true;
+  return route;
+}
 
 export function parseHash(hash: string): Route {
   const path = hash
@@ -157,9 +256,9 @@ export function parseHash(hash: string): Route {
       if (!topicId) return { name: 'home' };
       const [, second, third] = segments;
       if (second === 'bolum') {
-        const section = sectionFromSegment(topicId, third);
+        const section = sectionFromSegment(topicId, third, true);
         return section
-          ? { name: 'lesson', topicId, mode: 'section', sectionId: section.sectionId }
+          ? { name: 'lesson', topicId, mode: 'section', sectionId: section.sectionId, ...(segments[3] === 'tumu' ? { all: true } : {}) }
           : { name: 'topic', topicId };
       }
       const mode = MODE_SLUGS[second ?? 'normal'];
@@ -212,9 +311,37 @@ export function parseHash(hash: string): Route {
         : { name: 'summary', topicId };
     }
     case 'hatalarim':
-      return { name: 'mistakes' };
+      return rest[0] === 'hafta' && rest[1] === '1' ? { name: 'mistakes', scope: 'week1' } : { name: 'mistakes' };
     case 'istatistik':
       return { name: 'stats' };
+    case 'okuma': {
+      if (rest[0] === 'tur') {
+        const filter = rest[1] === 'kisa' ? 'short' : rest[1] === 'ielts' ? 'ielts' : undefined;
+        return filter ? { name: 'reading', filter } : { name: 'reading' };
+      }
+      if (rest[0] === 'giris') return { name: 'reading-intro' };
+      if (rest[0] === 'kelime') return { name: 'reading-vocab' };
+      if (rest[0]) {
+        const passageId = decodeURIComponent(rest[0]);
+        return rest[1] === 'inceleme'
+          ? { name: 'reading-passage', passageId, view: 'review' }
+          : { name: 'reading-passage', passageId };
+      }
+      return { name: 'reading' };
+    }
+    case 'yazma':
+      if (rest[0] === 'gorev' && rest[1] && EN_WRITING_BY_ID.has(rest[1])) {
+        return rest[2] === 'asama' && rest[3] === 'yeniden'
+          ? { name: 'writing', taskId: rest[1], stage: 'rewrite' }
+          : { name: 'writing', taskId: rest[1] };
+      }
+      return { name: 'writing' };
+    case 'dinleme':
+      return parseListeningRoute(rest);
+    case 'konusma':
+      return parseSpeakingRoute(rest);
+    case 'haftalik':
+      return rest[0] === 'analiz' ? { name: 'weekly-analysis' } : { name: 'weekly' };
     case 'icerik':
       return { name: 'debug' };
     default:
@@ -230,7 +357,7 @@ export function hrefFor(route: Route): string {
       return `#/konu/${slugFor(route.topicId)}`;
     case 'lesson': {
       const prefix = `#/ders/${slugFor(route.topicId)}`;
-      if (route.mode === 'section' && route.sectionId) return `${prefix}/bolum/${encodeURIComponent(route.sectionId)}`;
+      if (route.mode === 'section' && route.sectionId) return `${prefix}/bolum/${encodeURIComponent(route.sectionId)}${route.all ? '/tumu' : ''}`;
       return `${prefix}/${SLUG_BY_MODE[route.mode]}`;
     }
     case 'review':
@@ -260,9 +387,46 @@ export function hrefFor(route: Route): string {
       return `${base}${topic}${size}`;
     }
     case 'mistakes':
-      return '#/hatalarim';
+      return route.scope === 'week1' ? '#/hatalarim/hafta/1' : '#/hatalarim';
     case 'stats':
       return '#/istatistik';
+    case 'reading':
+      if (route.filter === 'ielts') return '#/okuma/tur/ielts';
+      if (route.filter === 'short') return '#/okuma/tur/kisa';
+      return '#/okuma';
+    case 'reading-passage':
+      return `#/okuma/${encodeURIComponent(route.passageId)}${route.view === 'review' ? '/inceleme' : ''}`;
+    case 'reading-intro':
+      return '#/okuma/giris';
+    case 'reading-vocab':
+      return '#/okuma/kelime';
+    case 'writing':
+      return route.taskId
+        ? `#/yazma/gorev/${encodeURIComponent(route.taskId)}${route.stage === 'rewrite' ? '/asama/yeniden' : ''}`
+        : '#/yazma';
+    case 'listening': {
+      let href = '#/dinleme';
+      if (route.topicId) href += `/konu/${slugFor(route.topicId)}`;
+      if (route.kind) href += `/tur/${route.kind === 'short' ? 'kisa' : route.kind === 'dictation' ? 'dikte' : 'ielts'}`;
+      if (route.focus) href += `/odak/${encodeURIComponent(route.focus)}`;
+      if (route.itemId) href += `/parca/${encodeURIComponent(route.itemId)}`;
+      return href;
+    }
+    case 'listening-task':
+      return `#/dinleme/gorev/${encodeURIComponent(route.taskId)}`;
+    case 'speaking': {
+      let href = '#/konusma';
+      if (route.topicId) href += `/konu/${slugFor(route.topicId)}`;
+      if (route.kind) href += `/tur/${route.kind}`;
+      if (route.focus) href += `/odak/${encodeURIComponent(route.focus)}`;
+      if (route.promptId) href += `/istem/${encodeURIComponent(route.promptId)}`;
+      if (route.retry) href += '/tekrar/1';
+      return href;
+    }
+    case 'weekly':
+      return '#/haftalik';
+    case 'weekly-analysis':
+      return '#/haftalik/analiz';
     case 'debug':
       return '#/icerik';
   }

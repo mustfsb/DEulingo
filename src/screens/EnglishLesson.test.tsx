@@ -112,8 +112,16 @@ describe('İngilizce ders döngüsü', () => {
   });
 
   it('İngilizce havuzundaki her alıştırma bulunabilir (kayıp kimlik yok)', () => {
+    const valid = new Set([
+      'en.present-perfect',
+      'en.sentence-structure',
+      'en.past-perfect',
+      'en.gerund-infinitive',
+      'en.conditionals',
+      'en.prepositions-collocations',
+    ]);
     for (const id of [...enExercisesById.keys()]) {
-      expect(enExercisesById.get(id)?.topicId).toBe('en.present-perfect');
+      expect(valid.has(enExercisesById.get(id)?.topicId ?? ''), id).toBe(true);
     }
   });
 
@@ -123,6 +131,7 @@ describe('İngilizce ders döngüsü', () => {
       ['I', "I've"], ['you', "you've"], ['he', "he's"], ['she', "she's"], ['it', "it's"], ['we', "we've"], ['they', "they've"],
     ];
     const doc = view.dom.window.document;
+    const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const click = (text: string, exact = false) => {
       const button = [...doc.querySelectorAll<HTMLButtonElement>('button')].find((candidate) => {
         const content = candidate.textContent?.trim() ?? '';
@@ -132,8 +141,19 @@ describe('İngilizce ders döngüsü', () => {
       act(() => button.dispatchEvent(new doc.defaultView!.MouseEvent('click', { bubbles: true })));
       view.rerender();
     };
+    // Sol sutun karisik siralanir: `he`/`she` gibi alt dizeler icin
+    // sira-bagimsiz tam eslesme gerekir (`^\d+he(↳|$)`).
+    const clickLeft = (left: string) => {
+      const pattern = new RegExp(`^\\d+${escape(left)}(↳|$)`);
+      const button = [...doc.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
+        pattern.test(candidate.textContent?.trim() ?? ''),
+      );
+      if (!button) throw new Error(`Sol buton bulunamadı: ${left}`);
+      act(() => button.dispatchEvent(new doc.defaultView!.MouseEvent('click', { bubbles: true })));
+      view.rerender();
+    };
     for (const [left, right] of pairs) {
-      click(left);
+      clickLeft(left);
       click(right, true);
     }
     expect(doc.body.textContent).not.toContain('Henüz değil');

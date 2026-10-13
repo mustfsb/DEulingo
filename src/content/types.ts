@@ -100,9 +100,9 @@ export interface GermanAudioTarget {
 }
 
 /**
- * İngilizce (en-GB) ses hedefi — yerel Piper modelİ YOKTUR (`.piper/voices`
- * yalnızca `de_DE` içerir); oynatma her zaman tarayıcı Web Speech
- * (`en-GB` tercihi) üzerinden yapılır. Almanca akışına dokunmaz.
+ * İngilizce (en-GB) ses hedefi — birincil yol yerel Piper'dır
+ * (`en_GB-alan-medium` / `en_GB-jenny_dioco-medium`, Britanya aksanı);
+ * /api/tts yoksa tarayıcı Web Speech (`en-GB` tercihi) yedeğe düşer.
  */
 export interface EnglishAudioTarget {
   text: string;

@@ -67,6 +67,8 @@ export function VocabListScreen({
   }, [query, filter, byId, VOCABULARY]);
 
   const ctx = `vocab-list`;
+  const speechSpeed = progress.settings.speechSpeed;
+  const speechVoice = progress.settings.speechVoice;
 
   return (
     <main className="mx-auto w-full max-w-[980px] px-5 pb-24 pt-6 sm:pt-10">
@@ -128,6 +130,8 @@ export function VocabListScreen({
               <AudioButton
                 target={{ text: entry.ttsText, language: entryLang, role: 'vocabulary' }}
                 contextId={ctx}
+                speed={speechSpeed}
+                voice={speechVoice}
                 compact
               />
               <div className="min-w-0 flex-1">

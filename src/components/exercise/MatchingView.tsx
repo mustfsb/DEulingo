@@ -6,7 +6,7 @@ import { languageOfExerciseId } from '../../lib/language';
 import type { ExerciseViewProps } from './types';
 
 /** Eslestirme: once soldan, sonra sagdan sec. Tamamlanan cift isaretlenir. */
-export function MatchingView({ exercise, value, onChange, locked, audioContextId, speechSpeed = 'normal', speechVoice }: ExerciseViewProps) {
+export function MatchingView({ exercise, value, onChange, locked, audioContextId, speechSpeed = 'normal', speechVoice, presentationSeed }: ExerciseViewProps) {
   const pairs = useMemo(() => exercise.pairs ?? [], [exercise.pairs]);
   const answers = (value ?? {}) as Record<string, string>;
   const [activeLeft, setActiveLeft] = useState<string | null>(null);
@@ -14,9 +14,13 @@ export function MatchingView({ exercise, value, onChange, locked, audioContextId
   // Anahtar yine de konuma bağlıdır; yinelenen metin React uzlaşmasını bozmaz.
   const targetLang = languageOfExerciseId(exercise.id) === 'en' ? 'en' : 'de';
 
+  // Sag sutun soldan BAGIMSIZ karisir: ayni tohum sol sirayla ayni
+  // permutasyonu uretmesin diye `#right` soneki kullanilir. Tohum yoksa
+  // (test/izole kullanim) alistirma kimligi kararli duzeni verir.
+  const rightsSeed = `${presentationSeed ?? exercise.id}#right`;
   const rights = useMemo(
-    () => seededShuffle(pairs.map((pair) => pair.right), exercise.id),
-    [pairs, exercise.id],
+    () => seededShuffle(pairs.map((pair) => pair.right), rightsSeed),
+    [pairs, rightsSeed],
   );
 
   const takenRights = new Set(Object.values(answers));

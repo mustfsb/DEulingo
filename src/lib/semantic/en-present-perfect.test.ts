@@ -38,9 +38,22 @@ describe('Present Perfect deterministik katman', () => {
     expect(evaluateExercise(SEEN(), 'I have not seen it.').status).toBe('correct');
     expect(evaluateExercise(SEEN(), "I haven't seen it").status).toBe('correct');
     expect(evaluateExercise(SEEN(), 'i haven’t seen it.').status).toBe('correct');
+    expect(evaluateExercise(SEEN(), 'i havent seen it').status).toBe('correct');
     expect(evaluateExercise(LIVED(), "I've lived here for three years.").status).toBe('correct');
+    expect(evaluateExercise(LIVED(), 'ive lived here for three years').status).toBe('correct');
     expect(evaluateExercise(LIVED(), 'I HAVE LIVED HERE FOR THREE YEARS.').status).toBe('correct');
     expect(evaluateExercise(QUESTION(), 'have you seen this film').status).toBe('correct');
+  });
+
+  it('kesme işaretsiz hasn’t/haven’t kabul edilir (en-pp-tr-free-called)', () => {
+    const called = enExercise({
+      id: 't-called',
+      answer: "He hasn't called me.",
+      acceptedAnswers: ['He has not called me.'],
+    });
+    expect(evaluateExercise(called, "He hasn't called me.").status).toBe('correct');
+    expect(evaluateExercise(called, 'He has not called me.').status).toBe('correct');
+    expect(evaluateExercise(called, 'he hasnt called me').status).toBe('correct');
   });
 
   it('küçük yazım hatasını affeder (minor-typo), dilbilgisini affetmez', () => {

@@ -69,12 +69,75 @@ const EN_CONTRACTIONS: Array<[RegExp, string]> = [
   [/\bhaven't\b/gi, 'have not'],
   [/\bwhat's\b/gi, 'what has'],
   [/\bwho's\b/gi, 'who has'],
+  // Kesme işaretsiz yazım (mobil klavye): `hasnt` → `has not`.
+  // Kesmeliler önce uygulanır; bunlar yalnızca kesme yoksa eşleşir.
+  [/\bive\b/gi, 'i have'],
+  [/\byouve\b/gi, 'you have'],
+  [/\bweve\b/gi, 'we have'],
+  [/\btheyve\b/gi, 'they have'],
+  [/\bhes\b/gi, 'he has'],
+  [/\bshes\b/gi, 'she has'],
+  [/\bhasnt\b/gi, 'has not'],
+  [/\bhavent\b/gi, 'have not'],
+  [/\bwhats\b/gi, 'what has'],
+  [/\bwhos\b/gi, 'who has'],
 ];
+
+/** Hafta 1 (Past Perfect/Conditionals/Gerund…) için genel kısaltmalar. */
+const EN_GENERAL_CONTRACTIONS: Array<[RegExp, string]> = [
+  [/\bi'm\b/gi, 'i am'],
+  [/\b(you|we|they)'re\b/gi, '$1 are'],
+  [/\b(he|she|it)'s (?=\w+ing\b)/gi, '$1 is '],
+  [/\b(i|you|we|they)'ll\b/gi, '$1 will'],
+  [/\b(he|she|it)'ll\b/gi, '$1 will'],
+  [/\bisn't\b/gi, 'is not'],
+  [/\baren't\b/gi, 'are not'],
+  [/\bwasn't\b/gi, 'was not'],
+  [/\bweren't\b/gi, 'were not'],
+  [/\bdon't\b/gi, 'do not'],
+  [/\bdoesn't\b/gi, 'does not'],
+  [/\bdidn't\b/gi, 'did not'],
+  [/\bwon't\b/gi, 'will not'],
+  [/\bwouldn't\b/gi, 'would not'],
+  [/\bcouldn't\b/gi, 'could not'],
+  [/\bshouldn't\b/gi, 'should not'],
+  [/\bcan't\b/gi, 'can not'],
+  [/\bhadn't\b/gi, 'had not'],
+  // Kesme işaretsiz (mobil) yazım — yalnızca gerçek sözcükle çakışmayanlar.
+  [/\bim\b/gi, 'i am'],
+  [/\byoure\b/gi, 'you are'],
+  [/\btheyre\b/gi, 'they are'],
+  [/\bisnt\b/gi, 'is not'],
+  [/\barent\b/gi, 'are not'],
+  [/\bwasnt\b/gi, 'was not'],
+  [/\bwerent\b/gi, 'were not'],
+  [/\bdont\b/gi, 'do not'],
+  [/\bdoesnt\b/gi, 'does not'],
+  [/\bdidnt\b/gi, 'did not'],
+  [/\bwouldnt\b/gi, 'would not'],
+  [/\bcouldnt\b/gi, 'could not'],
+  [/\bshouldnt\b/gi, 'should not'],
+  [/\bcant\b/gi, 'can not'],
+  [/\bhadnt\b/gi, 'had not'],
+];
+
+/** Düzensiz geçmiş ortaçlar: `'d` + ortaç = had, aksi hâlde would. */
+const EN_PARTICIPLE_HINT = /^(\w+ed|been|done|seen|gone|made|taken|written|known|given|found|bought|lost|met|thought|forgotten|woken|flown|begun|brought|told|said|left|eaten|spoken|read|heard|got|gotten|had)$/i;
+
+/** I'd / he'd …: sonraki sözcük (never/already/just/not atlanır) ortaçsa had, değilse would. */
+function expandApostropheD(text: string): string {
+  return text.replace(/\b(i|you|he|she|it|we|they)'d\b((?:\s+(?:never|already|just|not|only))*)\s+(\w+)/gi, (_m, who: string, adverbs: string, next: string) =>
+    `${who} ${EN_PARTICIPLE_HINT.test(next) ? 'had' : 'would'}${adverbs} ${next}`);
+}
 
 export function expandEnglishContractions(value: string): string {
   // Mobil klavyeler kıvırcık kesme işareti üretir — önce düzleştir.
   let text = ` ${value.replace(/[‘’‚]/g, "'")} `;
+  text = expandApostropheD(text);
   for (const [pattern, replacement] of EN_CONTRACTIONS) {
+    text = text.replace(pattern, ` ${replacement} `);
+  }
+  for (const [pattern, replacement] of EN_GENERAL_CONTRACTIONS) {
     text = text.replace(pattern, ` ${replacement} `);
   }
   return text.replace(/\s+/g, ' ').trim();
@@ -189,30 +252,54 @@ export const EN_CLOSED_SETS: string[][] = [
   ['be', 'am', 'is', 'are', 'was', 'were', 'been'],
   ['for', 'since'],
   ['ever', 'never'],
-  ['see', 'sees', 'saw', 'seen'],
-  ['go', 'goes', 'went', 'gone'],
-  ['do', 'does', 'did', 'done'],
-  ['know', 'knows', 'knew', 'known'],
-  ['make', 'makes', 'made'],
-  ['take', 'takes', 'took', 'taken'],
-  ['write', 'writes', 'wrote', 'written'],
-  ['speak', 'speaks', 'spoke', 'spoken'],
-  ['eat', 'eats', 'ate', 'eaten'],
-  ['drink', 'drinks', 'drank', 'drunk'],
-  ['find', 'finds', 'found'],
-  ['buy', 'buys', 'bought'],
-  ['come', 'comes', 'came'],
-  ['give', 'gives', 'gave', 'given'],
-  ['forget', 'forgets', 'forgot', 'forgotten'],
-  ['think', 'thinks', 'thought'],
-  ['meet', 'meets', 'met'],
-  ['learn', 'learns', 'learned', 'learnt'],
-  ['work', 'works', 'worked'],
-  ['study', 'studies', 'studied'],
-  ['finish', 'finishes', 'finished'],
-  ['visit', 'visits', 'visited'],
-  ['start', 'starts', 'started'],
-  ['live', 'lives', 'lived'],
+  ['will', 'would'],
+  ['can', 'could'],
+  ['if', 'unless'],
+  ['i', 'you', 'he', 'she', 'it', 'we', 'they'],
+  ['where', 'what', 'when', 'why', 'how', 'who', 'which'],
+  ['in', 'at', 'on', 'for', 'since', 'to', 'of', 'from', 'with', 'by', 'about', 'into', 'onto'],
+  ['do', 'does', 'did', 'done', 'doing'],
+  ['go', 'goes', 'went', 'gone', 'going'],
+  ['play', 'plays', 'played', 'playing'],
+  ['study', 'studies', 'studied', 'studying'],
+  ['work', 'works', 'worked', 'working'],
+  ['live', 'lives', 'lived', 'living'],
+  ['visit', 'visits', 'visited', 'visiting'],
+  ['enjoy', 'enjoys', 'enjoyed', 'enjoying'],
+  ['finish', 'finishes', 'finished', 'finishing'],
+  ['avoid', 'avoids', 'avoided', 'avoiding'],
+  ['keep', 'keeps', 'kept', 'keeping'],
+  ['stop', 'stops', 'stopped', 'stopping'],
+  ['miss', 'misses', 'missed', 'missing'],
+  ['hate', 'hates', 'hated', 'hating'],
+  ['love', 'loves', 'loved', 'loving'],
+  ['like', 'likes', 'liked', 'liking'],
+  ['want', 'wants', 'wanted', 'wanting'],
+  ['decide', 'decides', 'decided', 'deciding'],
+  ['need', 'needs', 'needed', 'needing'],
+  ['plan', 'plans', 'planned', 'planning'],
+  ['hope', 'hopes', 'hoped', 'hoping'],
+  ['promise', 'promises', 'promised', 'promising'],
+  ['try', 'tries', 'tried', 'trying'],
+  ['offer', 'offers', 'offered', 'offering'],
+  ['agree', 'agrees', 'agreed', 'agreeing'],
+  ['see', 'sees', 'saw', 'seen', 'seeing'],
+  ['know', 'knows', 'knew', 'known', 'knowing'],
+  ['make', 'makes', 'made', 'making'],
+  ['take', 'takes', 'took', 'taken', 'taking'],
+  ['write', 'writes', 'wrote', 'written', 'writing'],
+  ['speak', 'speaks', 'spoke', 'spoken', 'speaking'],
+  ['eat', 'eats', 'ate', 'eaten', 'eating'],
+  ['drink', 'drinks', 'drank', 'drunk', 'drinking'],
+  ['find', 'finds', 'found', 'finding'],
+  ['buy', 'buys', 'bought', 'buying'],
+  ['come', 'comes', 'came', 'coming'],
+  ['give', 'gives', 'gave', 'given', 'giving'],
+  ['forget', 'forgets', 'forgot', 'forgotten', 'forgetting'],
+  ['think', 'thinks', 'thought', 'thinking'],
+  ['meet', 'meets', 'met', 'meeting'],
+  ['learn', 'learns', 'learned', 'learnt', 'learning'],
+  ['start', 'starts', 'started', 'starting'],
 ];
 
 const EN_CLOSED_INDEX = new Map<string, Set<number>>();
@@ -243,6 +330,22 @@ export function isDativePluralVariant(a: string, b: string): boolean {
   const y = foldGerman(b);
   const [short, long] = x.length < y.length ? [x, y] : [y, x];
   return short.length >= 4 && long === `${short}n` && /(er|el)$/.test(short);
+}
+
+/**
+ * Aynı kökün çekim eki farkı (call ↔ called, play ↔ playing, dog ↔ dogs):
+ * kelime ne kadar uzun olursa olsun YAZIM hatası değil dilbilgisi biçimidir.
+ */
+export function isEnglishInflectionVariant(a: string, b: string): boolean {
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  if (short === long || short.length < 3 || !/^[a-z]+$/.test(short) || !/^[a-z]+$/.test(long)) return false;
+  const rest = long.startsWith(short) ? long.slice(short.length) : '';
+  if (['s', 'es', 'ed', 'd', 'ing', 'en', 'er', 'est', 'ly'].includes(rest)) return true;
+  if (short.endsWith('e') && (long === `${short.slice(0, -1)}ing` || long === `${short}n`)) return true;
+  const last = short.slice(-1);
+  if (long === `${short}${last}ed` || long === `${short}${last}ing` || long === `${short}${last}er`) return true;
+  if (short.endsWith('y') && (long === `${short.slice(0, -1)}ied` || long === `${short.slice(0, -1)}ies`)) return true;
+  return false;
 }
 
 /** Aynı sayıda sözcükte, herhangi bir sözcük farkı dilbilgisi biçimi değişikliği mi? */
@@ -462,7 +565,7 @@ function compareOne(input: string, expected: string, options: NormalizeOptions):
     }
     // İngilizce Present Perfect: yanlış V3 / have-has / for-since asla yazım
     // hatası sayılmaz (`see` ↔ `seen` tek harf olsa da dilbilgisidir).
-    if (options.englishContractions && isEnglishGrammarSwap(want, got)) {
+    if (options.englishContractions && (isEnglishGrammarSwap(want, got) || isEnglishInflectionVariant(want, got))) {
       return { status: 'incorrect', expected, normalizedInput, diff: { got, want } };
     }
     mismatches += 1;

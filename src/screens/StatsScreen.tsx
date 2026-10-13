@@ -10,7 +10,7 @@ import {
 import { computeTopicMastery } from '../lib/mastery';
 import { parseImportedProgress, serializeProgress } from '../lib/storage';
 import type { ProgressApi } from '../hooks/useProgress';
-import { DEFAULT_GERMAN_VOICE_ID, GERMAN_VOICE_PROFILES, isSpeechSpeed } from '../lib/audio/tts';
+import { DEFAULT_GERMAN_VOICE_ID, ENGLISH_VOICE_PROFILES, GERMAN_VOICE_PROFILES, englishVoiceGender, isEnglishVoiceId, isSpeechSpeed } from '../lib/audio/tts';
 import { clampGoalMinutes, formatGoalMinutes, GOAL_MAX_MINUTES, GOAL_MIN_MINUTES, GOAL_STEP_MINUTES, goalProgress } from '../lib/daily-goal';
 
 export function StatsScreen({ api }: { api: ProgressApi }) {
@@ -290,7 +290,7 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
           title="Otomatik telaffuz"
           description={
             C.language === 'en'
-              ? 'Uygun İngilizce soru ve doğru cevap, geri bildirimden sonra tarayıcı sesiyle (en-GB tercihi) dinletilir.'
+              ? 'Uygun İngilizce soru ve doğru cevap, geri bildirimden sonra yerel Piper sesiyle dinletilir.'
               : 'Uygun Almanca soru ve doğru cevap, geri bildirimden sonra Piper ile dinletilir.'
           }
           checked={api.progress.settings.autoPronunciation}
@@ -314,7 +314,7 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             </span>
             <select
               className="min-w-0 max-w-[55%] truncate rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
-              value={api.progress.settings.speechVoice}
+              value={GERMAN_VOICE_PROFILES.some((profile) => profile.id === api.progress.settings.speechVoice) ? api.progress.settings.speechVoice : (isEnglishVoiceId(api.progress.settings.speechVoice) && englishVoiceGender(api.progress.settings.speechVoice) === 'male' ? 'thorsten' : DEFAULT_GERMAN_VOICE_ID)}
               aria-label="Telaffuz sesi"
               onChange={(event) => {
                 const speechVoice = GERMAN_VOICE_PROFILES.find((profile) => profile.id === event.target.value)?.id ?? DEFAULT_GERMAN_VOICE_ID;
@@ -332,17 +332,38 @@ export function StatsScreen({ api }: { api: ProgressApi }) {
             </select>
           </label>
         ) : (
-          <div className="card mt-4 p-4">
-            <p className="text-lg font-bold">Telaffuz sesi</p>
-            <p className="mt-1 text-[0.92rem] text-ink-soft">
-              İngilizce telaffuz tarayıcı sesiyle okunur (en-GB tercihi); yerel Piper’da İngilizce model yoktur.
-            </p>
-          </div>
+          <label className="card mt-4 flex items-center justify-between gap-4 p-4">
+            <span>
+              <span className="block text-lg font-bold">Telaffuz sesi</span>
+              <span className="block text-[0.92rem] text-ink-soft">Yerel Piper İngilizce sesi (Britanya aksanı); Almanca seçiminle aynı cinsiyette.</span>
+            </span>
+            <select
+              className="min-w-0 max-w-[55%] truncate rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"
+              value={ENGLISH_VOICE_PROFILES.some((profile) => profile.id === api.progress.settings.speechVoice) ? api.progress.settings.speechVoice : (api.progress.settings.speechVoice === 'thorsten' || api.progress.settings.speechVoice === 'thorsten-soft' ? 'alan' : 'jenny')}
+              aria-label="Telaffuz sesi"
+              onChange={(event) => {
+                const picked = event.target.value;
+                const speechVoice = ENGLISH_VOICE_PROFILES.some((profile) => profile.id === picked)
+                  ? picked
+                  : picked === 'alan' ? 'thorsten' : DEFAULT_GERMAN_VOICE_ID;
+                api.update((current) => ({
+                  ...current,
+                  settings: { ...current.settings, speechVoice: speechVoice as typeof current.settings.speechVoice },
+                }));
+              }}
+            >
+              {ENGLISH_VOICE_PROFILES.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.label} — {profile.description}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         <label className="card mt-4 flex items-center justify-between gap-4 p-4">
           <span>
             <span className="block text-lg font-bold">Telaffuz hızı</span>
-            <span className="block text-[0.92rem] text-ink-soft">Dört ses için dengelenmiş yavaş, normal veya hızlı tekrar.</span>
+            <span className="block text-[0.92rem] text-ink-soft">Tüm sesler için dengelenmiş yavaş, normal veya hızlı tekrar.</span>
           </span>
           <select
             className="rounded-xl border-2 border-line bg-surface px-3 py-2 font-bold"

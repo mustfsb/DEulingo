@@ -13,10 +13,11 @@
 import { evaluateText, type ValidationResult } from '../validation';
 import { VOCAB_BY_ID } from '../../content/vocabulary/inventory';
 import { EN_VOCAB_BY_ID } from '../../content/en/vocab';
+import { getUserVocabEntry } from '../../content/en/user-vocab';
 
 /** Her iki dilin envanterinde de ara (dilimler ayrı ilerlemede tutulur). */
 function lookupVocabEntry(vocabId: string) {
-  return VOCAB_BY_ID.get(vocabId) ?? EN_VOCAB_BY_ID.get(vocabId);
+  return VOCAB_BY_ID.get(vocabId) ?? EN_VOCAB_BY_ID.get(vocabId) ?? getUserVocabEntry(vocabId);
 }
 
 function normalize(value: string): string {

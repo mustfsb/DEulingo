@@ -8,7 +8,7 @@
  * - Göçler deterministik ve idempotenttir.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import type { ContentBundle } from '../content/types';
 import {
@@ -80,7 +80,8 @@ function mistake(id: string, day: number, topic: string, track: 'private' | 'nor
 
 /** Gerçekçi bir v8 kaydı: iki izlekte de veri var. */
 function v8Fixture(): UserProgress {
-  const base = createEmptyProgress();
+  // Sabit zaman damgası: iki ayrı çağrı farklı milisaniyeye düşerse girdi farklı olurdu.
+  const base = { ...createEmptyProgress(), createdAt: NOW, updatedAt: NOW };
   return {
     ...base,
     version: 8,
@@ -175,7 +176,8 @@ describe('v8 → v9 → v10 zinciri', () => {
 
 /** Gerçekçi bir v9 kaydı: 1, 5, 7 ve 10. Gün çalışılmış. */
 function v9Fixture(): UserProgress {
-  const base = createEmptyProgress();
+  // Sabit zaman damgası (bkz. v8Fixture): determinizm testi girdiyi saatten bağımsız tutar.
+  const base = { ...createEmptyProgress(), createdAt: NOW, updatedAt: NOW };
   return {
     ...base,
     version: 9,
@@ -395,6 +397,19 @@ describe('v9 → v10 konu tabanli goc', () => {
 
   it('deterministiktir: ayni girdi her zaman ayni ciktiyi verir', () => {
     expect(migrate(structuredClone(v9Fixture()), context)).toEqual(migrate(structuredClone(v9Fixture()), context));
+  });
+
+  it('saat ilerlese de ayni girdi ayni ciktiyi verir (goc saatten bagimsiz)', () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-09-01T10:00:00.000Z'));
+      const first = migrate(structuredClone(v9Fixture()), context);
+      vi.setSystemTime(new Date('2027-03-15T23:59:59.999Z'));
+      const second = migrate(structuredClone(v9Fixture()), context);
+      expect(second).toEqual(first);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('idempotenttir: goc edilmis kayit tekrar goc edilince degismez', () => {

@@ -1,5 +1,8 @@
 import {
   DEFAULT_GERMAN_VOICE_ID,
+  englishVoiceForGermanVoice,
+  isEnglishVoiceId,
+  isGermanVoiceId,
   localTts,
   type AudioResult,
   type EnglishAudioTarget,
@@ -54,9 +57,9 @@ export interface TimerDriver {
 interface AudioControllerOptions {
   createAudio?: AudioFactory;
   requestSpeech?: (
-    target: GermanAudioTarget,
+    target: SpeechAudioTarget,
     speed: SpeechSpeed,
-    voice: GermanVoiceId,
+    voice: string,
     signal: AbortSignal,
   ) => Promise<AudioResult>;
   timer?: TimerDriver;
@@ -144,13 +147,25 @@ export class AudioController {
   }
 
   /**
-   * İngilizce (en-GB) oynatma. Yerel Piper'da İngilizce model YOKTUR
-   * (`.piper/voices` yalnızca `de_DE` içerir); bu yüzden doğrudan tarayıcı
-   * Web Speech kullanılır. Aynı generation/iptal yaşam döngüsü geçerlidir.
+   * İngilizce (en-GB) oynatma. Birincil yol yerel Piper'dır (Alan/Jenny,
+   * Almanca ile aynı doğallıkta); /api/tts yoksa tarayıcı Web Speech
+   * yedeğine düşer. Aynı generation/iptal yaşam döngüsü geçerlidir.
    */
-  async speakEnglish(contextId: string, target: EnglishAudioTarget, speed: SpeechSpeed): Promise<void> {
+  async speakEnglish(
+    contextId: string,
+    target: EnglishAudioTarget,
+    speed: SpeechSpeed,
+    voice: string = DEFAULT_GERMAN_VOICE_ID,
+  ): Promise<void> {
     const generation = this.begin(contextId);
-    await this.speakEnglishInGeneration(contextId, generation, target, speed);
+    await this.speakEnglishInGeneration(contextId, generation, target, speed, voice);
+  }
+
+  /** Almanca ses tercihini İngilizce Piper karşılığına çevirir. */
+  private englishVoiceFor(voice: string): string {
+    if (isEnglishVoiceId(voice)) return voice;
+    if (isGermanVoiceId(voice)) return englishVoiceForGermanVoice(voice);
+    return englishVoiceForGermanVoice(DEFAULT_GERMAN_VOICE_ID);
   }
 
   private async speakEnglishInGeneration(
@@ -158,34 +173,52 @@ export class AudioController {
     generation: number,
     target: EnglishAudioTarget,
     speed: SpeechSpeed,
+    voice: string = DEFAULT_GERMAN_VOICE_ID,
   ): Promise<void> {
     if (!this.isCurrent(contextId, generation)) return;
+    const englishVoice = this.englishVoiceFor(voice);
     const abort = new AbortController();
     this.abort = abort;
-    this.currentState = 'speaking';
+    this.currentState = 'generating';
     try {
-      await speakEnglishWithWebSpeech(target, speed, abort.signal);
-      if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
+      const result = await this.requestSpeech(target, speed, englishVoice, abort.signal);
+      if (!this.isCurrent(contextId, generation) || abort.signal.aborted) return;
+      this.abort = null;
+      await this.playUrl(result.url, contextId, generation, 0.86);
+      return;
     } catch (error) {
-      if ((error as DOMException)?.name === 'AbortError') return;
+      if (abort.signal.aborted || !this.isCurrent(contextId, generation)) return;
+      // Yerel Piper yoksa (Vercel/prod) yedek: iyileştirilmiş Web Speech.
+      if (isWebSpeechAvailable()) {
+        try {
+          this.abort = abort;
+          this.currentState = 'speaking';
+          await speakEnglishWithWebSpeech(target, speed, abort.signal);
+          if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
+          return;
+        } catch (speechError) {
+          if ((speechError as DOMException)?.name === 'AbortError') return;
+        }
+      }
       if (this.isCurrent(contextId, generation)) {
         this.currentState = 'idle';
         throw error;
       }
     } finally {
       if (this.abort === abort) this.abort = null;
+      if (this.isCurrent(contextId, generation) && !this.active) this.currentState = 'idle';
     }
   }
 
-  /** Dile göre doğru oynatıcıyı seçer (Almanca → Piper/Web Speech, İngilizce → Web Speech). */
+  /** Dile göre doğru oynatıcıyı seçer (her iki dilde önce Piper, sonra Web Speech). */
   async speak(
     contextId: string,
     target: SpeechAudioTarget,
     speed: SpeechSpeed,
-    voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
+    voice: string = DEFAULT_GERMAN_VOICE_ID,
   ): Promise<void> {
-    if (target.language === 'en-GB') return this.speakEnglish(contextId, target, speed);
-    return this.speakGerman(contextId, target, speed, voice);
+    if (target.language === 'en-GB') return this.speakEnglish(contextId, target, speed, voice);
+    return this.speakGerman(contextId, target, speed, isGermanVoiceId(voice) ? voice : DEFAULT_GERMAN_VOICE_ID);
   }
 
   /**
@@ -201,7 +234,7 @@ export class AudioController {
     target: SpeechAudioTarget | undefined,
     soundEffectsEnabled: boolean,
     speed: SpeechSpeed,
-    voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
+    voice: string = DEFAULT_GERMAN_VOICE_ID,
     options: { milestone?: SoundEffect } = {},
   ): Promise<void> {
     const generation = this.begin(contextId);
@@ -222,9 +255,8 @@ export class AudioController {
       }
     }
     if (target && this.isCurrent(contextId, generation)) {
-      // İngilizce hedef Piper'a gitmez; aynı generation içinde Web Speech.
       if (target.language === 'en-GB') {
-        await this.speakEnglishInGeneration(contextId, generation, target, speed);
+        await this.speakEnglishInGeneration(contextId, generation, target, speed, voice);
         return;
       }
       await this.requestThenPlay(contextId, generation, target, speed, voice);
@@ -255,9 +287,9 @@ export class AudioController {
   private async requestThenPlay(
     contextId: string,
     generation: number,
-    target: GermanAudioTarget,
+    target: SpeechAudioTarget,
     speed: SpeechSpeed,
-    voice: GermanVoiceId,
+    voice: string,
   ) {
     if (!this.isCurrent(contextId, generation)) return;
     const abort = new AbortController();
@@ -270,12 +302,16 @@ export class AudioController {
       await this.playUrl(result.url, contextId, generation, 0.86);
     } catch (error) {
       if (abort.signal.aborted || !this.isCurrent(contextId, generation)) return;
-      // Vercel/prod'da /api/tts yok — tarayıcı TTS'e düş (birebir fonksiyonel)
+      // Vercel/prod'da /api/tts yok — tarayıcı TTS'e düş
       if (isWebSpeechAvailable()) {
         try {
           this.abort = abort;
           this.currentState = 'speaking';
-          await speakWithWebSpeech(target, speed, abort.signal, voice);
+          if (target.language === 'en-GB') {
+            await speakEnglishWithWebSpeech(target, speed, abort.signal);
+          } else {
+            await speakWithWebSpeech(target, speed, abort.signal, isGermanVoiceId(voice) ? voice : DEFAULT_GERMAN_VOICE_ID);
+          }
           if (this.isCurrent(contextId, generation)) this.currentState = 'idle';
           return;
         } catch (speechError) {

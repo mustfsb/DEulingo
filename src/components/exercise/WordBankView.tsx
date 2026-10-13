@@ -6,6 +6,7 @@ import {
   selectWordBankToken,
   typedPrefixLength,
 } from '../../lib/word-bank';
+import type { TranslationDirection } from '../../content/types';
 import type { ExerciseViewProps } from './types';
 import { AudioButton } from '../AudioButton';
 import { findGermanAudioTarget } from '../../lib/audio/targets';
@@ -14,6 +15,16 @@ import { getTileReflowDelta } from '../../lib/tile-motion';
 const KEYBOARD_HINT_KEY = 'almanca-alistirma:word-bank-keyboard-hint-used';
 
 /** Duolingo tarzı, görünür metin girdisi olmayan kimlikli kelime bankası. */
+/** Hedef dile göre yönerge: "Türkçesini İngilizce oluştur" / "Almancayı Türkçe oluştur". */
+export function wordBankPrompt(direction: TranslationDirection): string {
+  switch (direction) {
+    case 'de-to-tr': return 'Almancayı Türkçe oluştur';
+    case 'en-to-tr': return 'İngilizceyi Türkçe oluştur';
+    case 'tr-to-en': return 'Türkçesini İngilizce oluştur';
+    case 'tr-to-de': return 'Türkçesini Almanca oluştur';
+  }
+}
+
 export function WordBankView({ exercise, value, onChange, onSubmit, locked, result, audioContextId, speechSpeed = 'normal', speechVoice }: ExerciseViewProps) {
   const wordBank = exercise.wordBank;
   const selected = Array.isArray(value) ? value : [];
@@ -104,8 +115,8 @@ export function WordBankView({ exercise, value, onChange, onSubmit, locked, resu
 
   return (
     <section className="word-bank" aria-label="Kelime bankası">
-      <p className="eyebrow">{wordBank.direction === 'de-to-tr' ? 'Almancayı Türkçe oluştur' : 'Türkçesini Almanca oluştur'}</p>
-      <p className="word-bank-source" lang={wordBank.direction === 'de-to-tr' ? 'de' : 'tr'}>{wordBank.sourceText}</p>
+      <p className="eyebrow">{wordBankPrompt(wordBank.direction)}</p>
+      <p className="word-bank-source" lang={wordBank.direction.startsWith('tr') ? 'tr' : wordBank.direction.slice(0, 2)}>{wordBank.sourceText}</p>
 
       <div className="word-bank-answer" data-state={state} aria-label="Seçilen kelimeler">
         {selectedTokens.length ? (

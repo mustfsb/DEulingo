@@ -7,6 +7,7 @@ import { Markup } from '../components/Markup';
 import { ComboIndicator, StreakCelebration } from '../components/StreakCelebration';
 import { buildSessionPlan } from '../lib/session';
 import { cancelScheduledRetry, scheduleRetry } from '../lib/lesson';
+import { presentExercise, presentationSeed } from '../lib/presentation';
 import { buildLessonResult, completeLesson } from '../lib/session-result';
 import { applyAttemptToStreak, milestoneCopy } from '../lib/streak';
 import { recordAttempt } from '../lib/progress';
@@ -32,6 +33,8 @@ export interface LessonScreenProps {
   sessionMode?: SessionMode;
   /** Bölüm pratiği (`section`) için özet bölümü. */
   sectionId?: string;
+  /** Bölüm/set havuzunun tamamı (haftalık plan): 12 soruluk örnek değil. */
+  all?: boolean;
   api: ProgressApi;
   navigate: (route: Route) => void;
 }
@@ -66,6 +69,7 @@ export function LessonScreen({
   topicId,
   sessionMode = 'normal',
   sectionId,
+  all,
   api,
   navigate,
 }: LessonScreenProps) {
@@ -115,6 +119,7 @@ export function LessonScreen({
         mode: sessionMode,
         topicId,
         sectionId,
+        ...(all && sessionMode === 'section' ? { size: pool.length } : {}),
         // Her oturumda değişen ama tekrar üretilebilir tohum.
         seed: `${topicId}:${sessionMode}:${sectionId ?? ''}:${progress.topics[topicId]?.sessionsCompleted ?? 0}`,
       });
@@ -145,7 +150,7 @@ export function LessonScreen({
       // ya da Genel Tekrar tarafindan). Dogrudan URL ile gelindiyse listeye don.
       navigate(mode === 'mistakes' ? { name: 'mistakes' } : { name: 'general-review' });
     }
-  }, [matches, mode, sessionMode, topicId, sectionId, progress, update, navigate]);
+  }, [matches, mode, sessionMode, topicId, sectionId, all, progress, update, navigate]);
 
   if (!active || !matches) {
     return <div className="p-10 text-center text-ink-soft">Ders hazırlanıyor…</div>;
@@ -296,7 +301,7 @@ interface ExerciseStepProps {
   soundEffects: boolean;
   autoPronunciation: boolean;
   speechSpeed: import('../lib/audio/tts').SpeechSpeed;
-  speechVoice: import('../lib/audio/tts').GermanVoiceId;
+  speechVoice: import('../lib/audio/tts').PiperVoiceId;
 }
 
 function ExerciseStep({
@@ -337,6 +342,15 @@ function ExerciseStep({
     setCheckingState(next);
   }, []);
   const startedAt = useRef(Date.now());
+  // Sunum tohumu: ayni soru acikken kararli (yeniden cizimler bozmaz),
+  // tekrar/oturum degisince cesitlenir. Kanonik icerik (cevap, Jev
+  // anlami) degismez; yalnizca gorunur sira turetilir.
+  const presentationReason = lesson.queue[lesson.index]?.presentationReason ?? 'primary';
+  const seed = useMemo(
+    () => presentationSeed(lesson.startedAt, lesson.index, presentationReason, exercise.id),
+    [lesson.startedAt, lesson.index, presentationReason, exercise.id],
+  );
+  const presentedExercise = useMemo(() => presentExercise(exercise, seed), [exercise, seed]);
   // Kimlik hem soru ID'sini hem oturum sırasını taşır: aynı soru retry ile
   // dönerse eski isteğin yeni örneğe sızması da engellenir.
   const audioContextId = `lesson:${lesson.startedAt}:${exercise.id}:${lesson.index}`;
@@ -572,7 +586,7 @@ function ExerciseStep({
           )}
 
           <ExerciseView
-            exercise={exercise}
+            exercise={presentedExercise}
             value={input}
             onChange={setInput}
             onSubmit={check}
@@ -581,6 +595,7 @@ function ExerciseStep({
             audioContextId={audioContextId}
             speechSpeed={speechSpeed}
             speechVoice={speechVoice}
+            presentationSeed={seed}
           />
 
           {exercise.hint && !result && (

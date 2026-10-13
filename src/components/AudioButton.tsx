@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { audioController } from '../lib/audio/playback';
-import { DEFAULT_GERMAN_VOICE_ID, type GermanVoiceId, type SpeechAudioTarget, type SpeechSpeed } from '../lib/audio/tts';
+import { DEFAULT_GERMAN_VOICE_ID, type SpeechAudioTarget, type SpeechSpeed } from '../lib/audio/tts';
 
 export function PronunciationButton({
   target,
@@ -15,8 +15,8 @@ export function PronunciationButton({
   /** Elle oynatma da aktif ekran bağlamına bağlıdır; eski ekranda kalmaz. */
   contextId: string;
   speed?: SpeechSpeed;
-  /** Kullanıcının ayarlardan seçtiği, doğrulanmış Piper sesi (Almanca hedeflerde). */
-  voice?: GermanVoiceId;
+  /** Kullanıcının ayarlardan seçtiği Piper sesi (Almanca kimlik; İngilizcede cinsiyete göre eşlenir). */
+  voice?: string;
   compact?: boolean;
   /** Metin/tile kapsayıcısı hover veya klavye odağındayken görünür. */
   revealOnHover?: boolean;

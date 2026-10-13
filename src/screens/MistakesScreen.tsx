@@ -3,6 +3,7 @@ import { Markup } from '../components/Markup';
 import { contentFor } from '../lib/content-en';
 import { buildReviewQueue } from '../lib/lesson';
 import { MISTAKE_LABELS } from '../lib/progress';
+import { EN_TOPIC_BY_ID } from '../content/en/topics';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { MistakeRecord } from '../lib/storage';
@@ -18,20 +19,35 @@ type GroupBy = 'topic' | 'type';
 export function MistakesScreen({
   api,
   navigate,
+  scope,
 }: {
   api: ProgressApi;
   navigate: (route: Route) => void;
+  /** `week1`: yalnızca 1. hafta İngilizce konularının hataları (haftalık plan Session G). */
+  scope?: 'week1';
 }) {
   const { progress, update } = api;
   const C = contentFor(api.language ?? 'de');
   const { exercisesById, getExercises, summariesByTopic, topicsById } = C;
   const topicTitle = C.topicTitle;
   const [groupBy, setGroupBy] = useState<GroupBy>('topic');
+  // Kapsam: hafta 1 = İngilizce hafta konuları. Hatalar zaten dil başına ayrı
+  // depolanır; kapsam bunun üstünde konu kimliğini de doğrular.
+  const inScope = (exerciseId: string, recordTopicId: string) => {
+    if (scope !== 'week1') return true;
+    const topicId = exercisesById.get(exerciseId)?.topicId ?? recordTopicId;
+    return EN_TOPIC_BY_ID.has(topicId);
+  };
+  const scopedMistakes = useMemo(
+    () => Object.fromEntries(Object.entries(progress.mistakes).filter(([, record]) => inScope(record.exerciseId, record.topicId))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [progress.mistakes, scope, exercisesById],
+  );
 
   const groups = useMemo(() => {
     const buckets = new Map<string, { label: string; topicId?: string; records: MistakeRecord[] }>();
 
-    for (const record of Object.values(progress.mistakes)) {
+    for (const record of Object.values(scopedMistakes)) {
       // Kanonik konu içerikten okunur; kayıttaki konu yalnızca geri dönüştür.
       const exercise = exercisesById.get(record.exerciseId);
       const topicId = exercise?.topicId ?? record.topicId;
@@ -52,11 +68,11 @@ export function MistakesScreen({
         weight: bucket.records.reduce((sum, record) => sum + record.count * 2 + record.typoCount, 0),
       }))
       .sort((a, b) => b.weight - a.weight);
-  }, [progress.mistakes, groupBy, exercisesById, topicTitle]);
+  }, [scopedMistakes, groupBy, exercisesById, topicTitle]);
 
   const repeatedTypos = useMemo(
-    () => Object.values(progress.mistakes).filter((record) => record.typoCount >= TYPO_WARNING_THRESHOLD),
-    [progress.mistakes],
+    () => Object.values(scopedMistakes).filter((record) => record.typoCount >= TYPO_WARNING_THRESHOLD),
+    [scopedMistakes],
   );
 
   const startReview = (ids: string[]) => {
@@ -78,20 +94,25 @@ export function MistakesScreen({
   };
 
   // "Hepsini tekrar çalış" en zorlanılandan başlar (zayıflık puanına göre),
-  // hata listesinin görüntüleme sırasına göre değil.
+  // hata listesinin görüntüleme sırasına göre değil. Eşit puanlılar
+  // ziyaret başına karışır (tohum montajda sabitlenir, çizimde oynamaz).
+  const retrySeed = useMemo(() => `mistakes:${Date.now()}`, []);
   const allIds = buildReviewQueue(
-    getExercises(Object.keys(progress.mistakes)),
+    getExercises(Object.keys(scopedMistakes)),
     progress,
     REVIEW_LIMIT,
+    retrySeed,
   );
 
   return (
     <main className="mx-auto w-full max-w-[820px] px-5 pb-24 pt-6 sm:pt-10">
       <header className="anim-pop">
-        <p className="eyebrow">Zayıf noktalar</p>
-        <h1 className="mt-1 text-[2.5rem] sm:text-5xl">Hatalarım</h1>
+        <p className="eyebrow">{scope === 'week1' ? 'Hafta 1 · Session G' : 'Zayıf noktalar'}</p>
+        <h1 className="mt-1 text-[2.5rem] sm:text-5xl">{scope === 'week1' ? 'Hafta 1 Hataları' : 'Hatalarım'}</h1>
         <p className="mt-3 text-lg text-ink-soft">
-          Tüm konuların hataları tek listede birikir.
+          {scope === 'week1'
+            ? 'Bu haftanın konularındaki hatalar, en çok zorlanılandan başlayarak. “Hepsini Tekrar Çalış” hemen bir tekrar oturumu açar.'
+            : 'Tüm konuların hataları tek listede birikir.'}
         </p>
       </header>
 

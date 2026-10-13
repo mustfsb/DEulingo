@@ -18,6 +18,8 @@
     "generate:sfx": "tsx scripts/generate-sfx.ts",
     "test:tts": "tsx scripts/tts-integration-test.ts",
     "audit:sessions": "npm run sync && tsx scripts/audit-sessions.ts",
+    "audit:week": "tsx scripts/audit-week-workload.ts",
+    "verify:resources": "tsx scripts/verify-week-resources.ts",
     "audit:coverage": "npm run sync && tsx scripts/audit-coverage.ts",
     "vocab:notes": "tsx scripts/generate-vocab-notes.ts",
     "vocab:check": "tsx scripts/generate-vocab-notes.ts --check",

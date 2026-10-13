@@ -10,7 +10,7 @@ import { audioController } from '../lib/audio/playback';
 import type { GermanExample, RecallQuestion, SummarySection } from '../content/types';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
-import type { GermanVoiceId, SpeechSpeed } from '../lib/audio/tts';
+import type { PiperVoiceId, SpeechSpeed } from '../lib/audio/tts';
 
 /** Okundu işareti — yalnızca bilgilendirme, ustalık anlamına GELMEZ (§52). */
 function useMarkRead(api: ProgressApi, sectionIds: string[]) {
@@ -351,7 +351,7 @@ function SectionView({
 }: {
   section: SummarySection;
   bookmarked: boolean;
-  settings: { showPronunciation: boolean; speechSpeed: SpeechSpeed; speechVoice: GermanVoiceId };
+  settings: { showPronunciation: boolean; speechSpeed: SpeechSpeed; speechVoice: PiperVoiceId };
   audioContextId: string;
   onToggleBookmark: () => void;
   practice?: { label: string; detail: string; onClick: () => void };
@@ -468,7 +468,7 @@ function Examples({
   items: GermanExample[];
   showPronunciation: boolean;
   speechSpeed: SpeechSpeed;
-  speechVoice: GermanVoiceId;
+  speechVoice: PiperVoiceId;
   audioContextId: string;
   exampleLang?: 'de-DE' | 'en-GB';
 }) {

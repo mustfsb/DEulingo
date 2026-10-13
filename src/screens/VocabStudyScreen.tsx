@@ -19,13 +19,14 @@ import { FeedbackPanel } from '../components/FeedbackPanel';
 import { AudioButton } from '../components/AudioButton';
 import { Markup } from '../components/Markup';
 import { contentFor } from '../lib/content-en';
+import { presentExercise, presentationSeed } from '../lib/presentation';
 import { recordAttempt } from '../lib/progress';
 import type { ExerciseInput, ValidationResult } from '../lib/validation';
 import { deterministicValidate, hybridToValidation, validateAnswer } from '../lib/semantic/validate-answer';
 import { isSemanticFallbackEligible } from '../lib/semantic/policy';
 import { buildVocabSession, type VocabKind, type VocabQuestion } from '../lib/vocab/questions';
 import { audioController } from '../lib/audio/playback';
-import type { GermanVoiceId, SpeechSpeed } from '../lib/audio/tts';
+import type { PiperVoiceId, SpeechSpeed } from '../lib/audio/tts';
 import type { ProgressApi } from '../hooks/useProgress';
 import type { Route } from '../lib/router';
 import type { AttemptResult } from '../lib/storage';
@@ -199,6 +200,7 @@ export function VocabStudyScreen({
       key={`${question.exercise.id}#${index}`}
       question={question}
       position={index + 1}
+      sessionSeed={seedRef.current}
       total={queue.length}
       label={`${KIND_LABEL[kind]}${topicId ? ` · ${C.topicTitle(topicId)}` : ''}`}
       vocabById={C.vocabById}
@@ -218,6 +220,7 @@ export function VocabStudyScreen({
 function VocabStep({
   question,
   position,
+  sessionSeed,
   total,
   label,
   vocabById,
@@ -233,6 +236,7 @@ function VocabStep({
 }: {
   question: VocabQuestion;
   position: number;
+  sessionSeed: string;
   total: number;
   label: string;
   vocabById: Map<string, { german: string; turkish: string }>;
@@ -241,12 +245,19 @@ function VocabStep({
   soundEffects: boolean;
   autoPronunciation: boolean;
   speechSpeed: SpeechSpeed;
-  speechVoice: GermanVoiceId;
+  speechVoice: PiperVoiceId;
   onCommit: (q: VocabQuestion, result: AttemptResult, validation: ValidationResult | null, value: ExerciseInput) => void;
   onAdvance: () => void;
   onExit: () => void;
 }) {
   const { exercise } = question;
+  // Kelime sorusu da sunum karisikligindan gecer: ayni soru acikken
+  // kararli, tekrar/oturum degisince cesitli. Dogrulama kanoniktir.
+  const seed = useMemo(
+    () => presentationSeed(sessionSeed, exercise.id, position),
+    [sessionSeed, exercise.id, position],
+  );
+  const presentedExercise = useMemo(() => presentExercise(exercise, seed), [exercise, seed]);
   const [input, setInput] = useState<ExerciseInput>(() => emptyInput(exercise));
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [checking, setChecking] = useState(false);
@@ -404,7 +415,7 @@ function VocabStep({
             </div>
           ) : (
             <ExerciseView
-              exercise={exercise}
+              exercise={presentedExercise}
               value={input}
               onChange={setInput}
               onSubmit={check}
@@ -413,6 +424,7 @@ function VocabStep({
               audioContextId={audioContextId}
               speechSpeed={speechSpeed}
               speechVoice={speechVoice}
+              presentationSeed={seed}
             />
           )}
         </div>

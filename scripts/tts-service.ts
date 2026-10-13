@@ -5,23 +5,32 @@ import { dirname, join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
+  DEFAULT_ENGLISH_VOICE_ID,
   DEFAULT_GERMAN_VOICE_ID,
-  germanVoiceProfile,
+  ENGLISH_VOICE_PROFILES,
   GERMAN_VOICE_PROFILES,
   PIPER_GERMAN_VOICE,
   PIPER_GERMAN_VOICE_VERSION,
   piperLengthScaleFor,
   speechCacheMaterial,
   validateSpeechRequest,
-  type GermanVoiceId,
+  voiceProfileFor,
+  type PiperVoiceId,
   type SpeechRequest,
 } from '../src/lib/audio/tts.ts';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const PIPER_DIRECTORY = join(projectRoot, '.piper');
 export const AUDIO_CACHE_DIRECTORY = join(projectRoot, 'generated', 'audio');
-export const voiceFileFor = (voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID) =>
-  join(PIPER_DIRECTORY, 'voices', `${germanVoiceProfile(voice).model}.onnx`);
+/** Doğallık sentezi (v3): cümle arası duraklama + hafif perde varyasyonu. */
+export const TTS_NOISE_SCALE = '0.8';
+export const TTS_NOISE_W_SCALE = '0.85';
+export const TTS_SENTENCE_SILENCE = '0.25';
+export function voiceFileFor(voice?: string, language?: 'de-DE' | 'en-GB'): string {
+  const fallback = language === 'en-GB' ? DEFAULT_ENGLISH_VOICE_ID : DEFAULT_GERMAN_VOICE_ID;
+  const profile = voiceProfileFor(language ?? 'de-DE', voice ?? fallback);
+  return join(PIPER_DIRECTORY, 'voices', `${profile.model}.onnx`);
+}
 export const DEFAULT_VOICE_FILE = voiceFileFor();
 export const DEFAULT_PIPER_BIN = join(PIPER_DIRECTORY, 'venv', 'bin', 'piper');
 
@@ -35,7 +44,7 @@ export type PiperRunner = (text: string, output: string, speed: SpeechRequest['s
 
 /** Ses URL'si sürümü: oynatılan baytlar değiştiğinde artırılır; tarayıcıların
  *  `immutable` önbelleğindeki eski WAV'lar böylece baypas edilir. */
-export const TTS_AUDIO_URL_VERSION = '2';
+export const TTS_AUDIO_URL_VERSION = '3';
 
 /** Üretimde kenar yumuşatma süreleri: sonda 30ms, başta 4ms. */
 export const TTS_FADE_OUT_MS = 30;
@@ -136,7 +145,7 @@ export interface TtsServiceOptions {
   voiceVersion?: string;
   voiceFile?: string;
   /** Sesin modelden bağımsız normal hız kalibrasyonunu seçer. */
-  voiceId?: GermanVoiceId;
+  voiceId?: PiperVoiceId;
   speaker?: number;
   piperBin?: string;
   runPiper?: PiperRunner;
@@ -189,14 +198,20 @@ export function createTtsService(options: TtsServiceOptions = {}) {
 export function createPiperRunner(
   piperBin: string,
   voiceFile: string,
-  voice: GermanVoiceId = DEFAULT_GERMAN_VOICE_ID,
+  voice: PiperVoiceId = DEFAULT_GERMAN_VOICE_ID,
   speaker?: number,
 ): PiperRunner {
   return async (text, output, speed) => {
     const lengthScale = piperLengthScaleFor(voice, speed);
     const args = ['--model', voiceFile];
     if (speaker !== undefined) args.push('--speaker', String(speaker));
-    args.push('--output_file', output, '--length_scale', lengthScale);
+    args.push(
+      '--output_file', output,
+      '--length_scale', lengthScale,
+      '--noise_scale', TTS_NOISE_SCALE,
+      '--noise_w_scale', TTS_NOISE_W_SCALE,
+      '--sentence_silence', TTS_SENTENCE_SILENCE,
+    );
     await new Promise<void>((resolveRun, reject) => {
       const child = spawn(piperBin, args, {
         stdio: ['pipe', 'ignore', 'pipe'],
@@ -218,21 +233,32 @@ export function createPiperRunner(
 
 export async function ttsHealth() {
   const service = createTtsService();
-  const [binary, voices] = await Promise.all([
+  const [binary, germanVoices, englishVoices] = await Promise.all([
     access(DEFAULT_PIPER_BIN).then(() => true).catch(() => false),
     Promise.all(
       GERMAN_VOICE_PROFILES.map(async (profile) => ({
         id: profile.id,
-        available: await access(voiceFileFor(profile.id)).then(() => true).catch(() => false),
+        language: 'de-DE' as const,
+        available: await access(voiceFileFor(profile.id, 'de-DE')).then(() => true).catch(() => false),
+      })),
+    ),
+    Promise.all(
+      ENGLISH_VOICE_PROFILES.map(async (profile) => ({
+        id: profile.id,
+        language: 'en-GB' as const,
+        available: await access(voiceFileFor(profile.id, 'en-GB')).then(() => true).catch(() => false),
       })),
     ),
   ]);
-  const defaultVoiceReady = voices.some((voice) => voice.id === DEFAULT_GERMAN_VOICE_ID && voice.available);
+  const voices = [...germanVoices, ...englishVoices];
+  const defaultVoiceReady = germanVoices.some((voice) => voice.id === DEFAULT_GERMAN_VOICE_ID && voice.available);
+  const defaultEnglishReady = englishVoices.some((voice) => voice.id === DEFAULT_ENGLISH_VOICE_ID && voice.available);
   return {
     ready: binary && defaultVoiceReady,
     voice: service.voice,
     voiceVersion: PIPER_GERMAN_VOICE_VERSION,
     voices,
+    englishReady: binary && defaultEnglishReady,
     cacheDirectory: AUDIO_CACHE_DIRECTORY,
     diagnostics: binary && defaultVoiceReady ? undefined : 'Piper veya varsayılan de_DE sesi kurulmamış. `npm run tts:setup` çalıştırın.',
   };
